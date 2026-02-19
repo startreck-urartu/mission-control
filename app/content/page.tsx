@@ -47,7 +47,7 @@ import { Doc } from "@/convex/_generated/dataModel";
 type Content = Doc<"content">;
 
 type ContentStage = "idea" | "script" | "thumbnail" | "filming" | "editing" | "published";
-type ContentType = "video" | "blog" | "social" | "email";
+type ContentType = "video" | "blog" | "social" | "podcast";
 type AssignedTo = "human" | "openclaw";
 
 const STAGES = [
