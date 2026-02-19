@@ -17,10 +17,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatTimeAgo } from "@/lib/utils";
 
 const statsCards = [
-  { title: "Total Tasks", icon: ClipboardList, color: "text-blue-400", bg: "bg-blue-400/10" },
+  { title: "Active Tasks", icon: ClipboardList, color: "text-blue-400", bg: "bg-blue-400/10" },
   { title: "Content Pipeline", icon: Video, color: "text-purple-400", bg: "bg-purple-400/10" },
-  { title: "Team Members", icon: Users, color: "text-green-400", bg: "bg-green-400/10" },
-  { title: "Memories", icon: Brain, color: "text-yellow-400", bg: "bg-yellow-400/10" },
+  { title: "AI Team", icon: Users, color: "text-green-400", bg: "bg-green-400/10" },
+  { title: "Knowledge Base", icon: Brain, color: "text-yellow-400", bg: "bg-yellow-400/10" },
 ];
 
 export default function DashboardPage() {
