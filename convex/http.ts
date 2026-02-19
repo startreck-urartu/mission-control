@@ -117,4 +117,17 @@ http.route({
   },
 });
 
+// GET /api/seed - Populate dashboard with initial data (one-time setup)
+http.route({
+  path: "/api/seed",
+  method: "GET",
+  handler: async (ctx) => {
+    const result = await ctx.runAction(internal.seed.seed, {});
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  },
+});
+
 export default http;

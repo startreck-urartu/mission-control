@@ -14,6 +14,7 @@ import type * as content from "../content.js";
 import type * as http from "../http.js";
 import type * as memories from "../memories.js";
 import type * as office from "../office.js";
+import type * as seed from "../seed.js";
 import type * as tasks from "../tasks.js";
 import type * as team from "../team.js";
 import type * as utils from "../utils.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   memories: typeof memories;
   office: typeof office;
+  seed: typeof seed;
   tasks: typeof tasks;
   team: typeof team;
   utils: typeof utils;
