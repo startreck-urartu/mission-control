@@ -46,6 +46,10 @@ import { Doc } from "@/convex/_generated/dataModel";
 
 type Content = Doc<"content">;
 
+type ContentStage = "idea" | "script" | "thumbnail" | "filming" | "editing" | "published";
+type ContentType = "video" | "blog" | "social" | "email";
+type AssignedTo = "human" | "openclaw";
+
 const STAGES = [
   { id: "idea", label: "Idea", icon: FileText, color: "bg-gray-500" },
   { id: "script", label: "Script", icon: FileText, color: "bg-blue-500" },
@@ -215,7 +219,19 @@ export default function ContentPage() {
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    description: string;
+    stage: ContentStage;
+    contentType: ContentType;
+    platform: string;
+    scriptContent: string;
+    assignedTo: AssignedTo;
+    tags: string;
+    thumbnailUrl: string;
+    videoUrl: string;
+    publishDate: string;
+  }>({
     title: "",
     description: "",
     stage: "idea" as const,
