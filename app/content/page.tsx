@@ -96,9 +96,9 @@ function ContentCard({
                 CONTENT_TYPES[content.contentType].color
               )}
             />
-            <badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs">
               {content.contentType}
-            </badge>
+            </Badge>
           </div>
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
