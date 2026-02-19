@@ -189,13 +189,13 @@ export default function CalendarPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    type: "task" as const,
+    type: "task" as "task" | "cron" | "meeting" | "milestone",
     startDate: "",
     endDate: "",
     allDay: false,
     recurrence: "",
     color: "#3b82f6",
-    assignedTo: "human" as const,
+    assignedTo: "human" as "human" | "openclaw",
   });
 
   const handlePreviousMonth = () => setCurrentDate((d) => subMonths(d, 1));
