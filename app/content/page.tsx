@@ -46,10 +46,10 @@ import { Doc } from "@/convex/_generated/dataModel";
 
 type Content = Doc<"content">;
 
-// Derive types directly from Convex schema (stays in sync automatically)
-type ContentStage = Content["stage"];
-type ContentType = Content["contentType"];
-type AssignedTo = Content["assignedTo"];
+// Content pipeline types (keep in sync with convex/schema.ts)
+type ContentStage = "idea" | "script" | "thumbnail" | "filming" | "editing" | "published";
+type ContentType = "video" | "blog" | "social" | "podcast";
+type AssignedTo = "human" | "openclaw";
 
 const STAGES = [
   { id: "idea", label: "Idea", icon: FileText, color: "bg-gray-500" },
