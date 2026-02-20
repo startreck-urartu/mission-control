@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
 
 const http = httpRouter();
 
@@ -122,7 +122,7 @@ http.route({
   path: "/api/seed",
   method: "GET",
   handler: async (ctx) => {
-    const result = await ctx.runAction(internal.seed.seed, {});
+    const result = await ctx.runAction(api.seed.seed, {});
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: { "Content-Type": "application/json" },
