@@ -89,8 +89,11 @@ function TeamMemberCard({
         <div className="flex items-start gap-4">
           <div className="relative">
             <Avatar className="w-14 h-14 border-2 border-gray-700">
-              {member.avatar ? (
+              {member.avatar && member.avatar.startsWith("http") ? (
                 <AvatarImage src={member.avatar} alt={member.name} />
+              ) : member.avatar ? (
+                <AvatarFallback className="bg-gray-700 text-2xl"
+                  >{member.avatar}</AvatarFallback>
               ) : (
                 <AvatarFallback className="bg-gray-700 text-gray-300"
                   >{member.name.slice(0, 2).toUpperCase()}</AvatarFallback>
