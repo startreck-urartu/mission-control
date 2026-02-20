@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useAction } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { 
   ClipboardList, 
@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const team = useQuery(api.team.getAllTeamMembers);
   const memories = useQuery(api.memories.getAllMemories);
   const activity = useQuery(api.activity.getRecentActivity, { limit: 10 });
-  const seed = useAction(api.seed.seed);
+  const populateData = useMutation(api.seedData.populateData);
   const [isSeeding, setIsSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState<string | null>(null);
 
@@ -44,8 +44,12 @@ export default function DashboardPage() {
   const handleSeed = async () => {
     setIsSeeding(true);
     try {
-      const result = await seed({});
-      setSeedResult(`✅ Populated ${result.stats.teamMembers} team members, ${result.stats.tasks} tasks, ${result.stats.contentItems} content items, ${result.stats.memories} memories!`);
+      const result = await populateData();
+      if (result.success) {
+        setSeedResult(`✅ Populated ${result.stats.teamMembers} team members, ${result.stats.tasks} tasks, ${result.stats.contentItems} content items, ${result.stats.memories} memories!`);
+      } else {
+        setSeedResult("⚠️ " + result.message);
+      }
     } catch (error) {
       setSeedResult("❌ Error: " + (error as Error).message);
     } finally {
