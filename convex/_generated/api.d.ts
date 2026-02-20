@@ -9,6 +9,7 @@
  */
 
 import type * as activity from "../activity.js";
+import type * as books from "../books.js";
 import type * as calendar from "../calendar.js";
 import type * as content from "../content.js";
 import type * as http from "../http.js";
@@ -29,6 +30,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
+  books: typeof books;
   calendar: typeof calendar;
   content: typeof content;
   http: typeof http;

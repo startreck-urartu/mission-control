@@ -194,4 +194,61 @@ export default defineSchema({
     .index("by_model", ["model"])
     .index("by_provider", ["provider"])
     .index("by_status", ["status"]),
+
+  // Books Library - Digital library for business literature and skill development
+  books: defineTable({
+    title: v.string(),
+    author: v.optional(v.string()),
+    description: v.optional(v.string()),
+    category: v.union(
+      v.literal("business"),
+      v.literal("technical"),
+      v.literal("design"),
+      v.literal("marketing"),
+      v.literal("leadership"),
+      v.literal("finance"),
+      v.literal("legal"),
+      v.literal("personal-development"),
+      v.literal("industry-specific"),
+      v.literal("reference"),
+      v.literal("other")
+    ),
+    format: v.union(
+      v.literal("pdf"),
+      v.literal("epub"),
+      v.literal("doc"),
+      v.literal("docx"),
+      v.literal("txt"),
+      v.literal("md"),
+      v.literal("other")
+    ),
+    filePath: v.optional(v.string()), // Local file path
+    fileSize: v.optional(v.number()), // Size in bytes
+    fileUrl: v.optional(v.string()), // External URL if hosted
+    thumbnailUrl: v.optional(v.string()), // Book cover image
+    status: v.union(
+      v.literal("reading"),
+      v.literal("completed"),
+      v.literal("reference"),
+      v.literal("to-read"),
+      v.literal("archived")
+    ),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+    rating: v.optional(v.number()), // 1-5 rating
+    notes: v.optional(v.string()), // Personal notes
+    tags: v.array(v.string()),
+    addedBy: v.id("team"), // Who added the book
+    readCount: v.number(), // How many times referenced
+    lastAccessed: v.optional(v.string()), // ISO timestamp
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_category", ["category"])
+    .index("by_status", ["status"])
+    .index("by_priority", ["priority"])
+    .index("by_addedBy", ["addedBy"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["category", "status", "tags"],
+    }),
 });

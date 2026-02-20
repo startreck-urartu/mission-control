@@ -11,6 +11,7 @@ import {
   Users,
   Building2,
   CreditCard,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Memory", href: "/memory", icon: Brain },
   { name: "Team", href: "/team", icon: Users },
   { name: "Usage & Costs", href: "/usage", icon: CreditCard },
+  { name: "Library", href: "/books", icon: BookOpen },
   { name: "Office", href: "/office", icon: Building2 },
 ];
 
