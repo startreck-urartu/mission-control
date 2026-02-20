@@ -5,7 +5,8 @@ import { action } from "./_generated/server";
 export const seed = action({
   args: {},
   handler: async (ctx) => {
-    const now = new Date().toISOString();
+    try {
+      const now = new Date().toISOString();
     
     // ========== TEAM MEMBERS (AI Agents) ==========
     const teamMembers = [
@@ -319,5 +320,12 @@ export const seed = action({
         calendarEvents: calendarEvents.length,
       }
     };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Seed failed: " + (error as Error).message,
+        error: String(error),
+      };
+    }
   },
 });
