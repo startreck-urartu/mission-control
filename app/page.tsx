@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { 
   ClipboardList, 
@@ -11,10 +11,14 @@ import {
   Activity,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Database,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatTimeAgo } from "@/lib/utils";
+import { useState } from "react";
 
 const statsCards = [
   { title: "Active Tasks", icon: ClipboardList, color: "text-blue-400", bg: "bg-blue-400/10" },
@@ -29,10 +33,25 @@ export default function DashboardPage() {
   const team = useQuery(api.team.getAllTeamMembers);
   const memories = useQuery(api.memories.getAllMemories);
   const activity = useQuery(api.activity.getRecentActivity, { limit: 10 });
+  const seed = useAction(api.seed.seed);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState<string | null>(null);
 
   const todoTasks = tasks?.filter(t => t.status === "todo").length || 0;
   const inProgressTasks = tasks?.filter(t => t.status === "in-progress").length || 0;
   const onlineTeam = team?.filter(t => t.status === "online").length || 0;
+
+  const handleSeed = async () => {
+    setIsSeeding(true);
+    try {
+      const result = await seed({});
+      setSeedResult(`✅ Populated ${result.stats.teamMembers} team members, ${result.stats.tasks} tasks, ${result.stats.contentItems} content items, ${result.stats.memories} memories!`);
+    } catch (error) {
+      setSeedResult("❌ Error: " + (error as Error).message);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   const stats = [
     { value: tasks?.length || 0, subtext: `${todoTasks} todo, ${inProgressTasks} in progress` },
@@ -43,9 +62,35 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 mt-1">Welcome to OpenClaw Mission Control</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <p className="text-gray-400 mt-1">Welcome to OpenClaw Mission Control</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          {!team?.length && !isSeeding && (
+            <Button 
+              onClick={handleSeed} 
+              disabled={isSeeding}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isSeeding ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Seeding...
+                </>
+              ) : (
+                <>
+                  <Database className="w-4 h-4 mr-2" />
+                  Populate Data
+                </>
+              )}
+            </Button>
+          )}
+          {seedResult && (
+            <p className="text-sm text-green-400">{seedResult}</p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
