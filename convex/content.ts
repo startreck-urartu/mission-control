@@ -225,3 +225,37 @@ export const upsertContentFromOpenClaw = internalMutation({
     }
   },
 });
+
+// Internal mutation for seeding
+export const insertContent = internalMutation({
+  args: {
+    title: v.string(),
+    description: v.optional(v.string()),
+    stage: v.union(
+      v.literal("idea"),
+      v.literal("script"),
+      v.literal("thumbnail"),
+      v.literal("filming"),
+      v.literal("editing"),
+      v.literal("published")
+    ),
+    contentType: v.union(
+      v.literal("video"),
+      v.literal("blog"),
+      v.literal("social"),
+      v.literal("podcast")
+    ),
+    platform: v.optional(v.string()),
+    scriptContent: v.optional(v.string()),
+    thumbnailUrl: v.optional(v.string()),
+    videoUrl: v.optional(v.string()),
+    publishDate: v.optional(v.string()),
+    assignedTo: v.union(v.literal("human"), v.literal("openclaw")),
+    tags: v.optional(v.array(v.string())),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("content", args);
+  },
+});

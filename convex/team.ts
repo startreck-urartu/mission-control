@@ -292,3 +292,33 @@ export const updateAgentHeartbeat = internalMutation({
     return agent._id;
   },
 });
+
+// Internal mutation for seeding
+export const insertTeamMember = internalMutation({
+  args: {
+    name: v.string(),
+    role: v.string(),
+    type: v.union(v.literal("human"), v.literal("ai")),
+    avatar: v.optional(v.string()),
+    status: v.union(
+      v.literal("online"),
+      v.literal("busy"),
+      v.literal("away"),
+      v.literal("offline")
+    ),
+    skills: v.array(v.string()),
+    description: v.optional(v.string()),
+    email: v.optional(v.string()),
+    isMainAgent: v.optional(v.boolean()),
+    parentId: v.optional(v.id("team")),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("team", {
+      ...args,
+      currentTask: undefined,
+      lastActive: args.updatedAt,
+    });
+  },
+});

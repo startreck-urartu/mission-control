@@ -1,4 +1,4 @@
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { action } from "./_generated/server";
 
 // Seed data for Mission Control
@@ -67,7 +67,7 @@ export const seed = action({
     ];
 
     for (const member of teamMembers) {
-      await ctx.runMutation(api.team.createTeamMember, member);
+      await ctx.runMutation(internal.team.insertTeamMember, member);
     }
 
     // ========== TASKS ==========
@@ -152,7 +152,7 @@ export const seed = action({
     ];
 
     for (const task of tasks) {
-      await ctx.runMutation(api.tasks.createTask, task);
+      await ctx.runMutation(internal.tasks.insertTask, task);
     }
 
     // ========== CONTENT PIPELINE ==========
@@ -196,7 +196,7 @@ export const seed = action({
     ];
 
     for (const content of contentItems) {
-      await ctx.runMutation(api.content.createContent, content);
+      await ctx.runMutation(internal.content.insertContent, content);
     }
 
     // ========== MEMORIES ==========
@@ -264,7 +264,7 @@ export const seed = action({
     ];
 
     for (const memory of memories) {
-      await ctx.runMutation(api.memories.createMemory, memory);
+      await ctx.runMutation(internal.memories.insertMemory, memory);
     }
 
     // ========== CALENDAR EVENTS ==========
@@ -305,7 +305,7 @@ export const seed = action({
     ];
 
     for (const event of calendarEvents) {
-      await ctx.runMutation(api.calendar.createEvent, event);
+      await ctx.runMutation(internal.calendar.insertEvent, event);
     }
 
     return { 

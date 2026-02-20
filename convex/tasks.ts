@@ -222,3 +222,29 @@ export const upsertTaskFromOpenClaw = internalMutation({
     }
   },
 });
+
+// Internal mutation for seeding
+export const insertTask = internalMutation({
+  args: {
+    title: v.string(),
+    description: v.optional(v.string()),
+    status: v.union(
+      v.literal("todo"),
+      v.literal("in-progress"),
+      v.literal("review"),
+      v.literal("done")
+    ),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+    assignee: v.union(v.literal("human"), v.literal("openclaw")),
+    tags: v.optional(v.array(v.string())),
+    dueDate: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("tasks", {
+      ...args,
+      parentId: undefined,
+    });
+  },
+});

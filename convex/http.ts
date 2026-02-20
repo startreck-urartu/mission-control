@@ -122,7 +122,7 @@ http.route({
   path: "/api/seed",
   method: "GET",
   handler: async (ctx) => {
-    const result = await ctx.runAction(api.seed.seed, {});
+    const result = await ctx.runAction(internal.seed.seed, {});
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: { "Content-Type": "application/json" },

@@ -170,3 +170,32 @@ export const upsertCronJob = internalMutation({
     }
   },
 });
+
+// Internal mutation for seeding
+export const insertEvent = internalMutation({
+  args: {
+    title: v.string(),
+    description: v.optional(v.string()),
+    type: v.union(
+      v.literal("task"),
+      v.literal("cron"),
+      v.literal("meeting"),
+      v.literal("milestone")
+    ),
+    startDate: v.string(),
+    endDate: v.optional(v.string()),
+    allDay: v.optional(v.boolean()),
+    recurrence: v.optional(v.string()),
+    color: v.optional(v.string()),
+    assignedTo: v.optional(v.union(v.literal("human"), v.literal("openclaw"))),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("calendar", {
+      ...args,
+      relatedTaskId: undefined,
+      relatedContentId: undefined,
+    });
+  },
+});

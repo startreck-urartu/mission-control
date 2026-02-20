@@ -176,3 +176,26 @@ export const addConversationFromOpenClaw = internalMutation({
     });
   },
 });
+
+// Internal mutation for seeding
+export const insertMemory = internalMutation({
+  args: {
+    title: v.string(),
+    content: v.string(),
+    type: v.union(
+      v.literal("conversation"),
+      v.literal("task"),
+      v.literal("decision"),
+      v.literal("insight"),
+      v.literal("note")
+    ),
+    tags: v.array(v.string()),
+    source: v.optional(v.string()),
+    importance: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("memories", args);
+  },
+});
