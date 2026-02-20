@@ -298,7 +298,7 @@ export const insertTeamMember = internalMutation({
   args: {
     name: v.string(),
     role: v.string(),
-    type: v.union(v.literal("human"), v.literal("ai")),
+    type: v.union(v.literal("human"), v.literal("agent")),
     avatar: v.optional(v.string()),
     status: v.union(
       v.literal("online"),

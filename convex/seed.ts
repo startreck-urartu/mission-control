@@ -11,7 +11,7 @@ export const seed = action({
     const teamMembers = [
       {
         name: "Gabriel",
-        type: "ai" as const,
+        type: "agent" as const,
         role: "orchestrator",
         description: "Main AI assistant coordinating all operations. Handles task management, content strategy, and agent supervision.",
         skills: ["task management", "content strategy", "agent coordination", "system design"],
@@ -22,7 +22,7 @@ export const seed = action({
       },
       {
         name: "Content Agent",
-        type: "ai" as const,
+        type: "agent" as const,
         role: "writer",
         description: "Automated blog post generation. Researches topics, writes SEO-optimized content, humanizes with Walter Writes.",
         skills: ["blog writing", "SEO optimization", "content research", "Walter Writes humanization"],
@@ -33,7 +33,7 @@ export const seed = action({
       },
       {
         name: "Lead Gen Agent",
-        type: "ai" as const,
+        type: "agent" as const,
         role: "sales",
         description: "Lead discovery, scoring, and outreach. Finds prospects, personalizes emails, manages follow-ups via SendGrid.",
         skills: ["lead research", "email personalization", "SendGrid integration", "CRM management"],
@@ -44,7 +44,7 @@ export const seed = action({
       },
       {
         name: "Design System Architect",
-        type: "ai" as const,
+        type: "agent" as const,
         role: "designer",
         description: "Apple HIG-inspired design system creator. Built 30+ components, tokens, patterns for luxury jewelry brand.",
         skills: ["UI/UX design", "design systems", "Apple HIG", "Tailwind CSS", "shadcn/ui"],
