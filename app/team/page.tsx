@@ -488,14 +488,18 @@ export default function TeamPage() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Avatar URL</label>
+              <label className="text-sm font-medium text-gray-200">Avatar Image URL</label>
               <Input
                 value={formData.avatar}
                 onChange={(e) =>
                   setFormData({ ...formData, avatar: e.target.value })
                 }
-                placeholder="https://..."
+                placeholder="https://example.com/avatar.png"
+                className="bg-gray-800 border-gray-700"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Use a direct image URL (PNG, JPG, SVG). Try: ui-avatars.com, dicebear.com, or avataaars.io
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-200">Skills</label>
