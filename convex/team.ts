@@ -115,6 +115,7 @@ export const updateTeamMember = mutation({
     id: v.id("team"),
     name: v.optional(v.string()),
     role: v.optional(v.string()),
+    type: v.optional(v.union(v.literal("human"), v.literal("agent"))),
     avatar: v.optional(v.string()),
     status: v.optional(v.union(
       v.literal("online"),
@@ -125,6 +126,7 @@ export const updateTeamMember = mutation({
     skills: v.optional(v.array(v.string())),
     currentTask: v.optional(v.string()),
     description: v.optional(v.string()),
+    email: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
