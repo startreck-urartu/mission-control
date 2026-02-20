@@ -127,6 +127,7 @@ export const updateTeamMember = mutation({
     currentTask: v.optional(v.string()),
     description: v.optional(v.string()),
     email: v.optional(v.string()),
+    isMainAgent: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;

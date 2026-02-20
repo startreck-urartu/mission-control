@@ -173,4 +173,25 @@ export default defineSchema({
     value: v.any(),
     updatedAt: v.string(),
   }).index("by_key", ["key"]),
+
+  // LLM Usage & Costs - Track spending and tokens per model
+  llmUsage: defineTable({
+    model: v.string(), // e.g., "claude-opus-4.5", "claude-sonet-4", "kimi-k2.5"
+    provider: v.string(), // e.g., "anthropic", "openai", "moonshot"
+    costPerInputToken: v.number(), // Cost per 1K input tokens
+    costPerOutputToken: v.number(), // Cost per 1K output tokens
+    inputTokensUsed: v.number(), // Total input tokens consumed
+    outputTokensUsed: v.number(), // Total output tokens consumed
+    totalCost: v.number(), // Total cost in USD
+    budgetLimit: v.optional(v.number()), // Monthly budget limit
+    requestsCount: v.number(), // Number of API calls
+    lastUsed: v.string(), // ISO timestamp
+    status: v.union(v.literal("active"), v.literal("paused"), v.literal("deprecated")),
+    description: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_model", ["model"])
+    .index("by_provider", ["provider"])
+    .index("by_status", ["status"]),
 });
