@@ -11,7 +11,9 @@ import {
   RefreshCw,
   Layers,
   AlertCircle,
+  Terminal,
 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -95,10 +97,41 @@ function StatCard({
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
+type LogEntry = {
+  ts: string;
+  level: string;
+  module?: string;
+  message: string;
+  source: string;
+};
+
+const LEVEL_STYLES: Record<string, string> = {
+  ERROR: "text-red-400",
+  WARN:  "text-yellow-400",
+  WARNING: "text-yellow-400",
+  INFO:  "text-gray-300",
+  DEBUG: "text-gray-500",
+};
+
+const SOURCE_BADGE: Record<string, string> = {
+  directional: "bg-blue-500/20 text-blue-300",
+  spread:      "bg-purple-500/20 text-purple-300",
+  sync:        "bg-gray-700 text-gray-400",
+};
+
 export default function PolymarketPage() {
   const traderState = useQuery(api.polymarketTrader.getTraderState);
   const recentTrades = useQuery(api.polymarketTrader.getRecentTrades, { limit: 50 });
   const tradeStats = useQuery(api.polymarketTrader.getTradeStats);
+  const [logFilter, setLogFilter] = useState<"all" | "directional" | "spread">("all");
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  const logs: LogEntry[] = ((traderState?.logs as LogEntry[]) ?? []).slice().reverse();
+  const filteredLogs = logFilter === "all" ? logs : logs.filter((l) => l.source === logFilter);
+
+  useEffect(() => {
+    // No auto-scroll needed since we show newest first
+  }, [logs.length]);
 
   const isLoading =
     traderState === undefined || recentTrades === undefined || tradeStats === undefined;
@@ -471,6 +504,87 @@ export default function PolymarketPage() {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Trader Logs */}
+      <div className="bg-gray-900 rounded-xl border border-gray-700">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-700">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-green-400" />
+            <h2 className="text-sm font-semibold text-white">Trader Logs</h2>
+            <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">
+              {filteredLogs.length}
+            </span>
+          </div>
+          <div className="flex gap-1">
+            {(["all", "directional", "spread"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setLogFilter(f)}
+                className={cn(
+                  "px-2.5 py-1 rounded text-xs font-medium transition-colors",
+                  logFilter === f
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-500 hover:text-gray-300"
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="h-72 overflow-y-auto font-mono text-xs p-4 space-y-0.5">
+          {isLoading ? (
+            <div className="space-y-1.5 pt-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-4 bg-gray-800 rounded animate-pulse" style={{ width: `${60 + (i % 3) * 15}%` }} />
+              ))}
+            </div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-gray-600">
+              No log entries — start the trader daemon to see output here
+            </div>
+          ) : (
+            filteredLogs.map((entry, i) => (
+              <div key={i} className="flex gap-2 leading-5 hover:bg-gray-800/50 px-1 rounded">
+                <span className="text-gray-600 shrink-0 w-16">
+                  {entry.ts?.slice(11, 19) || ""}
+                </span>
+                <span
+                  className={cn(
+                    "shrink-0 w-12",
+                    LEVEL_STYLES[entry.level] ?? "text-gray-400"
+                  )}
+                >
+                  {entry.level}
+                </span>
+                {entry.source && (
+                  <span
+                    className={cn(
+                      "shrink-0 px-1 rounded text-[10px] leading-5",
+                      SOURCE_BADGE[entry.source] ?? "bg-gray-700 text-gray-400"
+                    )}
+                  >
+                    {entry.source}
+                  </span>
+                )}
+                {entry.module && (
+                  <span className="text-gray-500 shrink-0">{entry.module}:</span>
+                )}
+                <span
+                  className={cn(
+                    "break-all",
+                    LEVEL_STYLES[entry.level] ?? "text-gray-300"
+                  )}
+                >
+                  {entry.message}
+                </span>
+              </div>
+            ))
+          )}
+          <div ref={logEndRef} />
+        </div>
       </div>
     </div>
   );

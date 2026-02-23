@@ -210,6 +210,7 @@ export default defineSchema({
     totalTradesToday: v.number(),
     peakEquity: v.number(),
     positions: v.array(v.any()),
+    logs: v.optional(v.array(v.any())),
     lastRunAt: v.optional(v.string()),
     lastSyncedAt: v.string(),
     createdAt: v.string(),
