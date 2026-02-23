@@ -1,195 +1,144 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Users, Zap, Monitor, Activity } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Activity, LayoutGrid, Users } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Doc } from "@/convex/_generated/dataModel";
+
+// Office components
+import { 
+  TeamMemberDesk, 
+  OfficeStats,
+  ActivityIndicator 
+} from "@/components/office";
 
 type TeamMember = Doc<"team">;
 type OfficeDesk = Doc<"office">;
 
-// Low-poly avatar colors by role
-const ROLE_COLORS: Record<string, { bg: string; accent: string }> = {
-  developer: { bg: "bg-emerald-500", accent: "bg-emerald-300" },
-  writer: { bg: "bg-blue-500", accent: "bg-blue-300" },
-  designer: { bg: "bg-purple-500", accent: "bg-purple-300" },
-  manager: { bg: "bg-amber-500", accent: "bg-amber-300" },
-  default: { bg: "bg-slate-500", accent: "bg-slate-300" },
-};
-
-// Simple CSS-animated low-poly avatar
-function LowPolyAvatar({
-  member,
-  isActive,
-  isWorking,
-}: {
-  member: TeamMember;
-  isActive: boolean;
-  isWorking: boolean;
-}) {
-  const colors = ROLE_COLORS[member.role?.toLowerCase()] || ROLE_COLORS.default;
-  const initials = member.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
+/**
+ * Loading skeleton for office page
+ * Shows animated placeholder cards while data loads
+ */
+function OfficeSkeleton() {
   return (
-    <div className="relative group">
-      {/* Avatar container */}
-      <div
-        className={cn(
-          "relative w-20 h-20 transition-transform duration-300",
-          isActive && isWorking && "animate-bounce-subtle"
-        )}
-      >
-        {/* Low-poly hexagon base */}
-        <div
-          className={cn(
-            "absolute inset-0 clip-hexagon transition-all duration-300",
-            colors.bg,
-            isActive ? "opacity-100" : "opacity-40 grayscale"
-          )}
-        />
-
-        {/* Accent geometric shapes */}
-        {isActive && (
-          <>
-            <div
-              className={cn(
-                "absolute top-2 right-2 w-4 h-4 rotate-45 animate-pulse",
-                colors.accent,
-                isWorking && "animate-spin-slow"
-              )}
-            />
-            <div
-              className={cn(
-                "absolute bottom-3 left-2 w-3 h-3 rounded-full",
-                colors.accent,
-                "animate-ping-slow"
-              )}
-            />
-          </>
-        )}
-
-        {/* Initials / Face */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-bold text-white drop-shadow-md">
-            {initials}
-          </span>
-        </div>
-
-        {/* Status indicator */}
-        <div
-          className={cn(
-            "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-900",
-            member.status === "online" && "bg-green-500",
-            member.status === "busy" && "bg-red-500",
-            member.status === "away" && "bg-yellow-500",
-            member.status === "offline" && "bg-gray-500",
-            isWorking && member.status === "online" && "animate-pulse"
-          )}
-        />
-      </div>
-
-      {/* Tooltip on hover */}
-      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-        <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg">
-          {member.name}
+    <div className="space-y-6">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="w-32 h-8 bg-gray-800 rounded animate-pulse" />
+          <div className="w-48 h-4 bg-gray-800 rounded animate-pulse" />
         </div>
       </div>
-    </div>
-  );
-}
 
-// Simplified desk with CSS only
-function TeamMemberDesk({
-  member,
-  desk,
-  row,
-  col,
-}: {
-  member: TeamMember;
-  desk?: OfficeDesk;
-  row: number;
-  col: number;
-}) {
-  const isActive = desk?.isActive ?? false;
-  const isWorking =
-    isActive && member.status === "online" && member.currentTask;
-
-  return (
-    <div
-      className={cn(
-        "relative p-6 rounded-xl border-2 transition-all duration-300",
-        isWorking
-          ? "bg-gray-800/90 border-blue-500/50 shadow-lg shadow-blue-500/20"
-          : isActive
-          ? "bg-gray-800/70 border-gray-700"
-          : "bg-gray-900/50 border-gray-800"
-      )}
-      style={{
-        animationDelay: `${(row + col) * 100}ms`,
-      }}
-    >
-      {/* Desk header - computer/activity indicator */}
-      <div className="flex items-center gap-3 mb-4">
-        <LowPolyAvatar
-          member={member}
-          isActive={isActive}
-          isWorking={isWorking}
-        />
-
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate">{member.name}</h3>
-          <p className="text-xs text-gray-400 capitalize truncate">
-            {member.role || "Team Member"}
-          </p>
-          {isWorking && (
-            <div className="flex items-center gap-1 mt-1">
-              <Monitor className="w-3 h-3 text-blue-400" />
-              <span className="text-xs text-blue-400 truncate">
-                {member.currentTask?.slice(0, 30) || "Working..."}
-              </span>
+      {/* Stats skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="bg-gray-900 border-gray-800 p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="w-24 h-3 bg-gray-800 rounded animate-pulse" />
+                <div className="w-12 h-8 bg-gray-800 rounded animate-pulse" />
+              </div>
+              <div className="w-10 h-10 bg-gray-800 rounded-xl animate-pulse" />
             </div>
-          )}
-        </div>
+          </Card>
+        ))}
       </div>
 
-      {/* Skills pills */}
-      {member.skills && member.skills.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {member.skills.slice(0, 3).map((skill) => (
-            <Badge
-              key={skill}
-              variant="outline"
-              className="text-[10px] bg-gray-800 border-gray-700 text-gray-400"
-            >
-              {skill}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      {/* Subtle activity indicator bar */}
-      {isWorking && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-pulse" />
-      )}
+      {/* Grid skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Card key={i} className="bg-gray-900 border-gray-800 p-6 h-40 animate-pulse" />
+        ))}
+      </div>
     </div>
   );
 }
 
+/**
+ * Empty state when no team members exist
+ */
+function OfficeEmptyState() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="bg-gray-900 border-gray-800 p-12 text-center">
+        <motion.div
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{ 
+            type: "spring",
+            stiffness: 200,
+            damping: 15,
+            delay: 0.1 
+          }}
+        >
+          <div className="relative inline-block">
+            <Activity className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <motion.div
+              className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </div>
+        </motion.div>
+        <h3 className="text-xl font-semibold text-white mb-2">
+          No Team Members Yet
+        </h3>
+        <p className="text-gray-400 max-w-md mx-auto">
+          Add team members in the Team section to see them here. 
+          They&apos;ll appear in the office with live status and activity.
+        </p>
+        <motion.div
+          className="mt-6 inline-flex items-center gap-2"
+          whileHover={{ scale: 1.05 }}
+        >
+          <span className="text-sm text-blue-400 cursor-pointer hover:underline">
+            Go to Team section →
+          </span>
+        </motion.div>
+      </Card>
+    </motion.div>
+  );
+}
+
+/**
+ * Main Office Page component
+ * Displays animated team members in a grid layout
+ * 
+ * Features:
+ * - Performance-optimized animations with Framer Motion
+ * - IntersectionObserver for lazy loading
+ * - CSS containment for GPU acceleration
+ * - Reduced motion support
+ * - Responsive grid layout
+ */
 export default function OfficePage() {
   const team = useQuery(api.team.getAllTeamMembers);
   const officeDesks = useQuery(api.office.getAllOfficeDesks);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [mounted, setMounted] = useState(false);
 
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  /**
+   * Calculate office statistics
+   * Memoized to prevent unnecessary recalculations
+   */
   const stats = useMemo(() => {
-    if (!team) return { total: 0, online: 0, active: 0 };
+    if (!team) {
+      return { total: 0, online: 0, active: 0 };
+    }
     return {
       total: team.length,
       online: team.filter((t) => t.status === "online").length,
@@ -197,6 +146,10 @@ export default function OfficePage() {
     };
   }, [team, officeDesks]);
 
+  /**
+   * Map team members with their desk data
+   * Memoized to maintain stable references
+   */
   const teamWithDesks = useMemo(() => {
     if (!team) return [];
     return team.map((member, index) => {
@@ -206,140 +159,148 @@ export default function OfficePage() {
         desk,
         row: Math.floor(index / 3),
         col: index % 3,
+        index,
       };
     });
   }, [team, officeDesks]);
 
-  if (!team) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading team...</p>
-        </div>
-      </div>
-    );
+  /**
+   * Check reduced motion preference
+   * Respects user's accessibility settings
+   */
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+    
+    const handler = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+    };
+    
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  // Show loading state
+  if (!team || !mounted) {
+    return <OfficeSkeleton />;
+  }
+
+  // Show empty state
+  if (teamWithDesks.length === 0) {
+    return <OfficeEmptyState />;
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Header with stats */}
+      <motion.div 
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <div>
-          <h1 className="text-3xl font-bold text-white">Office</h1>
+          <motion.h1 
+            className="text-3xl font-bold text-white"
+            layoutId="office-title"
+          >
+            Office
+          </motion.h1>
           <p className="text-gray-400 mt-1">
-            Visual workspace · {stats.online} online · {stats.active} active
+            Visual workspace with {stats.online} online · {stats.active} active
           </p>
         </div>
-      </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Team Members</p>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-              </div>
-              <Users className="w-8 h-8 text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* View mode toggle */}
+        <div className="flex items-center gap-2 bg-gray-900 rounded-lg p-1 border border-gray-800">
+          <motion.button
+            onClick={() => setViewMode("grid")}
+            className={cn(
+              "p-2 rounded-md transition-colors",
+              viewMode === "grid" 
+                ? "bg-gray-700 text-white" 
+                : "text-gray-400 hover:text-white"
+            )}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </motion.button>
+          <motion.button
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "p-2 rounded-md transition-colors",
+              viewMode === "list" 
+                ? "bg-gray-700 text-white" 
+                : "text-gray-400 hover:text-white"
+            )}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Users className="w-4 h-4" />
+          </motion.button>
+        </div>
+      </motion.div>
 
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Online Now</p>
-                <p className="text-2xl font-bold text-green-400">
-                  {stats.online}
-                </p>
-              </div>
-              <Zap className="w-8 h-8 text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Working</p>
-                <p className="text-2xl font-bold text-blue-400">
-                  {stats.active}
-                </p>
-              </div>
-              <Monitor className="w-8 h-8 text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Statistics cards */}
+      <OfficeStats 
+        total={stats.total} 
+        online={stats.online} 
+        active={stats.active} 
+      />
 
       {/* Team grid */}
-      {teamWithDesks.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {teamWithDesks.map(({ member, desk, row, col }) => (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={viewMode}
+          className={cn(
+            "grid gap-4",
+            viewMode === "grid"
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+              : "grid-cols-1"
+          )}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            willChange: "transform, opacity",
+            contain: "layout style paint",
+          }}
+        >
+          {teamWithDesks.map(({ member, desk, row, col, index }) => (
             <TeamMemberDesk
               key={member._id}
               member={member}
               desk={desk}
               row={row}
               col={col}
+              index={index}
             />
           ))}
-        </div>
-      ) : (
-        <Card className="bg-gray-900 border-gray-800 p-12 text-center">
-          <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">
-            No Team Members Yet
-          </h3>
-          <p className="text-gray-400">
-            Add team members in the Team section to see them here.
-          </p>
-        </Card>
-      )}
+        </motion.div>
+      </AnimatePresence>
 
-      {/* CSS Animations */}
-      <style jsx>{`
-        @keyframes bounce-subtle {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-2px);
-          }
-        }
-        @keyframes spin-slow {
-          from {
-            transform: rotate(45deg);
-          }
-          to {
-            transform: rotate(405deg);
-          }
-        }
-        @keyframes ping-slow {
-          75%,
-          100% {
-            transform: scale(1.5);
-            opacity: 0;
-          }
-        }
-        .animate-bounce-subtle {
-          animation: bounce-subtle 2s ease-in-out infinite;
-        }
-        .animate-spin-slow {
-          animation: spin-slow 3s linear infinite;
-        }
-        .animate-ping-slow {
-          animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        .clip-hexagon {
-          clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-        }
-      `}</style>
-    </div>
+      {/* Reduced motion notice */}
+      <AnimatePresence>
+        {prefersReducedMotion && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="fixed bottom-4 right-4 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-400 shadow-lg"
+          >
+            Animations reduced (accessibility on)
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

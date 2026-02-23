@@ -130,4 +130,26 @@ http.route({
   },
 });
 
+// POST /api/polymarket/sync - Sync trader state + trades from local daemon
+http.route({
+  path: "/api/polymarket/sync",
+  method: "POST",
+  handler: async (ctx, request) => {
+    const body = await request.json();
+    const { state, trades } = body;
+
+    if (state) {
+      await ctx.runMutation(internal.polymarketTrader.upsertTraderState, state);
+    }
+    if (trades && trades.length > 0) {
+      await ctx.runMutation(internal.polymarketTrader.upsertTrades, { trades });
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, synced: { state: !!state, trades: trades?.length ?? 0 } }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  },
+});
+
 export default http;

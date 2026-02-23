@@ -1,0 +1,294 @@
+/**
+ * Office animations CSS
+ * Performance-optimized animations for agent avatars and office UI
+ * 
+ * Features:
+ * - GPU-accelerated transforms
+ * - CSS custom properties for theming
+ * - Reduced motion support
+ * - Will-change hints for browser optimization
+ */
+
+/* ============================================
+   BASE ANIMATIONS
+   ============================================ */
+
+/* Floating animation for active agents */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate3d(0, 0, 0, 0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate3d(1, 0, 0, 2deg);
+  }
+}
+
+/* Breathing animation for idle state */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.95;
+  }
+}
+
+/* Pulsing ring animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* Slow spin for geometric accents */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Slow ping for dots */
+@keyframes ping-slow {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Orbiting particle animation */
+@keyframes orbit {
+  from {
+    transform: translateX(var(--orbit-radius, 30px)) rotate(0deg);
+  }
+  to {
+    transform: translateX(var(--orbit-radius, 30px)) rotate(360deg);
+  }
+}
+
+/* Text pulse for initials */
+@keyframes text-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Wave shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Fade in up for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scale bounce for interactions */
+@keyframes scaleBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+  will-change: transform;
+}
+
+.animate-ping-slow {
+  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.animate-orbit {
+  --orbit-radius: 35px;
+  animation: orbit 4s linear infinite;
+  will-change: transform;
+}
+
+.animate-text-pulse {
+  animation: text-pulse 2s ease-in-out infinite;
+  will-change: opacity;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+.animate-scale-bounce {
+  animation: scaleBounce 0.3s ease-out;
+  will-change: transform;
+}
+
+/* ============================================
+   HEXAGON CLIP PATH
+   ============================================ */
+
+.clip-hexagon {
+  clip-path: polygon(
+    50% 0%, 
+    100% 25%, 
+    100% 75%, 
+    50% 100%, 
+    0% 75%, 
+    0% 25%
+  );
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* GPU acceleration hint */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Containment for isolated rendering */
+.contain-layout {
+  contain: layout;
+}
+
+.contain-paint {
+  contain: paint;
+}
+
+.contain-strict {
+  contain: strict;
+}
+
+/* Passive scrolling */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-breathe,
+  .animate-pulse-ring,
+  .animate-spin-slow,
+  .animate-ping-slow,
+  .animate-orbit,
+  .animate-text-pulse,
+  .animate-shimmer,
+  .animate-scale-bounce {
+    animation: none !important;
+  }
+
+  .animate-fade-in-up {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Keep transition for hover states but make it instant */
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Focus visible styles */
+.focus-ring:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .clip-hexagon {
+    filter: contrast(1.2);
+  }
+}
+
+/* ============================================
+   CUSTOM PROPERTIES (CSS VARIABLES)
+   ============================================ */
+
+:root {
+  /* Animation durations */
+  --anim-duration-fast: 150ms;
+  --anim-duration-normal: 300ms;
+  --anim-duration-slow: 500ms;
+  
+  /* Animation easings */
+  --anim-ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --anim-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --anim-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --anim-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Orbit radius for animations */
+  --orbit-radius: 35px;
+}

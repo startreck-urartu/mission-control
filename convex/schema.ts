@@ -195,6 +195,50 @@ export default defineSchema({
     .index("by_provider", ["provider"])
     .index("by_status", ["status"]),
 
+  // Polymarket Trader - Trading system state (singleton record)
+  polymarketTrader: defineTable({
+    status: v.union(
+      v.literal("running"),
+      v.literal("stopped"),
+      v.literal("error"),
+      v.literal("unknown")
+    ),
+    strategyName: v.optional(v.string()),
+    balance: v.optional(v.number()),
+    dailyPnl: v.number(),
+    dailyResetDate: v.string(),
+    totalTradesToday: v.number(),
+    peakEquity: v.number(),
+    positions: v.array(v.any()),
+    lastRunAt: v.optional(v.string()),
+    lastSyncedAt: v.string(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_updated", ["updatedAt"]),
+
+  // Polymarket Trades - Individual trade journal records
+  polymarketTrades: defineTable({
+    tradeId: v.string(),
+    timestampUtc: v.string(),
+    marketId: v.string(),
+    tokenId: v.string(),
+    marketSlug: v.optional(v.string()),
+    side: v.union(v.literal("BUY"), v.literal("SELL")),
+    price: v.number(),
+    size: v.number(),
+    orderValue: v.number(),
+    signalSide: v.optional(v.string()),
+    signalEdge: v.optional(v.number()),
+    signalStrength: v.optional(v.string()),
+    strategy: v.optional(v.string()),
+    mode: v.optional(v.string()),
+    pnl: v.optional(v.number()),
+    createdAt: v.string(),
+  })
+    .index("by_trade_id", ["tradeId"])
+    .index("by_timestamp", ["timestampUtc"])
+    .index("by_strategy", ["strategy"]),
+
   // Books Library - Digital library for business literature and skill development
   books: defineTable({
     title: v.string(),

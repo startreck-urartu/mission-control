@@ -12,6 +12,7 @@ import {
   Building2,
   CreditCard,
   BookOpen,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Usage & Costs", href: "/usage", icon: CreditCard },
   { name: "Library", href: "/books", icon: BookOpen },
   { name: "Office", href: "/office", icon: Building2 },
+  { name: "Polymarket", href: "/polymarket", icon: TrendingUp },
 ];
 
 export function NavigationSidebar() {
