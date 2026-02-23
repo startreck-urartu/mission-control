@@ -1,6 +1,7 @@
 import { httpRouter } from "convex/server";
 import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
+import { httpAction } from "./_generated/server";
 
 const http = httpRouter();
 
@@ -130,11 +131,11 @@ http.route({
   },
 });
 
-// POST /api/polymarket/sync - Sync trader state + trades from local daemon
+// POST /polymarket/sync - Sync trader state + trades from local daemon
 http.route({
-  path: "/api/polymarket/sync",
+  path: "/polymarket/sync",
   method: "POST",
-  handler: async (ctx, request) => {
+  handler: httpAction(async (ctx, request) => {
     const body = await request.json();
     const { state, trades } = body;
 
@@ -149,7 +150,7 @@ http.route({
       JSON.stringify({ success: true, synced: { state: !!state, trades: trades?.length ?? 0 } }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
-  },
+  }),
 });
 
 export default http;
