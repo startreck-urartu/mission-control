@@ -34,7 +34,7 @@ export function TeamMemberDesk({
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const isActive = desk?.isActive ?? false;
-  const isWorking = isActive && member.status === "online" && member.currentTask;
+  const isWorking = !!(isActive && member.status === "online" && member.currentTask);
 
   /**
    * IntersectionObserver for lazy loading

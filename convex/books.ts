@@ -5,13 +5,18 @@ import { query, mutation } from "./_generated/server";
 export const getAllBooks = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("books").order("desc", "updatedAt").collect();
+    return await ctx.db.query("books").order("desc").collect();
   },
 });
 
 // Get books by category
 export const getBooksByCategory = query({
-  args: { category: v.string() },
+  args: { category: v.union(
+    v.literal("business"), v.literal("technical"), v.literal("design"),
+    v.literal("marketing"), v.literal("leadership"), v.literal("finance"),
+    v.literal("legal"), v.literal("personal-development"), v.literal("industry-specific"),
+    v.literal("reference"), v.literal("other")
+  ) },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("books")
@@ -22,7 +27,10 @@ export const getBooksByCategory = query({
 
 // Get books by status
 export const getBooksByStatus = query({
-  args: { status: v.string() },
+  args: { status: v.union(
+    v.literal("reading"), v.literal("completed"), v.literal("reference"),
+    v.literal("to-read"), v.literal("archived")
+  ) },
   handler: async (ctx, args) => {
     return await ctx.db
       .query("books")
@@ -112,7 +120,8 @@ export const createBook = mutation({
     
     return await ctx.db.insert("books", {
       ...args,
-      status: "to-read",
+      tags: args.tags ?? [],
+      status: "to-read" as const,
       rating: undefined,
       readCount: 0,
       lastAccessed: undefined,

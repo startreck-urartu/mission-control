@@ -5,7 +5,7 @@ import { query, mutation } from "./_generated/server";
 export const getAllLLMUsage = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("llmUsage").order("desc", "totalCost").collect();
+    return await ctx.db.query("llmUsage").order("desc").collect();
   },
 });
 

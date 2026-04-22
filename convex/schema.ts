@@ -9,13 +9,34 @@ export default defineSchema({
     status: v.union(
       v.literal("todo"),
       v.literal("in-progress"),
+      v.literal("dispatched"),
+      v.literal("processing"),
       v.literal("review"),
-      v.literal("done")
+      v.literal("done"),
+      v.literal("agent-reviewed"),
+      v.literal("validation-error"),
+      v.literal("failed")
     ),
     priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
     assignee: v.union(v.literal("human"), v.literal("openclaw")),
     tags: v.optional(v.array(v.string())),
     dueDate: v.optional(v.string()),
+    // Agent workflow fields (v2)
+    claimedBy: v.optional(v.string()),
+    claimedAt: v.optional(v.string()),
+    workflowRunId: v.optional(v.string()),
+    lastAgentResult: v.optional(v.string()),
+    // Event-driven dispatch fields (v3)
+    callbackChannel: v.optional(v.string()),
+    callbackChatId: v.optional(v.string()),
+    replyToMessageId: v.optional(v.string()),
+    chainNext: v.optional(v.object({
+      agent: v.string(),
+      promptTemplate: v.string(),
+    })),
+    chainDepth: v.optional(v.number()),
+    dispatchedAt: v.optional(v.string()),
+    completedAt: v.optional(v.string()),
     createdAt: v.string(),
     updatedAt: v.string(),
     parentId: v.optional(v.id("tasks")),

@@ -62,8 +62,12 @@ type Task = Doc<"tasks">;
 const COLUMNS = [
   { id: "todo", title: "To Do", color: "bg-red-500/20 border-red-500/50" },
   { id: "in-progress", title: "In Progress", color: "bg-yellow-500/20 border-yellow-500/50" },
+  { id: "processing", title: "Processing", color: "bg-purple-500/20 border-purple-500/50" },
   { id: "review", title: "Review", color: "bg-blue-500/20 border-blue-500/50" },
+  { id: "agent-reviewed", title: "Agent Reviewed", color: "bg-cyan-500/20 border-cyan-500/50" },
   { id: "done", title: "Done", color: "bg-green-500/20 border-green-500/50" },
+  { id: "validation-error", title: "Validation Error", color: "bg-orange-500/20 border-orange-500/50" },
+  { id: "failed", title: "Failed", color: "bg-red-700/20 border-red-700/50" },
 ] as const;
 
 const PRIORITY_COLORS = {
@@ -213,12 +217,20 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    description: string;
+    status: string;
+    priority: string;
+    assignee: string;
+    dueDate: string;
+    tags: string;
+  }>({
     title: "",
     description: "",
-    status: "todo" as const,
-    priority: "medium" as const,
-    assignee: "human" as const,
+    status: "todo",
+    priority: "medium",
+    assignee: "human",
     dueDate: "",
     tags: "",
   });
@@ -307,9 +319,9 @@ export default function TasksPage() {
       await updateTask({
         id: editingTask._id,
         ...taskData,
-      });
+      } as any);
     } else {
-      await createTask(taskData);
+      await createTask(taskData as any);
     }
 
     setIsCreateDialogOpen(false);
@@ -343,7 +355,7 @@ export default function TasksPage() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
+        <div className="flex-1 grid grid-cols-8 gap-3 min-h-0 overflow-x-auto">
           {COLUMNS.map((column) => (
             <div
               key={column.id}
@@ -366,7 +378,7 @@ export default function TasksPage() {
                 className="flex-1 bg-gray-900/50 rounded-b-lg border border-gray-800 border-t-0 p-2 overflow-y-auto"
               >
                 <SortableContext
-                  items={(tasksByColumn[column.id] || []).map((t) => t._id)}
+                  items={(tasksByColumn[column.id] || []).map((t: any) => t._id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {(tasksByColumn[column.id] || []).map((task) => (
@@ -385,7 +397,7 @@ export default function TasksPage() {
           ))}
         </div>
 
-        <DragOverlay dropAnimation={defaultDropAnimationSideEffects({})}>
+        <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({}) }}>
           {activeTask && <DragOverlayCard task={activeTask} />}
         </DragOverlay>
       </DndContext>
@@ -438,8 +450,12 @@ export default function TasksPage() {
                   <SelectContent>
                     <SelectItem value="todo">To Do</SelectItem>
                     <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
                     <SelectItem value="review">Review</SelectItem>
+                    <SelectItem value="agent-reviewed">Agent Reviewed</SelectItem>
                     <SelectItem value="done">Done</SelectItem>
+                    <SelectItem value="validation-error">Validation Error</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -5,7 +5,7 @@ import { query, mutation, internalMutation } from "./_generated/server";
 export const getAllMemories = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("memories").order("desc", "createdAt").take(100);
+    return await ctx.db.query("memories").order("desc").take(100);
   },
 });
 
@@ -48,7 +48,7 @@ export const getMemoriesByType = query({
     return await ctx.db
       .query("memories")
       .withIndex("by_type", (q) => q.eq("type", args.type))
-      .order("desc", "createdAt")
+      .order("desc")
       .take(50);
   },
 });
@@ -65,7 +65,7 @@ export const getRecentMemories = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("memories")
-      .order("desc", "createdAt")
+      .order("desc")
       .take(args.limit || 20);
   },
 });
@@ -147,6 +147,30 @@ export const deleteMemory = mutation({
     });
 
     return args.id;
+  },
+});
+
+// Public mutation for n8n agent logging (used by trading agent workflows)
+export const logAgentResult = mutation({
+  args: {
+    title: v.string(),
+    content: v.string(),
+    tags: v.optional(v.array(v.string())),
+    source: v.optional(v.string()),
+    importance: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = new Date().toISOString();
+    return await ctx.db.insert("memories", {
+      title: args.title,
+      content: args.content,
+      type: "conversation",
+      tags: args.tags || ["n8n"],
+      source: args.source || "n8n",
+      importance: (args.importance || "medium") as "low" | "medium" | "high",
+      createdAt: now,
+      updatedAt: now,
+    });
   },
 });
 

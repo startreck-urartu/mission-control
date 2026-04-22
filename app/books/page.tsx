@@ -400,9 +400,9 @@ export default function BooksPage() {
                     <Badge variant="outline" className="text-xs">
                       {getCategoryIcon(book.category)} {getCategoryLabel(book.category)}
                     </Badge>
-                    {book.fileSize > 0 && (
+                    {(book.fileSize ?? 0) > 0 && (
                       <span className="text-xs text-gray-500">
-                        {formatFileSize(book.fileSize)}
+                        {formatFileSize(book.fileSize ?? 0)}
                       </span>
                     )}
                   </div>

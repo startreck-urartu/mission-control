@@ -157,11 +157,18 @@ export default function MemoryPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    content: string;
+    type: string;
+    importance: string;
+    source: string;
+    tags: string;
+  }>({
     title: "",
     content: "",
-    type: "note" as const,
-    importance: "medium" as const,
+    type: "note",
+    importance: "medium",
     source: "",
     tags: "",
   });
@@ -220,9 +227,9 @@ export default function MemoryPage() {
       await updateMemory({
         id: editingMemory._id,
         ...data,
-      });
+      } as any);
     } else {
-      await createMemory(data);
+      await createMemory(data as any);
     }
 
     setIsDialogOpen(false);

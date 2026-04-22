@@ -27,13 +27,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased text-white noise`}
       >
         <ConvexClientProvider>
           <div className="flex h-screen">
             <NavigationSidebar />
             <main className="flex-1 overflow-auto p-6">
-              {children}
+              <div className="max-w-[1600px] mx-auto">
+                {children}
+              </div>
             </main>
           </div>
         </ConvexClientProvider>

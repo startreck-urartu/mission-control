@@ -80,7 +80,7 @@ function StatCard({
   valueColor?: string;
 }) {
   return (
-    <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
+    <div className="glass rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm text-gray-400">{label}</span>
         <div className={cn("p-2 rounded-lg", color)}>
@@ -263,8 +263,8 @@ export default function PolymarketPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Active Positions */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
+        <div className="glass rounded-xl">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-blue-400" />
               <h2 className="text-sm font-semibold text-white">Active Positions</h2>
@@ -288,7 +288,7 @@ export default function PolymarketPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs text-gray-500 border-b border-gray-700">
+                  <tr className="text-xs text-gray-500 border-b border-white/[0.06]">
                     <th className="text-left px-5 py-2.5">Market ID</th>
                     <th className="text-right px-4 py-2.5">Size</th>
                     <th className="text-right px-4 py-2.5">Entry</th>
@@ -300,7 +300,7 @@ export default function PolymarketPage() {
                   {positions.map((pos, i) => (
                     <tr
                       key={pos.token_id ?? i}
-                      className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                      className="border-b border-white/[0.06]/50 hover:bg-white/[0.03] transition-colors"
                     >
                       <td className="px-5 py-3 font-mono text-xs text-gray-300">
                         {pos.market_id}
@@ -335,8 +335,8 @@ export default function PolymarketPage() {
         </div>
 
         {/* Trade Stats Breakdown */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-700">
+        <div className="glass rounded-xl">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-white/[0.06]">
             <RefreshCw className="w-4 h-4 text-purple-400" />
             <h2 className="text-sm font-semibold text-white">Strategy Breakdown</h2>
           </div>
@@ -369,7 +369,7 @@ export default function PolymarketPage() {
                 return Object.entries(byStrategy).map(([name, data]) => (
                   <div
                     key={name}
-                    className="flex items-center justify-between py-2.5 px-3 bg-gray-700/40 rounded-lg"
+                    className="flex items-center justify-between py-2.5 px-3 bg-white/[0.03] rounded-lg"
                   >
                     <div>
                       <p className="text-sm font-medium text-white">{name}</p>
@@ -392,8 +392,8 @@ export default function PolymarketPage() {
       </div>
 
       {/* Recent Trades */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
+      <div className="glass rounded-xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-green-400" />
             <h2 className="text-sm font-semibold text-white">Recent Trades</h2>
@@ -415,7 +415,7 @@ export default function PolymarketPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-500 border-b border-gray-700">
+                <tr className="text-xs text-gray-500 border-b border-white/[0.06]">
                   <th className="text-left px-5 py-2.5">Time</th>
                   <th className="text-left px-4 py-2.5">Market</th>
                   <th className="text-center px-3 py-2.5">Side</th>
@@ -431,7 +431,7 @@ export default function PolymarketPage() {
                 {(recentTrades ?? []).map((trade) => (
                   <tr
                     key={trade.tradeId}
-                    className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                    className="border-b border-white/[0.06]/50 hover:bg-white/[0.03] transition-colors"
                   >
                     <td className="px-5 py-2.5 text-xs text-gray-400 whitespace-nowrap">
                       {formatTimestamp(trade.timestampUtc)}
@@ -478,7 +478,7 @@ export default function PolymarketPage() {
                         : "—"}
                     </td>
                     <td className="px-3 py-2.5 text-left">
-                      <span className="text-xs text-gray-500 bg-gray-700/50 px-1.5 py-0.5 rounded">
+                      <span className="text-xs text-gray-500 bg-white/[0.04] px-1.5 py-0.5 rounded">
                         {trade.strategy ?? "—"}
                       </span>
                     </td>
@@ -507,8 +507,8 @@ export default function PolymarketPage() {
       </div>
 
       {/* Trader Logs */}
-      <div className="bg-gray-900 rounded-xl border border-gray-700">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-700">
+      <div className="glass rounded-xl">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
             <Terminal className="w-4 h-4 text-green-400" />
             <h2 className="text-sm font-semibold text-white">Trader Logs</h2>

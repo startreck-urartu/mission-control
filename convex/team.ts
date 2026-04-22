@@ -1,11 +1,12 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 
 // Queries
 export const getAllTeamMembers = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("team").order("asc", "name").collect();
+    return await ctx.db.query("team").order("asc").collect();
   },
 });
 
@@ -209,6 +210,36 @@ export const deleteTeamMember = mutation({
   },
 });
 
+// Public mutation for n8n agent heartbeat (called via /api/mutation)
+export const heartbeat = mutation({
+  args: {
+    name: v.string(),
+    status: v.optional(v.union(
+      v.literal("online"),
+      v.literal("busy"),
+      v.literal("away"),
+      v.literal("offline")
+    )),
+    currentTask: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const agent = await ctx.db
+      .query("team")
+      .filter((q) => q.eq(q.field("name"), args.name))
+      .first();
+    if (!agent) return null;
+
+    const now = new Date().toISOString();
+    await ctx.db.patch(agent._id, {
+      status: args.status ?? "online",
+      currentTask: args.currentTask,
+      lastActive: now,
+    });
+
+    return agent._id;
+  },
+});
+
 // Internal mutation for OpenClaw integration
 export const registerAgentFromOpenClaw = internalMutation({
   args: {
@@ -222,7 +253,7 @@ export const registerAgentFromOpenClaw = internalMutation({
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
     
-    let parentId: string | undefined = undefined;
+    let parentId: Id<"team"> | undefined = undefined;
     if (args.parentName) {
       const parent = await ctx.db
         .query("team")

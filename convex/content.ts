@@ -5,7 +5,7 @@ import { query, mutation, internalMutation } from "./_generated/server";
 export const getAllContent = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("content").order("desc", "createdAt").take(100);
+    return await ctx.db.query("content").order("desc").take(100);
   },
 });
 

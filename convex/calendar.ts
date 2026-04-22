@@ -20,7 +20,7 @@ export const getEventsByDateRange = query({
 export const getAllEvents = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("calendar").order("asc", "startDate").take(100);
+    return await ctx.db.query("calendar").order("asc").take(100);
   },
 });
 

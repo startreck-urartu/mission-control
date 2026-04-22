@@ -80,7 +80,7 @@ function TeamMemberCard({
   return (
     <Card
       className={cn(
-        "group bg-gray-800 border-gray-700 hover:border-gray-600 transition-all overflow-hidden",
+        "group glass hover:border-white/[0.1] transition-all overflow-hidden",
         TYPE_COLORS[member.type],
         isSubagent && "ml-4 border-l-4"
       )}
@@ -88,7 +88,7 @@ function TeamMemberCard({
       <div className="p-4">
         <div className="flex items-start gap-4">
           <div className="relative">
-            <Avatar className="w-14 h-14 border-2 border-gray-700">
+            <Avatar className="w-14 h-14 border-2 border-white/[0.06]">
               {member.avatar && member.avatar.startsWith("http") ? (
                 <AvatarImage src={member.avatar} alt={member.name} />
               ) : member.avatar ? (
@@ -149,7 +149,7 @@ function TeamMemberCard({
                 <Badge
                   key={skill}
                   variant="outline"
-                  className="text-xs bg-gray-700/50 border-gray-600 text-gray-300"
+                  className="text-xs bg-white/[0.04] border-white/[0.08] text-gray-300"
                 >
                   {skill}
                 </Badge>
@@ -168,7 +168,7 @@ function TeamMemberCard({
             )}
 
             {member.currentTask && (
-              <div className="mt-3 p-2 bg-gray-900/50 rounded-lg">
+              <div className="mt-3 p-2 bg-white/[0.02] rounded-lg">
                 <div className="flex items-center gap-2">
                   <Activity className="w-3 h-3 text-blue-400" />
                   <span className="text-xs text-gray-400">Currently:</span>
@@ -177,7 +177,7 @@ function TeamMemberCard({
               </div>
             )}
 
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-700">
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.06]">
               <Select
                 value={member.status}
                 onValueChange={(v) => onStatusChange(member._id, v)}
@@ -243,12 +243,22 @@ export default function TeamPage() {
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "human" | "agent">("all");
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    role: string;
+    type: string;
+    avatar: string;
+    status: string;
+    skills: string;
+    description: string;
+    email: string;
+    isMainAgent: boolean;
+  }>({
     name: "",
     role: "",
-    type: "human" as const,
+    type: "human",
     avatar: "",
-    status: "online" as const,
+    status: "online",
     skills: "",
     description: "",
     email: "",
@@ -322,9 +332,9 @@ export default function TeamPage() {
       await updateTeamMember({
         id: editingMember._id,
         ...data,
-      });
+      } as any);
     } else {
-      await createTeamMember(data);
+      await createTeamMember(data as any);
     }
 
     setIsDialogOpen(false);
@@ -360,7 +370,7 @@ export default function TeamPage() {
           { label: "Agents", value: stats.agents, icon: Bot },
           { label: "Online", value: stats.online, icon: Activity },
         ].map((stat) => (
-          <Card key={stat.label} className="bg-gray-900 border-gray-800">
+          <Card key={stat.label} className="glass">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <stat.icon className="w-8 h-8 text-gray-500" />
@@ -374,7 +384,7 @@ export default function TeamPage() {
         ))}
       </div>
 
-      <Card className="bg-gray-900 border-gray-800 mb-6">
+      <Card className="glass mb-6">
         <div className="p-4 flex gap-2">
           {[
             { id: "all", label: "All" },
@@ -495,7 +505,7 @@ export default function TeamPage() {
                   setFormData({ ...formData, avatar: e.target.value })
                 }
                 placeholder="https://example.com/avatar.png"
-                className="bg-gray-800 border-gray-700"
+                className="glass"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Use a direct image URL (PNG, JPG, SVG). Try: ui-avatars.com, dicebear.com, or avataaars.io

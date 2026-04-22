@@ -6,7 +6,7 @@ export const getRecentActivity = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("activity")
-      .order("desc", "createdAt")
+      .order("desc")
       .take(args.limit || 50);
   },
 });
@@ -17,7 +17,7 @@ export const getActivityByType = query({
     return await ctx.db
       .query("activity")
       .filter((q) => q.eq(q.field("type"), args.type))
-      .order("desc", "createdAt")
+      .order("desc")
       .take(50);
   },
 });

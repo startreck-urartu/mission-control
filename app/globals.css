@@ -4,35 +4,154 @@
 @layer base {
   :root {
     --radius: 0.5rem;
+    --glass-bg: rgba(17, 17, 27, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-highlight: rgba(255, 255, 255, 0.03);
+    --glow-blue: rgba(59, 130, 246, 0.15);
+    --glow-purple: rgba(139, 92, 246, 0.15);
+    --glow-green: rgba(34, 197, 94, 0.12);
+    --glow-amber: rgba(245, 158, 11, 0.12);
+    --surface-0: #06060c;
+    --surface-1: #0a0a14;
+    --surface-2: #10101e;
+    --surface-3: #16162a;
   }
 }
 
 @layer base {
   * {
-    @apply border-gray-800;
+    @apply border-white/[0.06];
   }
   body {
-    @apply bg-gray-950 text-white;
+    @apply bg-[var(--surface-0)] text-white;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -20%, rgba(59, 130, 246, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139, 92, 246, 0.06), transparent);
+    background-attachment: fixed;
   }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1a2e;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3a3a5c;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a4a6c;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Glass morphism card */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Glow effects */
+.glow-blue {
+  box-shadow: 0 0 20px var(--glow-blue), inset 0 1px 0 var(--glass-highlight);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px var(--glow-purple), inset 0 1px 0 var(--glass-highlight);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px var(--glow-green), inset 0 1px 0 var(--glass-highlight);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px var(--glow-amber), inset 0 1px 0 var(--glass-highlight);
+}
+
+/* Subtle top highlight on cards */
+.highlight-top {
+  position: relative;
+}
+.highlight-top::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  border-radius: 1px;
+}
+
+/* Animated gradient border */
+@keyframes border-rotate {
+  0% { --angle: 0deg; }
+  100% { --angle: 360deg; }
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 0 15px rgba(59, 130, 246, 0.06);
+}
+
+/* Stagger animation for lists */
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-in > * {
+  opacity: 0;
+  animation: stagger-in 0.3s ease-out forwards;
+}
+
+.stagger-in > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-in > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-in > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-in > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-in > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-in > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-in > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-in > *:nth-child(8) { animation-delay: 350ms; }
+
+/* Subtle shimmer on empty states */
+@keyframes empty-shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+.empty-state-icon {
+  animation: empty-shimmer 3s ease-in-out infinite;
+}
+
+/* Active nav glow */
+.nav-active {
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Kanban drag and drop styles */
@@ -63,4 +182,29 @@
 
 .status-offline {
   @apply bg-gray-500;
+}
+
+/* Noise texture overlay for depth */
+.noise::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 9999;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .card-hover:hover {
+    transform: none;
+  }
+  .stagger-in > * {
+    animation: none;
+    opacity: 1;
+  }
+  .empty-state-icon {
+    animation: none;
+  }
 }
