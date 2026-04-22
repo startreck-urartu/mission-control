@@ -45,6 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn, formatTimeAgo } from "@/lib/utils";
+import { FormattedResult } from "@/components/ui/formatted-result";
 import { Doc } from "@/convex/_generated/dataModel";
 
 type TeamMember = Doc<"team">;
@@ -741,9 +742,9 @@ export default function TradingTeamPage() {
                                 Agent Result
                               </span>
                             </div>
-                            <pre className="text-xs text-gray-400 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto font-sans">
-                              {task.lastAgentResult}
-                            </pre>
+                            <div className="max-h-48 overflow-y-auto">
+                              <FormattedResult content={task.lastAgentResult} className="text-xs" />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -856,9 +857,9 @@ export default function TradingTeamPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto max-h-[60vh] pr-2">
-            <pre className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed font-sans">
-              {viewingResult?.result}
-            </pre>
+            {viewingResult?.result && (
+              <FormattedResult content={viewingResult.result} />
+            )}
           </div>
         </DialogContent>
       </Dialog>
