@@ -1,6 +1,8 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
 export function FormattedResult({
@@ -13,6 +15,7 @@ export function FormattedResult({
   return (
     <div className={cn("formatted-result text-sm text-gray-300 leading-relaxed", className)}>
       <ReactMarkdown
+        remarkPlugins={[remarkBreaks, remarkGfm]}
         components={{
           h1: ({ children }) => (
             <h1 className="text-base font-bold text-gray-100 mt-4 mb-2 first:mt-0">{children}</h1>
