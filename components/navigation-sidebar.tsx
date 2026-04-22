@@ -14,8 +14,11 @@ import {
   BookOpen,
   TrendingUp,
   Radio,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/theme-provider";
 
 type NavItem = {
   name: string;
@@ -64,6 +67,7 @@ const sections: NavSection[] = [
 
 export function NavigationSidebar() {
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="w-64 bg-[var(--surface-1)]/80 backdrop-blur-xl border-r border-white/[0.04] flex flex-col h-full relative">
@@ -116,7 +120,18 @@ export function NavigationSidebar() {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-white/[0.04]">
+      <div className="p-3 border-t border-white/[0.04] space-y-1">
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-gray-500 hover:bg-white/[0.04] hover:text-gray-300 transition-all duration-150"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 text-amber-400" />
+          ) : (
+            <Moon className="w-4 h-4 text-blue-400" />
+          )}
+          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+        </button>
         <div className="flex items-center gap-3 px-3 py-2">
           <div className="relative">
             <div className="w-2 h-2 bg-green-500 rounded-full" />
