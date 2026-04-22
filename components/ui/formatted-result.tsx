@@ -5,6 +5,117 @@ import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
+const FIELD_LABELS: Record<string, string> = {
+  actionType: "Action Type",
+  dataSource: "Data Source",
+  dataQualityScore: "Data Quality Score",
+  validationStatus: "Validation Status",
+  nextSteps: "Next Steps",
+  winRate: "Win Rate",
+  maxDrawdown: "Max Drawdown",
+};
+
+function formatLabel(key: string): string {
+  if (FIELD_LABELS[key]) return FIELD_LABELS[key];
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/[_-]/g, " ")
+    .replace(/^\w/, (c) => c.toUpperCase())
+    .trim();
+}
+
+function tryParseJson(content: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch {
+    // not JSON
+  }
+  return null;
+}
+
+const SKIP_FIELDS = new Set(["taskId", "title"]);
+
+function renderValue(value: unknown): React.ReactNode {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "number") return String(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return null;
+    return (
+      <ul className="list-disc list-outside pl-4 space-y-0.5">
+        {value.map((item, i) => (
+          <li key={i} className="text-gray-400">{typeof item === "object" ? JSON.stringify(item) : String(item)}</li>
+        ))}
+      </ul>
+    );
+  }
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const entries = Object.entries(obj).filter(([, v]) => v !== null && v !== undefined && v !== "");
+    if (entries.length === 0) return null;
+    return (
+      <div className="pl-3 border-l border-white/[0.06] space-y-1">
+        {entries.map(([k, v]) => (
+          <div key={k}>
+            <span className="text-gray-500 text-xs">{formatLabel(k)}:</span>{" "}
+            <span className="text-gray-300">{typeof v === "object" ? JSON.stringify(v) : String(v)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return String(value);
+}
+
+function JsonResult({ data }: { data: Record<string, unknown> }) {
+  const title = data.title as string | undefined;
+  const entries = Object.entries(data).filter(([key]) => !SKIP_FIELDS.has(key));
+
+  const primaryFields = ["analysis", "recommendation", "concerns"];
+  const metaFields = entries.filter(([key]) => !primaryFields.includes(key));
+  const contentFields = entries.filter(([key]) => primaryFields.includes(key));
+
+  return (
+    <div className="space-y-3">
+      {title && (
+        <h3 className="text-sm font-semibold text-gray-100">{title}</h3>
+      )}
+
+      {contentFields.map(([key, value]) => {
+        if (!value || (typeof value === "string" && !value.trim())) return null;
+        return (
+          <div key={key}>
+            <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+              {formatLabel(key)}
+            </h4>
+            <div className="text-sm text-gray-300 leading-relaxed">
+              {renderValue(value)}
+            </div>
+          </div>
+        );
+      })}
+
+      {metaFields.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-white/[0.06]">
+          {metaFields.map(([key, value]) => {
+            const rendered = renderValue(value);
+            if (rendered === null) return null;
+            return (
+              <div key={key}>
+                <span className="text-xs font-medium text-gray-500">{formatLabel(key)}</span>
+                <div className="text-sm text-gray-300 mt-0.5">{rendered}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FormattedResult({
   content,
   className,
@@ -12,6 +123,16 @@ export function FormattedResult({
   content: string;
   className?: string;
 }) {
+  const jsonData = tryParseJson(content);
+
+  if (jsonData) {
+    return (
+      <div className={cn("formatted-result text-sm text-gray-300 leading-relaxed", className)}>
+        <JsonResult data={jsonData} />
+      </div>
+    );
+  }
+
   return (
     <div className={cn("formatted-result text-sm text-gray-300 leading-relaxed", className)}>
       <ReactMarkdown
