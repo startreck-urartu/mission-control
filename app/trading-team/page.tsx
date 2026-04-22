@@ -93,13 +93,15 @@ const STATUS_COLORS: Record<string, string> = {
   offline: "bg-gray-500",
 };
 
-function getHeartbeatHealth(lastActive: string): {
+function getHeartbeatHealth(lastActive: string | undefined | null): {
   label: string;
   color: string;
   dotColor: string;
   icon: typeof Wifi;
 } {
+  if (!lastActive) return { label: "Unknown", color: "text-gray-400", dotColor: "bg-gray-500", icon: WifiOff };
   const diff = Date.now() - new Date(lastActive).getTime();
+  if (isNaN(diff)) return { label: "Unknown", color: "text-gray-400", dotColor: "bg-gray-500", icon: WifiOff };
   const minutes = diff / 60000;
   if (minutes < 10)
     return { label: "Healthy", color: "text-green-400", dotColor: "bg-green-500", icon: Wifi };
