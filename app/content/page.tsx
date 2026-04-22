@@ -330,7 +330,7 @@ export default function ContentPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-white">Content Pipeline</h1>
           <p className="text-gray-400 mt-1">
@@ -344,13 +344,13 @@ export default function ContentPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto">
-        <div className="flex gap-4 min-w-max pb-4">
+        <div className="flex gap-4 pb-4 min-w-0 md:min-w-max">
           {STAGES.map((stage, index) => {
             const StageIcon = stage.icon;
             const stageContent = contentByStage[stage.id] || [];
 
             return (
-              <div key={stage.id} className="w-72 flex-shrink-0">
+              <div key={stage.id} className="w-60 sm:w-72 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-3">
                   <div
                     className={cn(

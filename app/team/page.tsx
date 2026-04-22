@@ -352,9 +352,9 @@ export default function TeamPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Team</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Team</h1>
           <p className="text-gray-400 mt-1">Manage your team members and agents</p>
         </div>
         <Button onClick={handleCreate} className="flex items-center gap-2">
@@ -363,7 +363,7 @@ export default function TeamPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total", value: stats.total, icon: Users },
           { label: "Human", value: stats.human, icon: User },

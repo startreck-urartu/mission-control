@@ -172,7 +172,7 @@ export default function DashboardPage() {
 
       {/* Task Pipeline Metrics */}
       {metrics && (
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 stagger-in">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 stagger-in">
           {[
             { label: "Done 24h", value: metrics.completedLast24h, icon: CheckCircle2, color: "text-green-400" },
             { label: "Failed 24h", value: metrics.failedLast24h, icon: XCircle, color: metrics.failedLast24h > 0 ? "text-red-400" : "text-gray-600" },

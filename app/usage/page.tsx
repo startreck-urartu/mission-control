@@ -136,9 +136,9 @@ export default function UsageCostsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Usage & Costs</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Usage & Costs</h1>
           <p className="text-gray-400 mt-1">Track LLM spending and token usage</p>
         </div>
         <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700">
@@ -253,7 +253,7 @@ export default function UsageCostsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-800">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-800">
                 <div>
                   <p className="text-xs text-gray-500">Total Cost</p>
                   <p className="text-lg font-semibold text-white">

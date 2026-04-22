@@ -336,9 +336,9 @@ export default function TasksPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Tasks Board</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Tasks Board</h1>
           <p className="text-gray-400 mt-1">
             Drag and drop tasks to organize your workflow
           </p>
@@ -355,7 +355,7 @@ export default function TasksPage() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1 grid grid-cols-8 gap-3 min-h-0 overflow-x-auto">
+        <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 min-h-0 overflow-x-auto">
           {COLUMNS.map((column) => (
             <div
               key={column.id}

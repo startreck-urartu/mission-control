@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,6 +17,8 @@ import {
   Radio,
   Sun,
   Moon,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/theme-provider";
@@ -68,17 +71,23 @@ const sections: NavSection[] = [
 export function NavigationSidebar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  return (
-    <div className="w-64 bg-[var(--surface-1)]/80 backdrop-blur-xl border-r border-white/[0.04] flex flex-col h-full relative">
-      {/* Subtle gradient accent along right edge */}
-      <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-blue-500/20 via-transparent to-purple-500/20" />
-
-      <div className="p-5 pb-4">
-        <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 via-blue-300 to-purple-400 bg-clip-text text-transparent">
-          Mission Control
-        </h1>
-        <p className="text-[11px] text-gray-600 mt-0.5">OpenClaw AI Coordination</p>
+  const navContent = (
+    <>
+      <div className="p-5 pb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 via-blue-300 to-purple-400 bg-clip-text text-transparent">
+            Mission Control
+          </h1>
+          <p className="text-[11px] text-gray-600 mt-0.5">OpenClaw AI Coordination</p>
+        </div>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
+        >
+          <X className="w-5 h-5 text-gray-400" />
+        </button>
       </div>
 
       <nav className="flex-1 px-3 overflow-y-auto space-y-5">
@@ -98,6 +107,7 @@ export function NavigationSidebar() {
                   <Link
                     key={item.name}
                     href={item.href}
+                    onClick={() => setMobileOpen(false)}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
                       isActive
@@ -140,6 +150,42 @@ export function NavigationSidebar() {
           <span className="text-xs text-gray-600">System Online</span>
         </div>
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-lg glass"
+      >
+        <Menu className="w-5 h-5 text-gray-300" />
+      </button>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-[var(--surface-1)] backdrop-blur-xl border-r border-white/[0.04] flex flex-col transition-transform duration-300 md:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {navContent}
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex w-64 bg-[var(--surface-1)]/80 backdrop-blur-xl border-r border-white/[0.04] flex-col h-full relative">
+        <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-blue-500/20 via-transparent to-purple-500/20" />
+        {navContent}
+      </div>
+    </>
   );
 }

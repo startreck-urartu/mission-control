@@ -266,7 +266,7 @@ export default function CalendarPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-white">Calendar</h1>
           <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ export default function CalendarPage() {
         </Button>
       </div>
 
-      <div className="flex-1 flex gap-6 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
         <div className="flex-1 flex flex-col min-h-0">
           <CalendarGrid
             currentDate={currentDate}
@@ -300,7 +300,7 @@ export default function CalendarPage() {
           />
         </div>
 
-        <div className="w-80 flex-shrink-0">
+        <div className="w-full lg:w-80 lg:flex-shrink-0">
           <Card className="bg-gray-900 border-gray-800">
             <div className="p-4 border-b border-gray-800">
               <h2 className="font-semibold text-gray-100">Upcoming Events</h2>
