@@ -159,6 +159,27 @@ export const getRecentSignals = query({
   },
 });
 
+export const getSignalsReadyForFill = query({
+  args: {
+    nowTs: v.number(),
+    holdSeconds: v.optional(v.number()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const holdSeconds = args.holdSeconds ?? 72 * 3600;
+    const limit = args.limit ?? 200;
+    const pending = await ctx.db
+      .query("polymarketSignals")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .take(limit);
+    return pending.filter((s) => {
+      const horizonReached = s.scanTs + holdSeconds <= args.nowTs;
+      const eventResolved = s.endTs !== undefined && s.endTs !== null && s.endTs <= args.nowTs;
+      return horizonReached || eventResolved;
+    });
+  },
+});
+
 export const getSignalsByStrategy = query({
   args: {
     strategy: v.string(),
