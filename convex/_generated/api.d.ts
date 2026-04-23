@@ -16,6 +16,7 @@ import type * as http from "../http.js";
 import type * as llmUsage from "../llmUsage.js";
 import type * as memories from "../memories.js";
 import type * as office from "../office.js";
+import type * as polymarketSignals from "../polymarketSignals.js";
 import type * as polymarketTrader from "../polymarketTrader.js";
 import type * as seed from "../seed.js";
 import type * as seedData from "../seedData.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   llmUsage: typeof llmUsage;
   memories: typeof memories;
   office: typeof office;
+  polymarketSignals: typeof polymarketSignals;
   polymarketTrader: typeof polymarketTrader;
   seed: typeof seed;
   seedData: typeof seedData;

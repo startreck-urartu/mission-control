@@ -261,6 +261,50 @@ export default defineSchema({
     .index("by_timestamp", ["timestampUtc"])
     .index("by_strategy", ["strategy"]),
 
+  // Polymarket Signals - POLY-DELTA v2 cross-market arb signal queue
+  polymarketSignals: defineTable({
+    strategy: v.string(),                    // e.g. "poly-delta-v1"
+    mode: v.union(v.literal("paper"), v.literal("live")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("claimed"),
+      v.literal("executed"),
+      v.literal("paper-filled"),
+      v.literal("expired"),
+      v.literal("rejected")
+    ),
+    eventId: v.string(),
+    eventSlug: v.optional(v.string()),
+    eventTitle: v.optional(v.string()),
+    eventVolume: v.number(),
+    endTs: v.optional(v.number()),           // unix sec, event resolution deadline
+    scanTs: v.number(),                      // unix sec, when signal was emitted
+    sumYesProb: v.number(),
+    absDeviationBps: v.number(),
+    direction: v.union(v.literal("long_basket"), v.literal("short_basket")),
+    nLegs: v.number(),
+    totalLegs: v.number(),
+    observationCompleteness: v.number(),
+    legs: v.array(v.object({
+      conditionId: v.string(),
+      tokenYes: v.optional(v.string()),
+      tokenNo: v.optional(v.string()),
+      question: v.optional(v.string()),
+      yesPrice: v.number(),
+    })),
+    claimedBy: v.optional(v.string()),
+    claimedAt: v.optional(v.string()),
+    rejectReason: v.optional(v.string()),
+    paperPnlBps: v.optional(v.number()),
+    paperFilledAt: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_status", ["status"])
+    .index("by_event_direction", ["eventId", "direction"])
+    .index("by_created", ["createdAt"])
+    .index("by_strategy", ["strategy"]),
+
   // Books Library - Digital library for business literature and skill development
   books: defineTable({
     title: v.string(),
