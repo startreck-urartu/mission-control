@@ -52,8 +52,14 @@ export const enqueueSignal = mutation({
       )
       .collect();
 
+    // Dedup is per-mode — a paper signal should not block a live signal for
+    // the same (event, direction) pair, and vice versa.
     const duplicate = recent.find(
-      (s) => s.scanTs >= cutoff && s.status !== "rejected" && s.status !== "expired",
+      (s) =>
+        s.mode === args.mode &&
+        s.scanTs >= cutoff &&
+        s.status !== "rejected" &&
+        s.status !== "expired",
     );
     if (duplicate) {
       return { id: duplicate._id, created: false, reason: "dedup-window" };
@@ -162,18 +168,17 @@ export const getRecentSignals = query({
 export const getSignalsReadyForFill = query({
   args: {
     nowTs: v.number(),
-    holdSeconds: v.optional(v.number()),
+    holdSeconds: v.number(),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const holdSeconds = args.holdSeconds ?? 72 * 3600;
     const limit = args.limit ?? 200;
     const pending = await ctx.db
       .query("polymarketSignals")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
       .take(limit);
     return pending.filter((s) => {
-      const horizonReached = s.scanTs + holdSeconds <= args.nowTs;
+      const horizonReached = s.scanTs + args.holdSeconds <= args.nowTs;
       const eventResolved = s.endTs !== undefined && s.endTs !== null && s.endTs <= args.nowTs;
       return horizonReached || eventResolved;
     });
