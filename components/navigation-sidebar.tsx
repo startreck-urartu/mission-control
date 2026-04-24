@@ -14,6 +14,7 @@ import {
   CreditCard,
   BookOpen,
   TrendingUp,
+  Layers,
   Radio,
   Sun,
   Moon,
@@ -55,6 +56,7 @@ const sections: NavSection[] = [
     items: [
       { name: "Trading Team", href: "/trading-team", icon: Radio },
       { name: "Polymarket", href: "/polymarket", icon: TrendingUp },
+      { name: "Polymarket v2", href: "/polymarket-v2", icon: Layers },
     ],
   },
   {
