@@ -61,12 +61,17 @@ export const enqueueSignal = mutation({
   handler: async (ctx, args) => {
     requireAuth(args.authToken);
     const cutoff = args.scanTs - DEDUP_WINDOW_SECONDS;
+    // Bounded scan: newest-first on the (eventId, direction) partition.
+    // The dedup window is 72h; at the 5-min scanner cadence we expect <=10
+    // in-window signals for any (event, direction) pair. 50 is generous
+    // headroom without pulling the full historical partition.
     const recent = await ctx.db
       .query("polymarketSignals")
       .withIndex("by_event_direction", (q) =>
         q.eq("eventId", args.eventId).eq("direction", args.direction),
       )
-      .collect();
+      .order("desc")
+      .take(50);
 
     // Dedup is per-mode — a paper signal should not block a live signal for
     // the same (event, direction) pair, and vice versa.
