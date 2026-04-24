@@ -1,7 +1,21 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
 const DEDUP_WINDOW_SECONDS = 72 * 3600;
+
+// Shared-secret auth for mutations. Queries remain unauthenticated so the
+// Mission Control dashboard can read the ledger without the token.
+// Token is set via `npx convex env set POLYMARKET_AUTH_TOKEN <hex>` and
+// provided by scanner/resolver in every mutation call.
+function requireAuth(authToken: string) {
+  const expected = process.env.POLYMARKET_AUTH_TOKEN;
+  if (!expected) {
+    throw new ConvexError("POLYMARKET_AUTH_TOKEN not configured on deployment");
+  }
+  if (authToken !== expected) {
+    throw new ConvexError("unauthorized");
+  }
+}
 
 const directionValidator = v.union(
   v.literal("long_basket"),
@@ -27,6 +41,7 @@ const legValidator = v.object({
 
 export const enqueueSignal = mutation({
   args: {
+    authToken: v.string(),
     strategy: v.string(),
     mode: v.union(v.literal("paper"), v.literal("live")),
     eventId: v.string(),
@@ -44,6 +59,7 @@ export const enqueueSignal = mutation({
     legs: v.array(legValidator),
   },
   handler: async (ctx, args) => {
+    requireAuth(args.authToken);
     const cutoff = args.scanTs - DEDUP_WINDOW_SECONDS;
     const recent = await ctx.db
       .query("polymarketSignals")
@@ -66,8 +82,10 @@ export const enqueueSignal = mutation({
     }
 
     const now = new Date().toISOString();
+    // Strip authToken before persisting — never write the secret to the DB.
+    const { authToken: _authToken, ...persisted } = args;
     const id = await ctx.db.insert("polymarketSignals", {
-      ...args,
+      ...persisted,
       status: "pending",
       createdAt: now,
       updatedAt: now,
@@ -94,10 +112,12 @@ export const enqueueSignal = mutation({
 
 export const claimSignal = mutation({
   args: {
+    authToken: v.string(),
     id: v.id("polymarketSignals"),
     claimedBy: v.string(),
   },
   handler: async (ctx, args) => {
+    requireAuth(args.authToken);
     const sig = await ctx.db.get(args.id);
     if (!sig) return { claimed: false, reason: "not-found" };
     if (sig.status !== "pending") {
@@ -116,12 +136,14 @@ export const claimSignal = mutation({
 
 export const updateSignalStatus = mutation({
   args: {
+    authToken: v.string(),
     id: v.id("polymarketSignals"),
     status: statusValidator,
     rejectReason: v.optional(v.string()),
     paperPnlBps: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    requireAuth(args.authToken);
     const sig = await ctx.db.get(args.id);
     if (!sig) return { updated: false };
     const now = new Date().toISOString();
