@@ -1,5 +1,6 @@
 import { v, ConvexError } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 const DEDUP_WINDOW_SECONDS = 72 * 3600;
 
@@ -224,5 +225,55 @@ export const getSignalsByStrategy = query({
       .withIndex("by_strategy", (q) => q.eq("strategy", args.strategy))
       .order("desc")
       .take(limit);
+  },
+});
+
+// Rejects every signal whose eventId starts with "DASHBOARD-DEMO-". Invoked
+// by ctx.scheduler from scheduleDemoCleanup — NOT a public mutation.
+export const cleanupDemoSignals = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db
+      .query("polymarketSignals")
+      .withIndex("by_strategy", (q) => q.eq("strategy", "poly-delta-v1"))
+      .collect();
+    const targets = rows.filter(
+      (s) => s.eventId.startsWith("DASHBOARD-DEMO-") && s.status !== "rejected",
+    );
+    const now = new Date().toISOString();
+    for (const s of targets) {
+      await ctx.db.patch(s._id, {
+        status: "rejected",
+        rejectReason: "scheduled demo cleanup",
+        updatedAt: now,
+      });
+    }
+    await ctx.db.insert("activity", {
+      type: "polymarket_demo_cleanup",
+      message: `POLY-DELTA demo cleanup: rejected ${targets.length} DASHBOARD-DEMO-* signals`,
+      entityType: "polymarketSignal",
+      metadata: { count: targets.length },
+      createdAt: now,
+    });
+    return { rejected: targets.length };
+  },
+});
+
+export const scheduleDemoCleanup = mutation({
+  args: {
+    authToken: v.string(),
+    delayMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    requireAuth(args.authToken);
+    const scheduledId = await ctx.scheduler.runAfter(
+      args.delayMs,
+      internal.polymarketSignals.cleanupDemoSignals,
+      {},
+    );
+    return {
+      scheduledId,
+      runAtMs: Date.now() + args.delayMs,
+    };
   },
 });
