@@ -228,6 +228,52 @@ export const getSignalsByStrategy = query({
   },
 });
 
+// Tethys — write one activity row per health-check run. Queries the most
+// recent via getLatestTethysStatus below. No auth: activity table is an
+// append-only ops log, matches the existing enqueueSignal activity pattern.
+export const logTethysStatus = mutation({
+  args: {
+    overall: v.union(v.literal("ok"), v.literal("fail")),
+    checks: v.array(
+      v.object({
+        name: v.string(),
+        status: v.union(v.literal("ok"), v.literal("fail")),
+        detail: v.string(),
+      }),
+    ),
+    failureCount: v.number(),
+    message: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = new Date().toISOString();
+    const id = await ctx.db.insert("activity", {
+      type: "polymarket_v2_tethys",
+      message: args.message,
+      entityType: "polymarketSignal",
+      metadata: {
+        overall: args.overall,
+        failureCount: args.failureCount,
+        checks: args.checks,
+      },
+      createdAt: now,
+    });
+    return { id };
+  },
+});
+
+export const getLatestTethysStatus = query({
+  args: {},
+  handler: async (ctx) => {
+    // Scan most-recent-first on the by_created index; filter to tethys type.
+    const recent = await ctx.db
+      .query("activity")
+      .withIndex("by_created")
+      .order("desc")
+      .take(50);
+    return recent.find((r) => r.type === "polymarket_v2_tethys") ?? null;
+  },
+});
+
 // Rejects every signal whose eventId starts with "DASHBOARD-DEMO-". Invoked
 // by ctx.scheduler from scheduleDemoCleanup — NOT a public mutation.
 export const cleanupDemoSignals = internalMutation({

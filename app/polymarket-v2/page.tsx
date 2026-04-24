@@ -6,6 +6,7 @@ import {
   Activity,
   CheckCircle2,
   Clock,
+  HeartPulse,
   Layers,
   TrendingUp,
   TrendingDown,
@@ -23,6 +24,25 @@ type Leg = {
   question?: string;
   yesPrice: number;
 };
+
+type TethysCheck = {
+  name: string;
+  status: "ok" | "fail";
+  detail: string;
+};
+
+type TethysStatus = {
+  _id: string;
+  _creationTime: number;
+  type: string;
+  message: string;
+  createdAt: string;
+  metadata?: {
+    overall?: "ok" | "fail";
+    failureCount?: number;
+    checks?: TethysCheck[];
+  };
+} | null;
 
 type Signal = {
   _id: string;
@@ -218,6 +238,68 @@ function SignalRow({ sig }: { sig: Signal }) {
   );
 }
 
+function HealthPill({ status }: { status: TethysStatus }) {
+  // Tethys runs every 30 min. Treat >45 min as "stale" — something stopped the cron.
+  const STALE_AFTER_MS = 45 * 60 * 1000;
+
+  if (status === null) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border bg-gray-700/40 border-gray-600/40 text-gray-400">
+        <HeartPulse className="w-3.5 h-3.5" />
+        Health: unknown
+      </div>
+    );
+  }
+
+  const ageMs = Date.now() - new Date(status.createdAt).getTime();
+  const stale = ageMs > STALE_AFTER_MS;
+  const overall = status.metadata?.overall ?? "fail";
+  const failureCount = status.metadata?.failureCount ?? 0;
+  const checks = status.metadata?.checks ?? [];
+  const failedChecks = checks.filter((c) => c.status === "fail");
+
+  let styles: string;
+  let label: string;
+  let dotColor: string;
+  if (stale) {
+    styles = "bg-amber-500/10 border-amber-500/30 text-amber-300";
+    label = `Health: stale (${timeAgo(status.createdAt)})`;
+    dotColor = "bg-amber-400";
+  } else if (overall === "ok") {
+    styles = "bg-green-500/10 border-green-500/30 text-green-300";
+    label = "Health: OK";
+    dotColor = "bg-green-400 animate-pulse";
+  } else {
+    styles = "bg-red-500/10 border-red-500/30 text-red-300";
+    label = `Health: ${failureCount} failure${failureCount === 1 ? "" : "s"}`;
+    dotColor = "bg-red-400 animate-pulse";
+  }
+
+  const tooltip = [
+    `Updated ${timeAgo(status.createdAt)}`,
+    ...checks.map((c) => `${c.status === "ok" ? "✓" : "✗"} ${c.name}: ${c.detail}`),
+  ].join("\n");
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border cursor-help",
+        styles,
+      )}
+      title={tooltip}
+    >
+      <span className={cn("w-2 h-2 rounded-full", dotColor)} />
+      <HeartPulse className="w-3.5 h-3.5" />
+      {label}
+      {failedChecks.length > 0 && !stale && (
+        <span className="text-xs font-normal text-red-200/80 max-w-[220px] truncate">
+          · {failedChecks.map((c) => c.name).join(", ")}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function SignalTable({ rows, emptyMessage }: { rows: Signal[]; emptyMessage: string }) {
   if (rows.length === 0) {
     return (
@@ -254,6 +336,11 @@ export default function PolymarketV2Page() {
     strategy: "poly-delta-v1",
     limit: 200,
   }) as Signal[] | undefined;
+
+  const tethysStatus = useQuery(
+    api.polymarketSignals.getLatestTethysStatus,
+    {},
+  ) as TethysStatus | undefined;
 
   const isLoading = signals === undefined;
 
@@ -302,12 +389,13 @@ export default function PolymarketV2Page() {
             POLY-DELTA cross-market arb · negRisk mutex events · paper mode
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <span className="text-xs text-gray-500">
             {mostRecentScanTs > 0
               ? `Last signal ${timeAgo(mostRecentScanTs)}`
               : "No signals yet"}
           </span>
+          <HealthPill status={tethysStatus === undefined ? null : tethysStatus} />
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border bg-blue-500/10 border-blue-500/30 text-blue-300">
             <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
             Live
