@@ -20,6 +20,7 @@ import {
   Moon,
   Menu,
   X,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/theme-provider";
@@ -42,6 +43,7 @@ const sections: NavSection[] = [
       { name: "Dashboard", href: "/", icon: LayoutDashboard },
       { name: "Tasks Board", href: "/tasks", icon: ClipboardList },
       { name: "Calendar", href: "/calendar", icon: Calendar },
+      { name: "Assistant", href: "/assistant", icon: MessageCircle },
     ],
   },
   {
