@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { Id, Doc } from "@/convex/_generated/dataModel";
 import { Send, Plus, MessageCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,7 @@ export default function AssistantPage() {
 
       const priorHistory = messages
         .slice(-HISTORY_TURNS)
-        .map((m) => ({ role: m.role, content: m.content }));
+        .map((m: Doc<"assistantMessages">) => ({ role: m.role, content: m.content }));
 
       await addMessage({ threadId, role: "user", content: question });
       setInput("");
@@ -96,7 +96,7 @@ export default function AssistantPage() {
           <Plus className="h-4 w-4" /> New chat
         </Button>
         <div className="flex flex-col gap-1 overflow-y-auto">
-          {threads.map((t) => (
+          {threads.map((t: Doc<"assistantThreads">) => (
             <button
               key={t._id}
               onClick={() => setActiveThreadId(t._id)}
@@ -123,7 +123,7 @@ export default function AssistantPage() {
               Ask anything about your CAD-jewelry courses.
             </p>
           )}
-          {messages.map((m) => (
+          {messages.map((m: Doc<"assistantMessages">) => (
             <div key={m._id} className={m.role === "user" ? "text-right" : "text-left"}>
               <Card
                 className={`inline-block max-w-[80%] p-3 text-sm whitespace-pre-wrap ${
@@ -133,7 +133,7 @@ export default function AssistantPage() {
                 {m.content}
                 {m.role === "assistant" && m.citations && m.citations.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {m.citations.map((c, i) => (
+                    {m.citations.map((c: Citation, i: number) => (
                       <span
                         key={i}
                         title={c.snippet}
