@@ -361,4 +361,30 @@ export default defineSchema({
       searchField: "title",
       filterFields: ["category", "status", "tags"],
     }),
+
+  // CAD Assistant - Threaded chat sessions
+  assistantThreads: defineTable({
+    title: v.string(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_updated", ["updatedAt"]),
+
+  assistantMessages: defineTable({
+    threadId: v.id("assistantThreads"),
+    role: v.union(v.literal("user"), v.literal("assistant")),
+    content: v.string(),
+    citations: v.optional(
+      v.array(
+        v.object({
+          lessonTitle: v.string(),
+          software: v.string(),
+          startTs: v.number(),
+          videoPath: v.optional(v.string()),
+          score: v.number(),
+          snippet: v.string(),
+        })
+      )
+    ),
+    createdAt: v.string(),
+  }).index("by_thread", ["threadId"]),
 });
