@@ -18,6 +18,7 @@ export const getMessages = query({
     return await ctx.db
       .query("assistantMessages")
       .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
+      .order("asc")
       .collect();
   },
 });
