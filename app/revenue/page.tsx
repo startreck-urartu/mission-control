@@ -75,7 +75,6 @@ function monthBounds() {
 
 export default function RevenuePage() {
   const allRevenue = useQuery(api.revenue.getAllRevenue);
-  const monthRevenue = useQuery(api.revenue.getCurrentMonthRevenue);
   const goals = useQuery(api.goals.getGoalProgress);
   const clients = useQuery(api.clients.getAllClients);
 
@@ -96,6 +95,8 @@ export default function RevenuePage() {
     date: today(),
     status: "received" as Revenue["status"],
   });
+
+  const [visibleEntries, setVisibleEntries] = useState(50);
 
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
@@ -122,8 +123,35 @@ export default function RevenuePage() {
     [allRevenue]
   );
 
-  const clientName = (id?: Id<"clients">) =>
-    id ? clients?.find((c) => c._id === id)?.name : undefined;
+  // Month aggregates derived from the already-live ledger — no second
+  // subscription (getCurrentMonthRevenue) needed; local month matches EST use
+  const monthRevenue = useMemo(() => {
+    if (!allRevenue) return undefined;
+    const { start, end } = monthBounds();
+    const byCategory: Record<string, { amount: number; count: number }> = {};
+    let pending = 0;
+    let received = 0;
+    let count = 0;
+    for (const r of allRevenue) {
+      const day = r.date.slice(0, 10);
+      if (day < start || day > end) continue;
+      count += 1;
+      if (!byCategory[r.category]) byCategory[r.category] = { amount: 0, count: 0 };
+      byCategory[r.category].amount += r.amount;
+      byCategory[r.category].count += 1;
+      if (r.status === "pending") pending += r.amount;
+      else received += r.amount;
+    }
+    return { byCategory, pending, received, count };
+  }, [allRevenue]);
+
+  const clientNames = useMemo(() => {
+    const map = new Map<Id<"clients">, string>();
+    for (const c of clients ?? []) map.set(c._id, c.name);
+    return map;
+  }, [clients]);
+
+  const clientName = (id?: Id<"clients">) => (id ? clientNames.get(id) : undefined);
 
   // ── Revenue handlers ─────────────────────────────────
 
@@ -283,7 +311,7 @@ export default function RevenuePage() {
           },
           {
             label: "Entries This Month",
-            value: monthRevenue?.items.length ?? 0,
+            value: monthRevenue?.count ?? 0,
             icon: Users,
             color: "text-purple-400",
             bg: "bg-purple-500/10",
@@ -387,7 +415,7 @@ export default function RevenuePage() {
           <CardContent className="p-2">
             {entries.length > 0 ? (
               <div className="divide-y divide-white/[0.04]">
-                {entries.map((r) => (
+                {entries.slice(0, visibleEntries).map((r) => (
                   <div key={r._id} className="flex items-center gap-3 p-2.5 group hover:bg-white/[0.02] rounded-lg">
                     <span className="text-[11px] text-gray-500 w-20 shrink-0">{formatDate(r.date)}</span>
                     <div className="flex-1 min-w-0">
@@ -423,6 +451,18 @@ export default function RevenuePage() {
                     </div>
                   </div>
                 ))}
+                {entries.length > visibleEntries && (
+                  <div className="p-2 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setVisibleEntries((n) => n + 50)}
+                      className="text-xs text-gray-400"
+                    >
+                      Show more ({entries.length - visibleEntries} older entries)
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-10">

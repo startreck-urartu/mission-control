@@ -271,7 +271,6 @@ function StageColumn({
 
 export default function ClientsPage() {
   const clients = useQuery(api.clients.getAllClients);
-  const metrics = useQuery(api.clients.getPipelineMetrics);
   const createClient = useMutation(api.clients.createClient);
   const updateClient = useMutation(api.clients.updateClient);
   const deleteClient = useMutation(api.clients.deleteClient);
@@ -300,6 +299,23 @@ export default function ClientsPage() {
     priority: "medium" as Client["priority"],
     tags: "",
   });
+
+  // Computed from the already-live client list — the page doesn't need a second
+  // full-table subscription (getPipelineMetrics) for numbers it can derive here
+  const metrics = useMemo(() => {
+    if (!clients) return undefined;
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    let totalPipeline = 0;
+    let totalWon = 0;
+    let followUpNeeded = 0;
+    for (const c of clients) {
+      if (c.stage === "paid") totalWon += c.value ?? 0;
+      else totalPipeline += c.value ?? 0;
+      if (c.followUpDate && c.followUpDate.slice(0, 10) <= today) followUpNeeded += 1;
+    }
+    return { totalClients: clients.length, totalPipeline, totalWon, followUpNeeded };
+  }, [clients]);
 
   const clientsByStage = useMemo(() => {
     const list = clients ?? [];
