@@ -1,5 +1,6 @@
 import { v, ConvexError } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 
 const DEDUP_WINDOW_SECONDS = 72 * 3600;
@@ -312,7 +313,8 @@ export const scheduleDemoCleanup = mutation({
   },
   handler: async (ctx, args) => {
     requireAuth(args.authToken);
-    const scheduledId = await ctx.scheduler.runAfter(
+    // Explicit type breaks the self-reference cycle (fn scheduled from its own module)
+    const scheduledId: Id<"_scheduled_functions"> = await ctx.scheduler.runAfter(
       args.delayMs,
       internal.polymarketSignals.cleanupDemoSignals,
       {},

@@ -1,23 +1,18 @@
 "use client";
 
-import { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Activity, LayoutGrid, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Doc } from "@/convex/_generated/dataModel";
 
 // Office components
-import { 
-  TeamMemberDesk, 
-  OfficeStats,
-  ActivityIndicator 
+import {
+  TeamMemberDesk,
+  OfficeStats
 } from "@/components/office";
-
-type TeamMember = Doc<"team">;
-type OfficeDesk = Doc<"office">;
 
 /**
  * Loading skeleton for office page
@@ -128,6 +123,8 @@ export default function OfficePage() {
 
   // Prevent hydration mismatch
   useEffect(() => {
+    // Intentional mount flag for hydration gating; must set state on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -172,6 +169,8 @@ export default function OfficePage() {
   
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // Sync initial media-query state on mount (browser-only API, not available at render time).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPrefersReducedMotion(mediaQuery.matches);
     
     const handler = (e: MediaQueryListEvent) => {

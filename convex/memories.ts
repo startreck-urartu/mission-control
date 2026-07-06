@@ -113,6 +113,16 @@ export const updateMemory = mutation({
     id: v.id("memories"),
     title: v.optional(v.string()),
     content: v.optional(v.string()),
+    type: v.optional(
+      v.union(
+        v.literal("conversation"),
+        v.literal("task"),
+        v.literal("decision"),
+        v.literal("insight"),
+        v.literal("note")
+      )
+    ),
+    source: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     importance: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
     metadata: v.optional(v.record(v.string(), v.any())),
@@ -193,7 +203,7 @@ export const addConversationFromOpenClaw = internalMutation({
       type: "conversation",
       tags: args.tags || ["openclaw"],
       source: args.source || "OpenClaw",
-      importance: (args.importance || "medium") as any,
+      importance: (args.importance || "medium") as "low" | "medium" | "high",
       metadata: args.metadata,
       createdAt: now,
       updatedAt: now,

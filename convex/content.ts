@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
+import { Doc } from "./_generated/dataModel";
 
 // Queries
 export const getAllContent = query({
@@ -205,11 +206,11 @@ export const upsertContentFromOpenClaw = internalMutation({
     const contentData = {
       title: args.title,
       description: args.description,
-      stage: args.stage as any,
-      contentType: args.contentType as any,
+      stage: args.stage as Doc<"content">["stage"],
+      contentType: args.contentType as Doc<"content">["contentType"],
       platform: args.platform,
       scriptContent: args.scriptContent,
-      assignedTo: args.assignedTo as any,
+      assignedTo: args.assignedTo as Doc<"content">["assignedTo"],
       tags: args.tags || [],
       updatedAt: now,
     };

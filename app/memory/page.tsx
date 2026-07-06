@@ -37,8 +37,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { cn, formatDate, formatTimeAgo } from "@/lib/utils";
-import { Doc } from "@/convex/_generated/dataModel";
+import { cn, formatTimeAgo } from "@/lib/utils";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type Memory = Doc<"memories">;
 
@@ -63,7 +63,7 @@ function MemoryCard({
 }: {
   memory: Memory;
   onEdit: (memory: Memory) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: Id<"memories">) => void;
 }) {
   const TypeIcon = MEMORY_TYPES[memory.type].icon;
 
@@ -160,8 +160,8 @@ export default function MemoryPage() {
   const [formData, setFormData] = useState<{
     title: string;
     content: string;
-    type: string;
-    importance: string;
+    type: Memory["type"];
+    importance: Memory["importance"];
     source: string;
     tags: string;
   }>({
@@ -227,17 +227,17 @@ export default function MemoryPage() {
       await updateMemory({
         id: editingMemory._id,
         ...data,
-      } as any);
+      });
     } else {
-      await createMemory(data as any);
+      await createMemory(data);
     }
 
     setIsDialogOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: Id<"memories">) => {
     if (confirm("Delete this memory?")) {
-      await deleteMemory({ id: id as any });
+      await deleteMemory({ id });
     }
   };
 
@@ -378,7 +378,7 @@ export default function MemoryPage() {
                 <Select
                   value={formData.type}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, type: v as any })
+                    setFormData({ ...formData, type: v as Memory["type"] })
                   }
                 >
                   <SelectTrigger>
@@ -401,7 +401,7 @@ export default function MemoryPage() {
                 <Select
                   value={formData.importance}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, importance: v as any })
+                    setFormData({ ...formData, importance: v as Memory["importance"] })
                   }
                 >
                   <SelectTrigger>

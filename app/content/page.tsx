@@ -6,7 +6,6 @@ import { api } from "@/convex/_generated/api";
 import {
   Plus,
   Play,
-  Pause,
   CheckCircle,
   FileText,
   Image,
@@ -22,7 +21,7 @@ import {
   Tag,
   ExternalLink,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,7 +41,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDate } from "@/lib/utils";
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type Content = Doc<"content">;
 
@@ -76,9 +75,9 @@ function ContentCard({
 }: {
   content: Content;
   onEdit: (content: Content) => void;
-  onDelete: (id: string) => void;
-  onAdvance: (id: string) => void;
-  onPrevious: (id: string) => void;
+  onDelete: (id: Id<"content">) => void;
+  onAdvance: (id: Id<"content">) => void;
+  onPrevious: (id: Id<"content">) => void;
 }) {
   const stageIndex = STAGES.findIndex((s) => s.id === content.stage);
   const progressPercent = ((stageIndex + 1) / STAGES.length) * 100;
@@ -218,7 +217,6 @@ export default function ContentPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
-  const [selectedStage, setSelectedStage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -268,7 +266,6 @@ export default function ContentPage() {
       videoUrl: "",
       publishDate: "",
     });
-    setSelectedStage(null);
     setIsDialogOpen(true);
   };
 
@@ -308,23 +305,23 @@ export default function ContentPage() {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: Id<"content">) => {
     if (confirm("Delete this content?")) {
-      await deleteContent({ id: id as any });
+      await deleteContent({ id });
     }
   };
 
-  const handleAdvance = async (id: string) => {
-    await advanceStage({ id: id as any });
+  const handleAdvance = async (id: Id<"content">) => {
+    await advanceStage({ id });
   };
 
-  const handlePrevious = async (id: string) => {
+  const handlePrevious = async (id: Id<"content">) => {
     const c = content.find((x) => x._id === id);
     if (!c) return;
     const currentIndex = STAGES.findIndex((s) => s.id === c.stage);
     const prevStage = STAGES[currentIndex - 1];
     if (prevStage) {
-      await updateContentStage({ id: id as any, stage: prevStage.id });
+      await updateContentStage({ id, stage: prevStage.id });
     }
   };
 
@@ -444,7 +441,7 @@ export default function ContentPage() {
                 <Select
                   value={formData.contentType}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, contentType: v as any })
+                    setFormData({ ...formData, contentType: v as ContentType })
                   }
                 >
                   <SelectTrigger>
@@ -464,7 +461,7 @@ export default function ContentPage() {
                 <Select
                   value={formData.stage}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, stage: v as any })
+                    setFormData({ ...formData, stage: v as ContentStage })
                   }
                 >
                   <SelectTrigger>
@@ -496,7 +493,7 @@ export default function ContentPage() {
                 <Select
                   value={formData.assignedTo}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, assignedTo: v as any })
+                    setFormData({ ...formData, assignedTo: v as AssignedTo })
                   }
                 >
                   <SelectTrigger>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Doc } from "@/convex/_generated/dataModel";
 
@@ -112,8 +112,6 @@ export default function AnimatedAvatar({
    * Uses requestAnimationFrame for smooth state transitions
    */
   useEffect(() => {
-    let frameId: number;
-    
     const updateState = () => {
       if (!isActive) {
         setAnimationState("idle");
@@ -123,8 +121,8 @@ export default function AnimatedAvatar({
         setAnimationState("idle");
       }
     };
-    
-    frameId = requestAnimationFrame(updateState);
+
+    const frameId = requestAnimationFrame(updateState);
     return () => cancelAnimationFrame(frameId);
   }, [isActive, isWorking]);
   

@@ -17,8 +17,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Hydrate theme from localStorage after mount (browser-only API);
+    // setting state here is intentional to avoid SSR hydration mismatch.
     const stored = localStorage.getItem("mc-theme") as Theme | null;
     if (stored === "light" || stored === "dark") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(stored);
     }
     setMounted(true);

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useState } from "react";
 import {
   Card,
@@ -17,7 +18,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -45,7 +45,7 @@ export default function UsageCostsPage() {
   const deleteModel = useMutation(api.llmUsage.deleteLLMModel);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingModel, setEditingModel] = useState<any>(null);
+  const [editingModel, setEditingModel] = useState<Doc<"llmUsage"> | null>(null);
   const [formData, setFormData] = useState({
     model: "",
     provider: "anthropic",
@@ -68,7 +68,7 @@ export default function UsageCostsPage() {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (model: any) => {
+  const handleEdit = (model: Doc<"llmUsage">) => {
     setEditingModel(model);
     setFormData({
       model: model.model,
@@ -105,7 +105,7 @@ export default function UsageCostsPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Delete this model?")) {
-      await deleteModel({ id: id as any });
+      await deleteModel({ id: id as Id<"llmUsage"> });
     }
   };
 
@@ -212,7 +212,7 @@ export default function UsageCostsPage() {
 
       {/* Models List */}
       <div className="grid grid-cols-1 gap-4">
-        {llmModels?.map((model) => (
+        {llmModels?.map((model: Doc<"llmUsage">) => (
           <Card key={model._id} className="bg-gray-900 border-gray-800">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">

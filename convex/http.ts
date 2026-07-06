@@ -1,5 +1,4 @@
 import { httpRouter } from "convex/server";
-import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 
@@ -176,9 +175,9 @@ http.route({
         JSON.stringify({ taskId, status: "dispatched", webhookFired: dispatched }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
-    } catch (e: any) {
+    } catch (e) {
       return new Response(
-        JSON.stringify({ error: e.message || "Dispatch failed" }),
+        JSON.stringify({ error: (e as Error).message || "Dispatch failed" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -289,9 +288,9 @@ http.route({
         JSON.stringify({ success: true, chainedTaskId }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
-    } catch (e: any) {
+    } catch (e) {
       return new Response(
-        JSON.stringify({ error: e.message || "Complete failed" }),
+        JSON.stringify({ error: (e as Error).message || "Complete failed" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
