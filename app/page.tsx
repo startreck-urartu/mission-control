@@ -62,6 +62,7 @@ export default function DashboardPage() {
   const activity = useQuery(api.activity.getRecentActivity, { limit: 15 });
   const metrics = useQuery(api.tasks.getTaskMetrics);
   const clientMetrics = useQuery(api.clients.getPipelineMetrics);
+  const monthRevenue = useQuery(api.revenue.getCurrentMonthRevenue);
   const goals = useQuery(api.goals.getGoalProgress);
 
   const tradingAgents = team?.filter((m) =>
@@ -203,23 +204,30 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Revenue Won */}
+          {/* Revenue This Month */}
           <Card className="glass border border-green-500/10 hover:border-green-500/20 transition-all duration-300 hover:shadow-green-500/5">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 rounded-lg bg-green-500/10">
                   <DollarSign className="w-4 h-4 text-green-400" />
                 </div>
-                <Link href="/clients" className="text-[10px] text-gray-600 hover:text-gray-400 flex items-center gap-0.5">
-                  Clients <ArrowRight className="w-3 h-3" />
+                <Link href="/revenue" className="text-[10px] text-gray-600 hover:text-gray-400 flex items-center gap-0.5">
+                  Revenue <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
               <div className="text-2xl font-bold text-white">
-                ${(clientMetrics?.totalWon ?? 0).toLocaleString()}
+                ${(monthRevenue?.received ?? 0).toLocaleString()}
               </div>
-              <div className="text-xs text-gray-400 mt-0.5">Revenue Won</div>
-              <div className="text-[11px] text-gray-600 mt-2">
-                Closed deals to date
+              <div className="text-xs text-gray-400 mt-0.5">Revenue This Month</div>
+              <div className="flex items-center gap-2 mt-2">
+                {(monthRevenue?.pending ?? 0) > 0 && (
+                  <span className="text-[11px] text-yellow-400">
+                    ${(monthRevenue?.pending ?? 0).toLocaleString()} pending
+                  </span>
+                )}
+                <span className="text-[11px] text-gray-600">
+                  ${(clientMetrics?.totalWon ?? 0).toLocaleString()} won all-time
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -258,9 +266,12 @@ export default function DashboardPage() {
                   <div className="p-2 rounded-lg bg-amber-500/10">
                     <Target className="w-4 h-4 text-amber-400" />
                   </div>
+                  <Link href="/revenue" className="text-[10px] text-gray-600 hover:text-gray-400 flex items-center gap-0.5">
+                    Set goal <ArrowRight className="w-3 h-3" />
+                  </Link>
                 </div>
                 <div className="text-sm text-gray-400">No active goal set</div>
-                <p className="text-[11px] text-gray-600 mt-1">Set a revenue or client goal via the API</p>
+                <p className="text-[11px] text-gray-600 mt-1">Set a monthly revenue target on the Revenue page</p>
               </CardContent>
             </Card>
           )}

@@ -5,6 +5,19 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import {
+  DndContext,
+  DragOverlay,
+  DragStartEvent,
+  DragEndEvent,
+  PointerSensor,
+  pointerWithin,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Plus,
   Users,
   TrendingUp,
@@ -170,6 +183,92 @@ function ClientCard({
   );
 }
 
+function DraggableClientCard({
+  client,
+  onEdit,
+  onDelete,
+  onMove,
+}: {
+  client: Client;
+  onEdit: (c: Client) => void;
+  onDelete: (id: Id<"clients">) => void;
+  onMove: (id: Id<"clients">, stage: Client["stage"]) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: client._id,
+    data: { client },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1 }}
+      {...attributes}
+      {...listeners}
+    >
+      <ClientCard client={client} onEdit={onEdit} onDelete={onDelete} onMove={onMove} />
+    </div>
+  );
+}
+
+function StageColumn({
+  stage,
+  clients,
+  onEdit,
+  onDelete,
+  onMove,
+}: {
+  stage: (typeof STAGES)[number];
+  clients: Client[];
+  onEdit: (c: Client) => void;
+  onDelete: (id: Id<"clients">) => void;
+  onMove: (id: Id<"clients">, stage: Client["stage"]) => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+  const stageValue = clients.reduce((sum, c) => sum + (c.value ?? 0), 0);
+
+  return (
+    <div className="w-72 sm:w-80 flex-shrink-0 flex flex-col">
+      <div className={cn("p-3 rounded-t-lg border-t-2", stage.border)}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className={cn("w-2 h-2 rounded-full", stage.color)} />
+            <h2 className="text-sm font-semibold text-gray-200">{stage.label}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">{clients.length}</span>
+            {stageValue > 0 && (
+              <span className="text-xs text-green-400">${stageValue.toLocaleString()}</span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div
+        ref={setNodeRef}
+        className={cn(
+          "flex-1 bg-[var(--surface-1)]/50 rounded-b-lg border border-white/[0.04] border-t-0 p-2 space-y-2 overflow-y-auto transition-colors",
+          isOver && "bg-white/[0.04] border-white/[0.1]"
+        )}
+      >
+        {clients.map((client) => (
+          <DraggableClientCard
+            key={client._id}
+            client={client}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onMove={onMove}
+          />
+        ))}
+        {clients.length === 0 && (
+          <div className="text-center py-8">
+            <span className="text-xs text-gray-600">No clients</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ClientsPage() {
   const clients = useQuery(api.clients.getAllClients);
   const metrics = useQuery(api.clients.getPipelineMetrics);
@@ -180,6 +279,12 @@ export default function ClientsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeClient, setActiveClient] = useState<Client | null>(null);
+
+  // distance threshold keeps card buttons clickable without starting a drag
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   const [formData, setFormData] = useState({
     name: "",
@@ -282,12 +387,28 @@ export default function ClientsPage() {
     await updateClient({ id, stage });
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveClient((event.active.data.current?.client as Client) ?? null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveClient(null);
+    if (!over) return;
+
+    const client = active.data.current?.client as Client | undefined;
+    const targetStage = STAGES.find((s) => s.id === String(over.id))?.id;
+    if (client && targetStage && targetStage !== client.stage) {
+      await handleMove(client._id, targetStage);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Client Pipeline</h1>
-          <p className="text-gray-400 mt-1">CADCAM Designs — track leads, proposals, and deals</p>
+          <p className="text-gray-400 mt-1">CADCAM Designs — drag deals between stages; Paid books revenue automatically</p>
         </div>
         <Button onClick={handleCreate} className="flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Client
@@ -352,48 +473,40 @@ export default function ClientsPage() {
       </div>
 
       {/* Pipeline columns */}
-      <div className="flex-1 overflow-x-auto min-h-0">
-        <div className="flex gap-3 pb-4 min-w-max">
-          {STAGES.map((stage) => {
-            const stageClients = clientsByStage[stage.id] ?? [];
-            const stageValue = stageClients.reduce((sum, c) => sum + (c.value ?? 0), 0);
-            return (
-              <div key={stage.id} className="w-72 sm:w-80 flex-shrink-0 flex flex-col">
-                <div className={cn("p-3 rounded-t-lg border-t-2", stage.border)}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={cn("w-2 h-2 rounded-full", stage.color)} />
-                      <h2 className="text-sm font-semibold text-gray-200">{stage.label}</h2>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">{stageClients.length}</span>
-                      {stageValue > 0 && (
-                        <span className="text-xs text-green-400">${stageValue.toLocaleString()}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex-1 bg-[var(--surface-1)]/50 rounded-b-lg border border-white/[0.04] border-t-0 p-2 space-y-2 overflow-y-auto">
-                  {stageClients.map((client) => (
-                    <ClientCard
-                      key={client._id}
-                      client={client}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onMove={handleMove}
-                    />
-                  ))}
-                  {stageClients.length === 0 && (
-                    <div className="text-center py-8">
-                      <span className="text-xs text-gray-600">No clients</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={pointerWithin}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex-1 overflow-x-auto min-h-0">
+          <div className="flex gap-3 pb-4 min-w-max">
+            {STAGES.map((stage) => (
+              <StageColumn
+                key={stage.id}
+                stage={stage}
+                clients={clientsByStage[stage.id] ?? []}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onMove={handleMove}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+
+        <DragOverlay>
+          {activeClient && (
+            <Card className="p-3.5 w-72 bg-[var(--surface-2)] border-white/[0.15] shadow-2xl rotate-2">
+              <h3 className="text-sm font-medium text-gray-200 truncate">{activeClient.name}</h3>
+              {!!activeClient.value && (
+                <span className="text-sm font-semibold text-green-400">
+                  ${activeClient.value.toLocaleString()}
+                </span>
+              )}
+            </Card>
+          )}
+        </DragOverlay>
+      </DndContext>
 
       {/* Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

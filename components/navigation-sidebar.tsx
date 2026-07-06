@@ -50,6 +50,7 @@ const sections: NavSection[] = [
     label: "Business",
     items: [
       { name: "Client Pipeline", href: "/clients", icon: Users },
+      { name: "Revenue & Goals", href: "/revenue", icon: CreditCard },
     ],
   },
   {

@@ -37,18 +37,35 @@ export const getGoalProgress = query({
       .withIndex("by_active", (q) => q.eq("isActive", true))
       .collect();
 
-    return activeGoals.map((goal) => {
-      const pct = goal.targetAmount > 0
-        ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100))
-        : 0;
-      const daysLeft = Math.max(
-        0,
-        Math.ceil(
-          (new Date(goal.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        )
-      );
-      return { ...goal, progressPct: pct, daysLeft };
-    });
+    return await Promise.all(
+      activeGoals.map(async (goal) => {
+        // Revenue goals track received revenue in their date range automatically;
+        // other categories keep the manually maintained currentAmount
+        let currentAmount = goal.currentAmount;
+        if (goal.category === "revenue") {
+          const items = await ctx.db
+            .query("revenue")
+            .withIndex("by_date", (q) =>
+              q.gte("date", goal.startDate).lte("date", goal.endDate)
+            )
+            .collect();
+          currentAmount = items
+            .filter((r) => r.status === "received")
+            .reduce((sum, r) => sum + r.amount, 0);
+        }
+
+        const pct = goal.targetAmount > 0
+          ? Math.min(100, Math.round((currentAmount / goal.targetAmount) * 100))
+          : 0;
+        const daysLeft = Math.max(
+          0,
+          Math.ceil(
+            (new Date(goal.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          )
+        );
+        return { ...goal, currentAmount, progressPct: pct, daysLeft };
+      })
+    );
   },
 });
 

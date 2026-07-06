@@ -123,6 +123,29 @@ export const updateClient = mutation({
       ...rest,
       updatedAt: new Date().toISOString(),
     });
+
+    // First transition into "paid" books the deal as revenue, unless revenue
+    // was already logged for this client (e.g. manually or a prior win)
+    if (rest.stage === "paid" && existing.stage !== "paid") {
+      const amount = rest.value ?? existing.value;
+      if (amount) {
+        const alreadyLogged = await ctx.db
+          .query("revenue")
+          .withIndex("by_client", (q) => q.eq("clientId", id))
+          .first();
+        if (!alreadyLogged) {
+          await ctx.db.insert("revenue", {
+            amount,
+            description: `Deal won — ${existing.name}`,
+            category: "cadcam-design",
+            clientId: id,
+            date: new Date(Date.now()).toISOString().slice(0, 10),
+            status: "received",
+            createdAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
   },
 });
 
