@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { getAll } from "./utils";
 
@@ -476,18 +476,25 @@ export const createDispatchedTask = internalMutation({
 });
 
 // Internal mutation: mark a task as completed (called by n8n via /api/tasks/complete)
-export const completeTask = internalMutation({
-  args: {
-    id: v.string(),
-    status: v.union(
-      v.literal("agent-reviewed"),
-      v.literal("validation-error"),
-      v.literal("failed")
-    ),
-    result: v.optional(v.string()),
-    error: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
+const completeTaskArgs = {
+  id: v.string(),
+  status: v.union(
+    v.literal("agent-reviewed"),
+    v.literal("validation-error"),
+    v.literal("failed")
+  ),
+  result: v.optional(v.string()),
+  error: v.optional(v.string()),
+};
+
+type CompleteTaskArgs = {
+  id: string;
+  status: "agent-reviewed" | "validation-error" | "failed";
+  result?: string;
+  error?: string;
+};
+
+async function completeTaskImpl(ctx: MutationCtx, args: CompleteTaskArgs) {
     // Convex IDs from external sources come as strings — normalize
     const task = await ctx.db
       .query("tasks")
@@ -547,7 +554,18 @@ export const completeTask = internalMutation({
       chainDepth: task.chainDepth,
       tags: task.tags,
     };
-  },
+}
+
+export const completeTask = internalMutation({
+  args: completeTaskArgs,
+  handler: completeTaskImpl,
+});
+
+// Public variant for external agents (n8n) — the .convex.site HTTP routes are
+// broken, so agents call this via .convex.cloud/api/mutation instead
+export const completeTaskFromAgent = mutation({
+  args: completeTaskArgs,
+  handler: completeTaskImpl,
 });
 
 // Query: task metrics for monitoring dashboard
