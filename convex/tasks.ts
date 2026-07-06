@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
-import { getAll, getFirstOrNull } from "./utils";
+import { Doc, Id } from "./_generated/dataModel";
+import { getAll } from "./utils";
 
 // Shared status validator (v3 — includes "dispatched")
 const taskStatusValidator = v.union(
@@ -201,9 +202,9 @@ export const upsertTaskFromOpenClaw = internalMutation({
     const taskData = {
       title: args.title,
       description: args.description,
-      status: args.status as any,
-      priority: args.priority as any,
-      assignee: args.assignee as any,
+      status: args.status as Doc<"tasks">["status"],
+      priority: args.priority as Doc<"tasks">["priority"],
+      assignee: args.assignee as Doc<"tasks">["assignee"],
       tags: args.tags || [],
       dueDate: args.dueDate,
       updatedAt: now,
@@ -390,7 +391,7 @@ export const recoverStaleTask = mutation({
     const now = new Date().toISOString();
     const newStatus = args.action === "retry" ? "in-progress" : "failed";
     await ctx.db.patch(args.id, {
-      status: newStatus as any,
+      status: newStatus,
       claimedBy: undefined,
       claimedAt: undefined,
       workflowRunId: undefined,
@@ -490,13 +491,13 @@ export const completeTask = internalMutation({
     // Convex IDs from external sources come as strings — normalize
     const task = await ctx.db
       .query("tasks")
-      .filter((q) => q.eq(q.field("_id"), args.id as any))
+      .filter((q) => q.eq(q.field("_id"), args.id as Id<"tasks">))
       .first();
     if (!task) throw new Error(`Task not found: ${args.id}`);
 
     const now = new Date().toISOString();
     await ctx.db.patch(task._id, {
-      status: args.status as any,
+      status: args.status,
       lastAgentResult: args.result,
       completedAt: now,
       updatedAt: now,

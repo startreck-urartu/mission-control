@@ -10,6 +10,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
@@ -24,15 +25,11 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   Plus,
-  Calendar,
   User,
   Bot,
-  AlertCircle,
   Clock,
-  MoreHorizontal,
   Trash2,
   Edit,
-  Check,
   Flag,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -55,7 +52,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDate } from "@/lib/utils";
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type Task = Doc<"tasks">;
 
@@ -83,7 +80,7 @@ function SortableTaskCard({
 }: {
   task: Task;
   onEdit: (task: Task) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: Id<"tasks">) => void;
 }) {
   const {
     attributes,
@@ -190,6 +187,27 @@ function SortableTaskCard({
   );
 }
 
+function DroppableColumnBody({
+  columnId,
+  children,
+}: {
+  columnId: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: columnId });
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex-1 bg-gray-900/50 rounded-b-lg border border-gray-800 border-t-0 p-2 overflow-y-auto transition-colors",
+        isOver && "bg-gray-800/60 border-gray-600"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 function DragOverlayCard({ task }: { task: Task }) {
   return (
     <Card className="p-4 bg-gray-800 border-gray-600 shadow-2xl rotate-2 scale-105">
@@ -220,9 +238,9 @@ export default function TasksPage() {
   const [formData, setFormData] = useState<{
     title: string;
     description: string;
-    status: string;
-    priority: string;
-    assignee: string;
+    status: Task["status"];
+    priority: Task["priority"];
+    assignee: Task["assignee"];
     dueDate: string;
     tags: string;
   }>({
@@ -273,11 +291,14 @@ export default function TasksPage() {
     const activeTask = tasks?.find((t) => t._id === active.id);
     if (!activeTask) return;
 
-    const newStatus = over.id as string;
-    const validStatus = COLUMNS.find((c) => c.id === newStatus)?.id;
+    // over.id is a column id when dropping on the column body, or a task id
+    // when dropping onto another card — resolve both to a target status
+    const overId = String(over.id);
+    const overTask = tasks?.find((t) => t._id === overId);
+    const newStatus = COLUMNS.find((c) => c.id === overId)?.id ?? overTask?.status;
 
-    if (validStatus && newStatus !== activeTask.status) {
-      await moveTask({ id: activeTask._id as any, status: newStatus as any });
+    if (newStatus && newStatus !== activeTask.status) {
+      await moveTask({ id: activeTask._id, status: newStatus });
     }
   }
 
@@ -319,18 +340,18 @@ export default function TasksPage() {
       await updateTask({
         id: editingTask._id,
         ...taskData,
-      } as any);
+      });
     } else {
-      await createTask(taskData as any);
+      await createTask(taskData);
     }
 
     setIsCreateDialogOpen(false);
     setEditingTask(null);
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: Id<"tasks">) {
     if (confirm("Are you sure you want to delete this task?")) {
-      await deleteTask({ id: id as any });
+      await deleteTask({ id });
     }
   }
 
@@ -374,11 +395,9 @@ export default function TasksPage() {
                   </Badge>
                 </div>
               </div>
-              <div
-                className="flex-1 bg-gray-900/50 rounded-b-lg border border-gray-800 border-t-0 p-2 overflow-y-auto"
-              >
+              <DroppableColumnBody columnId={column.id}>
                 <SortableContext
-                  items={(tasksByColumn[column.id] || []).map((t: any) => t._id)}
+                  items={(tasksByColumn[column.id] || []).map((t) => t._id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {(tasksByColumn[column.id] || []).map((task) => (
@@ -392,7 +411,7 @@ export default function TasksPage() {
                   ))}
                 </SortableContext>
                 <div className="pb-2" />
-              </div>
+              </DroppableColumnBody>
             </div>
           ))}
         </div>
@@ -441,7 +460,7 @@ export default function TasksPage() {
                 <Select
                   value={formData.status}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, status: v as any })
+                    setFormData({ ...formData, status: v as Task["status"] })
                   }
                 >
                   <SelectTrigger>
@@ -464,7 +483,7 @@ export default function TasksPage() {
                 <Select
                   value={formData.priority}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, priority: v as any })
+                    setFormData({ ...formData, priority: v as Task["priority"] })
                   }
                 >
                   <SelectTrigger>
@@ -484,7 +503,7 @@ export default function TasksPage() {
                 <Select
                   value={formData.assignee}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, assignee: v as any })
+                    setFormData({ ...formData, assignee: v as Task["assignee"] })
                   }
                 >
                   <SelectTrigger>

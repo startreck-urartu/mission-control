@@ -18,7 +18,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -34,15 +33,15 @@ import {
   Search,
   Trash2,
   Edit2,
-  FileText,
   BookMarked,
   Clock,
   CheckCircle,
-  Archive,
   Star,
-  ExternalLink,
   FolderOpen,
 } from "lucide-react";
+import { Doc, Id } from "@/convex/_generated/dataModel";
+
+type Book = Doc<"books">;
 
 const categories = [
   { value: "business", label: "Business", icon: "💼" },
@@ -86,22 +85,35 @@ export default function BooksPage() {
   const recordAccess = useMutation(api.books.recordAccess);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingBook, setEditingBook] = useState<any>(null);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    author: string;
+    description: string;
+    category: Book["category"];
+    format: Book["format"];
+    filePath: string;
+    fileSize: number;
+    fileUrl: string;
+    thumbnailUrl: string;
+    priority: Book["priority"];
+    notes: string;
+    tags: string;
+  }>({
     title: "",
     author: "",
     description: "",
-    category: "business" as const,
-    format: "pdf" as const,
+    category: "business",
+    format: "pdf",
     filePath: "",
     fileSize: 0,
     fileUrl: "",
     thumbnailUrl: "",
-    priority: "medium" as const,
+    priority: "medium",
     notes: "",
     tags: "",
   });
@@ -143,7 +155,7 @@ export default function BooksPage() {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (book: any) => {
+  const handleEdit = (book: Book) => {
     setEditingBook(book);
     setFormData({
       title: book.title,
@@ -208,13 +220,13 @@ export default function BooksPage() {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: Id<"books">) => {
     if (confirm("Delete this book from the library?")) {
-      await deleteBook({ id: id as any });
+      await deleteBook({ id });
     }
   };
 
-  const handleOpenBook = async (book: any) => {
+  const handleOpenBook = async (book: Book) => {
     await recordAccess({ id: book._id });
     if (book.fileUrl) {
       window.open(book.fileUrl, "_blank");
@@ -241,8 +253,6 @@ export default function BooksPage() {
     formats.find((f) => f.value === value)?.icon || "📎";
   const getStatusColor = (value: string) =>
     statuses.find((s) => s.value === value)?.color || "bg-gray-500";
-  const getStatusLabel = (value: string) =>
-    statuses.find((s) => s.value === value)?.label || value;
 
   return (
     <div className="space-y-6">
@@ -524,8 +534,8 @@ export default function BooksPage() {
                 <Label>Category</Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(v: any) =>
-                    setFormData({ ...formData, category: v })
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, category: v as Book["category"] })
                   }
                 >
                   <SelectTrigger className="bg-gray-800 border-gray-700">
@@ -544,8 +554,8 @@ export default function BooksPage() {
                 <Label>Format</Label>
                 <Select
                   value={formData.format}
-                  onValueChange={(v: any) =>
-                    setFormData({ ...formData, format: v })
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, format: v as Book["format"] })
                   }
                   disabled={!!editingBook}
                 >
@@ -565,8 +575,8 @@ export default function BooksPage() {
                 <Label>Priority</Label>
                 <Select
                   value={formData.priority}
-                  onValueChange={(v: any) =>
-                    setFormData({ ...formData, priority: v })
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, priority: v as Book["priority"] })
                   }
                 >
                   <SelectTrigger className="bg-gray-800 border-gray-700">

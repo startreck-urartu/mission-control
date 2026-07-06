@@ -251,6 +251,8 @@ function HealthPill({ status }: { status: TethysStatus }) {
     );
   }
 
+  // Staleness is intentionally computed against wall-clock time at render.
+  // eslint-disable-next-line react-hooks/purity
   const ageMs = Date.now() - new Date(status.createdAt).getTime();
   const stale = ageMs > STALE_AFTER_MS;
   const overall = status.metadata?.overall ?? "fail";
@@ -355,7 +357,6 @@ export default function PolymarketV2Page() {
   const pending = signals.filter((s) => s.status === "pending");
   const claimed = signals.filter((s) => s.status === "claimed");
   const filled = signals.filter((s) => s.status === "paper-filled");
-  const executed = signals.filter((s) => s.status === "executed");
   const expired = signals.filter((s) => s.status === "expired");
   const rejected = signals.filter((s) => s.status === "rejected");
 

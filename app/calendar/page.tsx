@@ -7,14 +7,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Clock,
   Calendar as CalendarIcon,
   Repeat,
   Zap,
   Users,
   CheckCircle2,
   Trash2,
-  Edit,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -49,7 +47,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type CalendarEvent = Doc<"calendar">;
 
@@ -184,7 +182,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate] = useState<Date | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -255,7 +253,7 @@ export default function CalendarPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Delete this event?")) {
-      await deleteEvent({ id: id as any });
+      await deleteEvent({ id: id as Id<"calendar"> });
     }
   };
 
@@ -422,7 +420,10 @@ export default function CalendarPage() {
                 <Select
                   value={formData.type}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, type: v as any })
+                    setFormData({
+                      ...formData,
+                      type: v as "task" | "cron" | "meeting" | "milestone",
+                    })
                   }
                 >
                   <SelectTrigger>
@@ -442,7 +443,10 @@ export default function CalendarPage() {
                 <Select
                   value={formData.assignedTo}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, assignedTo: v as any })
+                    setFormData({
+                      ...formData,
+                      assignedTo: v as "human" | "openclaw",
+                    })
                   }
                 >
                   <SelectTrigger>

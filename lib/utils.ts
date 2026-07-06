@@ -16,6 +16,13 @@ export function formatDate(dateString: string): string {
   });
 }
 
+// Avatar URLs entered during local dev may be absolute localhost URLs;
+// resolve them against the current origin so they work in production too
+export function normalizeAssetUrl(url: string | undefined): string | undefined {
+  if (!url) return url;
+  return url.replace(/^https?:\/\/localhost(:\d+)?\//, "/");
+}
+
 export function formatTimeAgo(dateString: string | undefined | null): string {
   if (!dateString) return "—";
   const date = new Date(dateString);

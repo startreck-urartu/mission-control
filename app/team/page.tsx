@@ -7,18 +7,14 @@ import {
   Plus,
   User,
   Bot,
-  Circle,
-  MoreHorizontal,
   Trash2,
   Edit,
-  Mail,
-  Wrench,
   Activity,
   UserCircle,
   Crown,
   Users,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,7 +35,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn, formatTimeAgo } from "@/lib/utils";
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type TeamMember = Doc<"team">;
 
@@ -71,12 +67,10 @@ function TeamMemberCard({
 }: {
   member: TeamMember;
   onEdit: (member: TeamMember) => void;
-  onDelete: (id: string) => void;
-  onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: Id<"team">) => void;
+  onStatusChange: (id: Id<"team">, status: TeamMember["status"]) => void;
   isSubagent?: boolean;
 }) {
-  const subagents = 0;
-
   return (
     <Card
       className={cn(
@@ -180,7 +174,7 @@ function TeamMemberCard({
             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.06]">
               <Select
                 value={member.status}
-                onValueChange={(v) => onStatusChange(member._id, v)}
+                onValueChange={(v) => onStatusChange(member._id, v as TeamMember["status"])}
               >
                 <SelectTrigger className="h-7 w-32 text-xs">
                   <div className="flex items-center gap-2">
@@ -246,9 +240,9 @@ export default function TeamPage() {
   const [formData, setFormData] = useState<{
     name: string;
     role: string;
-    type: string;
+    type: TeamMember["type"];
     avatar: string;
-    status: string;
+    status: TeamMember["status"];
     skills: string;
     description: string;
     email: string;
@@ -332,22 +326,22 @@ export default function TeamPage() {
       await updateTeamMember({
         id: editingMember._id,
         ...data,
-      } as any);
+      });
     } else {
-      await createTeamMember(data as any);
+      await createTeamMember(data);
     }
 
     setIsDialogOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: Id<"team">) => {
     if (confirm("Remove this team member?")) {
-      await deleteTeamMember({ id: id as any });
+      await deleteTeamMember({ id });
     }
   };
 
-  const handleStatusChange = async (id: string, status: string) => {
-    await updateStatus({ id: id as any, status: status as any });
+  const handleStatusChange = async (id: Id<"team">, status: TeamMember["status"]) => {
+    await updateStatus({ id, status });
   };
 
   return (
@@ -395,7 +389,7 @@ export default function TeamPage() {
               key={tab.id}
               variant={activeTab === tab.id ? "default" : "ghost"}
               size="sm"
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as "all" | "human" | "agent")}
             >
               {tab.label}
             </Button>
@@ -465,7 +459,7 @@ export default function TeamPage() {
                 <Select
                   value={formData.type}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, type: v as any })
+                    setFormData({ ...formData, type: v as TeamMember["type"] })
                   }
                 >
                   <SelectTrigger>
@@ -482,7 +476,7 @@ export default function TeamPage() {
                 <Select
                   value={formData.status}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, status: v as any })
+                    setFormData({ ...formData, status: v as TeamMember["status"] })
                   }
                 >
                   <SelectTrigger>
