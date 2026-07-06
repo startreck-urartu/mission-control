@@ -47,6 +47,12 @@ const sections: NavSection[] = [
     ],
   },
   {
+    label: "Business",
+    items: [
+      { name: "Client Pipeline", href: "/clients", icon: Users },
+    ],
+  },
+  {
     label: "Content",
     items: [
       { name: "Content Pipeline", href: "/content", icon: Video },

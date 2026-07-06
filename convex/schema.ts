@@ -387,4 +387,84 @@ export default defineSchema({
     ),
     createdAt: v.string(),
   }).index("by_thread", ["threadId"]),
+
+  // ───────────────────────────────
+  // Client Pipeline (CADCAM Designs)
+  // ───────────────────────────────
+  clients: defineTable({
+    name: v.string(),
+    company: v.optional(v.string()),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    source: v.optional(v.string()), // referral, linkedin, jck, website, etc.
+    stage: v.union(
+      v.literal("lead"),
+      v.literal("qualified"),
+      v.literal("proposal"),
+      v.literal("contract"),
+      v.literal("in-production"),
+      v.literal("delivered"),
+      v.literal("paid")
+    ),
+    value: v.optional(v.number()), // estimated deal value in USD
+    projectType: v.optional(v.string()), // "cad-design", "prototyping", "full-production"
+    notes: v.optional(v.string()),
+    followUpDate: v.optional(v.string()),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+    tags: v.optional(v.array(v.string())),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_stage", ["stage"])
+    .index("by_priority", ["priority"])
+    .index("by_follow_up", ["followUpDate"]),
+
+  // ───────────────────────────────
+  // Revenue Tracker
+  // ───────────────────────────────
+  revenue: defineTable({
+    amount: v.number(),
+    currency: v.optional(v.string()),
+    description: v.string(),
+    category: v.union(
+      v.literal("cadcam-design"),
+      v.literal("3dgoldsmith"),
+      v.literal("trading"),
+      v.literal("consulting"),
+      v.literal("other")
+    ),
+    clientId: v.optional(v.id("clients")),
+    date: v.string(), // ISO date
+    status: v.union(v.literal("pending"), v.literal("received")),
+    createdAt: v.string(),
+  })
+    .index("by_date", ["date"])
+    .index("by_category", ["category"])
+    .index("by_status", ["status"])
+    .index("by_client", ["clientId"]),
+
+  // ───────────────────────────────
+  // Financial Goals
+  // ───────────────────────────────
+  goals: defineTable({
+    title: v.string(),
+    description: v.optional(v.string()),
+    targetAmount: v.number(),
+    currentAmount: v.number(),
+    currency: v.optional(v.string()),
+    startDate: v.string(),
+    endDate: v.string(),
+    category: v.union(
+      v.literal("profit"),
+      v.literal("revenue"),
+      v.literal("clients"),
+      v.literal("trading"),
+      v.literal("custom")
+    ),
+    isActive: v.boolean(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_active", ["isActive"])
+    .index("by_end_date", ["endDate"]),
 });

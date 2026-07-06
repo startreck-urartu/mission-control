@@ -18,6 +18,9 @@ import {
   Video,
   XCircle,
   Zap,
+  DollarSign,
+  Briefcase,
+  Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,9 +59,10 @@ export default function DashboardPage() {
   const tasks = useQuery(api.tasks.getAllTasks);
   const content = useQuery(api.content.getAllContent);
   const team = useQuery(api.team.getAllTeamMembers);
-  const memories = useQuery(api.memories.getAllMemories);
   const activity = useQuery(api.activity.getRecentActivity, { limit: 15 });
   const metrics = useQuery(api.tasks.getTaskMetrics);
+  const clientMetrics = useQuery(api.clients.getPipelineMetrics);
+  const goals = useQuery(api.goals.getGoalProgress);
 
   const tradingAgents = team?.filter((m) =>
     TRADING_AGENTS.some((name) => m.name.toLowerCase() === name.toLowerCase())
@@ -146,13 +150,13 @@ export default function DashboardPage() {
             glowClass: "hover:glow-purple",
           },
           {
-            label: "Knowledge Base",
-            value: memories?.length ?? 0,
-            sub: "memories archived",
-            icon: Activity,
-            color: "text-yellow-400",
-            bg: "bg-yellow-500/10",
-            glowClass: "hover:glow-amber",
+            label: "Client Pipeline",
+            value: clientMetrics?.totalClients ?? 0,
+            sub: `$${(clientMetrics?.totalPipeline ?? 0).toLocaleString()} potential`,
+            icon: Briefcase,
+            color: "text-teal-400",
+            bg: "bg-teal-500/10",
+            glowClass: "hover:glow-teal",
           },
         ].map((stat) => (
           <Card key={stat.label} className={cn("transition-shadow duration-300", stat.glowClass)}>
@@ -169,6 +173,99 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      {/* Financial Snapshot */}
+      {(clientMetrics || goals) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 stagger-in">
+          {/* Pipeline Value */}
+          <Card className="glass border border-purple-500/10 hover:border-purple-500/20 transition-all duration-300 hover:shadow-purple-500/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 rounded-lg bg-purple-500/10">
+                  <Briefcase className="w-4 h-4 text-purple-400" />
+                </div>
+                <Link href="/clients" className="text-[10px] text-gray-600 hover:text-gray-400 flex items-center gap-0.5">
+                  Pipeline <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <div className="text-2xl font-bold text-white">
+                ${(clientMetrics?.totalPipeline ?? 0).toLocaleString()}
+              </div>
+              <div className="text-xs text-gray-400 mt-0.5">Pipeline Value</div>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[11px] text-gray-500">{clientMetrics?.totalClients ?? 0} clients</span>
+                {(clientMetrics?.followUpNeeded ?? 0) > 0 && (
+                  <span className="text-[11px] text-red-400 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {clientMetrics?.followUpNeeded} follow-ups
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Revenue Won */}
+          <Card className="glass border border-green-500/10 hover:border-green-500/20 transition-all duration-300 hover:shadow-green-500/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <DollarSign className="w-4 h-4 text-green-400" />
+                </div>
+                <Link href="/clients" className="text-[10px] text-gray-600 hover:text-gray-400 flex items-center gap-0.5">
+                  Clients <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <div className="text-2xl font-bold text-white">
+                ${(clientMetrics?.totalWon ?? 0).toLocaleString()}
+              </div>
+              <div className="text-xs text-gray-400 mt-0.5">Revenue Won</div>
+              <div className="text-[11px] text-gray-600 mt-2">
+                Closed deals to date
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Monthly Goal Progress */}
+          {goals && goals.length > 0 ? (
+            <Card className="glass border border-amber-500/10 hover:border-amber-500/20 transition-all duration-300 hover:shadow-amber-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-2 rounded-lg bg-amber-500/10">
+                    <Target className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <span className="text-[10px] text-gray-500">{goals[0].daysLeft}d left</span>
+                </div>
+                <div className="text-2xl font-bold text-white">
+                  ${goals[0].currentAmount.toLocaleString()}
+                  <span className="text-sm font-normal text-gray-500"> / ${goals[0].targetAmount.toLocaleString()}</span>
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">{goals[0].title}</div>
+                <div className="mt-2 w-full h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-amber-500/80 to-amber-400/60 transition-all duration-700"
+                    style={{ width: `${goals[0].progressPct}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-[11px] text-gray-600">{goals[0].progressPct}%</span>
+                  <span className="text-[11px] text-amber-400">${(goals[0].targetAmount - goals[0].currentAmount).toLocaleString()} to go</span>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="glass border border-amber-500/10">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-2 rounded-lg bg-amber-500/10">
+                    <Target className="w-4 h-4 text-amber-400" />
+                  </div>
+                </div>
+                <div className="text-sm text-gray-400">No active goal set</div>
+                <p className="text-[11px] text-gray-600 mt-1">Set a revenue or client goal via the API</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Task Pipeline Metrics */}
       {metrics && (
