@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
   }
 
+  // Bound the wait: the KB /chat can hang if its generation model stalls, and an
+  // un-timed fetch would freeze the request (and the UI) indefinitely.
+  const KB_TIMEOUT_MS = 45_000;
+
   let kbRes: Response;
   try {
     kbRes = await fetch(`${kbUrl}/chat`, {
@@ -31,11 +35,18 @@ export async function POST(req: NextRequest) {
         question: body.question,
         history: body.history ?? [],
       }),
+      signal: AbortSignal.timeout(KB_TIMEOUT_MS),
     });
-  } catch {
+  } catch (e) {
+    const timedOut =
+      e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
     return NextResponse.json(
-      { error: "Assistant unavailable — is the KB service running?" },
-      { status: 503 }
+      {
+        error: timedOut
+          ? "Assistant timed out — the knowledge-base service didn't respond in time. It may be busy or its model is unavailable."
+          : "Assistant unavailable — is the KB service running?",
+      },
+      { status: timedOut ? 504 : 503 }
     );
   }
 
@@ -46,7 +57,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const data = (await kbRes.json()) as { answer: string; citations: KBCitation[] };
+  let data: { answer: string; citations: KBCitation[] };
+  try {
+    data = (await kbRes.json()) as { answer: string; citations: KBCitation[] };
+  } catch {
+    return NextResponse.json(
+      { error: "Assistant returned an unreadable response." },
+      { status: 502 }
+    );
+  }
   // Map snake_case (KB) -> camelCase (Convex/JS). This is the only place we map.
   const citations = (data.citations ?? []).map((c) => ({
     lessonTitle: c.lesson_title,

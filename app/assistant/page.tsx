@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
@@ -41,6 +41,11 @@ export default function AssistantPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, sending]);
 
   async function handleSend() {
     const question = input.trim();
@@ -148,6 +153,21 @@ export default function AssistantPage() {
               </Card>
             </div>
           ))}
+          {sending && (
+            <div className="text-left">
+              <Card className="inline-block p-3">
+                <span className="flex items-center gap-2 text-gray-400 text-sm">
+                  <span className="inline-flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" />
+                  </span>
+                  Searching the knowledge base…
+                </span>
+              </Card>
+            </div>
+          )}
+          <div ref={bottomRef} />
         </div>
 
         {error && (
