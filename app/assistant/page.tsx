@@ -85,9 +85,9 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-[calc(100dvh-5rem)] md:h-[calc(100dvh-3rem)]">
       {/* Thread sidebar */}
-      <div className="w-64 border-r border-border p-3 flex flex-col gap-2">
+      <div className="w-64 border-r p-3 flex flex-col gap-2">
         <Button
           variant="outline"
           className="w-full justify-start gap-2"
@@ -100,8 +100,8 @@ export default function AssistantPage() {
             <button
               key={t._id}
               onClick={() => setActiveThreadId(t._id)}
-              className={`text-left text-sm px-2 py-1.5 rounded truncate hover:bg-accent ${
-                activeThreadId === t._id ? "bg-accent" : ""
+              className={`text-left text-sm px-2 py-1.5 rounded truncate transition-colors hover:bg-white/[0.04] ${
+                activeThreadId === t._id ? "bg-white/[0.06]" : ""
               }`}
             >
               {t.title}
@@ -112,14 +112,14 @@ export default function AssistantPage() {
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col">
-        <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2 border-b px-4 py-3">
           <MessageCircle className="h-5 w-5" />
           <h1 className="font-semibold">CAD Assistant</h1>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-gray-400 text-sm">
               Ask anything about your CAD-jewelry courses.
             </p>
           )}
@@ -127,7 +127,7 @@ export default function AssistantPage() {
             <div key={m._id} className={m.role === "user" ? "text-right" : "text-left"}>
               <Card
                 className={`inline-block max-w-[80%] p-3 text-sm whitespace-pre-wrap ${
-                  m.role === "user" ? "bg-primary text-primary-foreground" : ""
+                  m.role === "user" ? "bg-blue-500/15 text-blue-100 border-blue-500/20" : ""
                 }`}
               >
                 {m.content}
@@ -137,7 +137,7 @@ export default function AssistantPage() {
                       <span
                         key={i}
                         title={c.snippet}
-                        className="text-xs bg-muted text-muted-foreground rounded px-2 py-0.5"
+                        className="text-xs bg-white/[0.04] text-gray-400 rounded px-2 py-0.5"
                       >
                         {c.lessonTitle}
                         {fmtTs(c.startTs)}
@@ -151,10 +151,10 @@ export default function AssistantPage() {
         </div>
 
         {error && (
-          <div className="px-4 py-2 text-sm text-destructive">{error}</div>
+          <div role="alert" className="px-4 py-2 text-sm text-red-400">{error}</div>
         )}
 
-        <div className="border-t border-border p-3 flex gap-2">
+        <div className="border-t p-3 flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -167,7 +167,7 @@ export default function AssistantPage() {
             placeholder="Ask about bezels, topology, stone setting..."
             disabled={sending}
           />
-          <Button onClick={handleSend} disabled={sending || !input.trim()}>
+          <Button onClick={handleSend} disabled={sending || !input.trim()} aria-label="Send message">
             <Send className="h-4 w-4" />
           </Button>
         </div>

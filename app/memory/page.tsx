@@ -68,7 +68,7 @@ function MemoryCard({
   const TypeIcon = MEMORY_TYPES[memory.type].icon;
 
   return (
-    <Card className="group bg-gray-800 border-gray-700 hover:border-gray-600 transition-all overflow-hidden">
+    <Card className="group glass card-hover highlight-top transition-all overflow-hidden">
       <div className="p-4">
         <div className="flex items-start gap-3">
           <div
@@ -131,7 +131,7 @@ function MemoryCard({
                 {memory.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-300"
+                    className="text-xs px-2 py-0.5 bg-white/[0.06] rounded-full text-gray-300"
                   >
                     #{tag}
                   </span>
@@ -262,7 +262,7 @@ export default function MemoryPage() {
         </Button>
       </div>
 
-      <Card className="bg-gray-900 border-gray-800 mb-6">
+      <Card className="glass-subtle mb-6">
         <div className="p-4 flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />

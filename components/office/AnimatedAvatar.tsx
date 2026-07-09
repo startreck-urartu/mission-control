@@ -246,7 +246,7 @@ export default function AnimatedAvatar({
       
       {/* Enhanced tooltip with role info */}
       <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 translate-y-2 group-hover:translate-y-0">
-        <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg border border-gray-700">
+        <div className="glass text-white text-xs px-2 py-1 rounded shadow-lg">
           <span className="font-medium">{member.name}</span>
           <span className={cn("ml-1", colors.accent)}>· {member.role}</span>
         </div>

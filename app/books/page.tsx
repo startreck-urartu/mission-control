@@ -271,7 +271,7 @@ export default function BooksPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="glass card-hover highlight-top">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Total Books</CardTitle>
             <div className="p-2 rounded-lg bg-blue-400/10">
@@ -285,7 +285,7 @@ export default function BooksPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="glass card-hover highlight-top">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Reading Now</CardTitle>
             <div className="p-2 rounded-lg bg-green-400/10">
@@ -299,7 +299,7 @@ export default function BooksPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="glass card-hover highlight-top">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Completed</CardTitle>
             <div className="p-2 rounded-lg bg-purple-400/10">
@@ -313,7 +313,7 @@ export default function BooksPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="glass card-hover highlight-top">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Library Size</CardTitle>
             <div className="p-2 rounded-lg bg-yellow-400/10">
@@ -337,12 +337,12 @@ export default function BooksPage() {
               placeholder="Search books, authors, tags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-700"
+              className="pl-10 bg-white/[0.03] border-white/[0.08]"
             />
           </div>
         </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700">
+          <SelectTrigger className="w-[180px] bg-white/[0.03] border-white/[0.08]">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-700">
@@ -355,7 +355,7 @@ export default function BooksPage() {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700">
+          <SelectTrigger className="w-[180px] bg-white/[0.03] border-white/[0.08]">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-700">
@@ -374,13 +374,13 @@ export default function BooksPage() {
         {filteredBooks?.map((book) => (
           <Card
             key={book._id}
-            className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors cursor-pointer group"
+            className="glass card-hover highlight-top transition-colors cursor-pointer group"
             onClick={() => handleOpenBook(book)}
           >
             <CardContent className="p-4">
               <div className="flex gap-4">
                 {/* Thumbnail or Icon */}
-                <div className="w-16 h-20 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-20 bg-white/[0.04] rounded-lg flex items-center justify-center flex-shrink-0">
                   {book.thumbnailUrl ? (
                     <img
                       src={book.thumbnailUrl}
@@ -469,7 +469,7 @@ export default function BooksPage() {
         ))}
 
         {!filteredBooks?.length && (
-          <Card className="bg-gray-900 border-gray-800 col-span-full">
+          <Card className="glass card-hover highlight-top col-span-full">
             <CardContent className="p-8 text-center">
               <BookMarked className="w-12 h-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400">No books in the library yet.</p>
@@ -483,7 +483,7 @@ export default function BooksPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingBook ? "Edit Book" : "Add New Book"}</DialogTitle>
           <p className="text-sm text-gray-400">
@@ -500,7 +500,7 @@ export default function BooksPage() {
                     setFormData({ ...formData, title: e.target.value })
                   }
                   placeholder="Book title"
-                  className="bg-gray-800 border-gray-700"
+                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
               <div className="space-y-2">
@@ -511,7 +511,7 @@ export default function BooksPage() {
                     setFormData({ ...formData, author: e.target.value })
                   }
                   placeholder="Author name"
-                  className="bg-gray-800 border-gray-700"
+                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
             </div>
@@ -524,7 +524,7 @@ export default function BooksPage() {
                   setFormData({ ...formData, description: e.target.value })
                 }
                 placeholder="Brief description of the book"
-                className="bg-gray-800 border-gray-700"
+                className="bg-white/[0.03] border-white/[0.08]"
                 rows={2}
               />
             </div>
@@ -538,7 +538,7 @@ export default function BooksPage() {
                     setFormData({ ...formData, category: v as Book["category"] })
                   }
                 >
-                  <SelectTrigger className="bg-gray-800 border-gray-700">
+                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
@@ -559,7 +559,7 @@ export default function BooksPage() {
                   }
                   disabled={!!editingBook}
                 >
-                  <SelectTrigger className="bg-gray-800 border-gray-700">
+                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
@@ -579,7 +579,7 @@ export default function BooksPage() {
                     setFormData({ ...formData, priority: v as Book["priority"] })
                   }
                 >
-                  <SelectTrigger className="bg-gray-800 border-gray-700">
+                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
@@ -599,7 +599,7 @@ export default function BooksPage() {
                   setFormData({ ...formData, filePath: e.target.value })
                 }
                 placeholder="e.g., /Users/username/Documents/book.pdf"
-                className="bg-gray-800 border-gray-700"
+                className="bg-white/[0.03] border-white/[0.08]"
               />
               <p className="text-xs text-gray-500">
                 Path to the file on your local system
@@ -619,7 +619,7 @@ export default function BooksPage() {
                     })
                   }
                   placeholder="0"
-                  className="bg-gray-800 border-gray-700"
+                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
               <div className="space-y-2">
@@ -630,7 +630,7 @@ export default function BooksPage() {
                     setFormData({ ...formData, fileUrl: e.target.value })
                   }
                   placeholder="https://..."
-                  className="bg-gray-800 border-gray-700"
+                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
             </div>
@@ -643,7 +643,7 @@ export default function BooksPage() {
                   setFormData({ ...formData, thumbnailUrl: e.target.value })
                 }
                 placeholder="https://..."
-                className="bg-gray-800 border-gray-700"
+                className="bg-white/[0.03] border-white/[0.08]"
               />
             </div>
 
@@ -655,7 +655,7 @@ export default function BooksPage() {
                   setFormData({ ...formData, tags: e.target.value })
                 }
                 placeholder="e.g., cad, jewelry, marketing"
-                className="bg-gray-800 border-gray-700"
+                className="bg-white/[0.03] border-white/[0.08]"
               />
             </div>
 
@@ -667,7 +667,7 @@ export default function BooksPage() {
                   setFormData({ ...formData, notes: e.target.value })
                 }
                 placeholder="Personal notes about this book"
-                className="bg-gray-800 border-gray-700"
+                className="bg-white/[0.03] border-white/[0.08]"
                 rows={3}
               />
             </div>

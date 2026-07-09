@@ -84,7 +84,7 @@ function ContentCard({
   const TypeIcon = CONTENT_TYPES[content.contentType].icon;
 
   return (
-    <Card className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-all group overflow-hidden">
+    <Card className="glass card-hover highlight-top transition-all group overflow-hidden">
       <div className="h-1 w-full bg-gray-700">
         <div
           className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
@@ -164,7 +164,7 @@ function ContentCard({
             {content.tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-300"
+                className="text-xs px-2 py-0.5 bg-white/[0.06] rounded-full text-gray-300"
               >
                 {tag}
               </span>
@@ -360,7 +360,7 @@ export default function ContentPage() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h2 className="font-semibold text-gray-100">{stage.label}</h2>
-                      <Badge variant="secondary" className="bg-gray-800">
+                      <Badge variant="secondary" className="bg-white/[0.06]">
                         {stageContent.length}
                       </Badge>
                     </div>

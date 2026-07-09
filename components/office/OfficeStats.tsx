@@ -63,7 +63,7 @@ function StatCard({ label, value, icon, colorClass, trend, index }: StatCardProp
         transition: { duration: 0.2 }
       }}
     >
-      <Card className="bg-gray-900 border-gray-800 overflow-hidden group">
+      <Card className="glass card-hover highlight-top overflow-hidden group">
         <CardContent className="p-5">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -91,7 +91,7 @@ function StatCard({ label, value, icon, colorClass, trend, index }: StatCardProp
             <motion.div
               className={cn(
                 "p-3 rounded-xl transition-colors duration-300",
-                "bg-gray-800 group-hover:bg-gray-700"
+                "bg-white/[0.06] group-hover:bg-white/[0.1]"
               )}
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -101,7 +101,7 @@ function StatCard({ label, value, icon, colorClass, trend, index }: StatCardProp
           </div>
           
           {/* Subtle progress bar indicator */}
-          <div className="mt-4 h-1 bg-gray-800 rounded-full overflow-hidden">
+          <div className="mt-4 h-1 bg-white/[0.06] rounded-full overflow-hidden">
             <motion.div
               className={cn("h-full rounded-full", colorClass.replace("text-", "bg-"))}
               initial={{ width: 0 }}

@@ -24,21 +24,21 @@ function OfficeSkeleton() {
       {/* Header skeleton */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <div className="w-32 h-8 bg-gray-800 rounded animate-pulse" />
-          <div className="w-48 h-4 bg-gray-800 rounded animate-pulse" />
+          <div className="w-32 h-8 bg-white/[0.04] rounded animate-pulse" />
+          <div className="w-48 h-4 bg-white/[0.04] rounded animate-pulse" />
         </div>
       </div>
 
       {/* Stats skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="bg-gray-900 border-gray-800 p-4">
+          <Card key={i} className="glass card-hover highlight-top p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <div className="w-24 h-3 bg-gray-800 rounded animate-pulse" />
-                <div className="w-12 h-8 bg-gray-800 rounded animate-pulse" />
+                <div className="w-24 h-3 bg-white/[0.04] rounded animate-pulse" />
+                <div className="w-12 h-8 bg-white/[0.04] rounded animate-pulse" />
               </div>
-              <div className="w-10 h-10 bg-gray-800 rounded-xl animate-pulse" />
+              <div className="w-10 h-10 bg-white/[0.04] rounded-xl animate-pulse" />
             </div>
           </Card>
         ))}
@@ -47,7 +47,7 @@ function OfficeSkeleton() {
       {/* Grid skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Card key={i} className="bg-gray-900 border-gray-800 p-6 h-40 animate-pulse" />
+          <Card key={i} className="glass card-hover highlight-top p-6 h-40 animate-pulse" />
         ))}
       </div>
     </div>
@@ -64,7 +64,7 @@ function OfficeEmptyState() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="bg-gray-900 border-gray-800 p-12 text-center">
+      <Card className="glass card-hover highlight-top p-12 text-center">
         <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
@@ -218,7 +218,7 @@ export default function OfficePage() {
         </div>
 
         {/* View mode toggle */}
-        <div className="flex items-center gap-2 bg-gray-900 rounded-lg p-1 border border-gray-800">
+        <div className="flex items-center gap-2 glass-subtle rounded-lg p-1">
           <motion.button
             onClick={() => setViewMode("grid")}
             className={cn(
@@ -294,7 +294,7 @@ export default function OfficePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="fixed bottom-4 right-4 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-400 shadow-lg"
+            className="fixed bottom-4 right-4 glass rounded-lg px-3 py-2 text-xs text-gray-400 shadow-lg"
           >
             Animations reduced (accessibility on)
           </motion.div>

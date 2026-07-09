@@ -299,7 +299,7 @@ export default function CalendarPage() {
         </div>
 
         <div className="w-full lg:w-80 lg:flex-shrink-0">
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="glass-subtle">
             <div className="p-4 border-b border-gray-800">
               <h2 className="font-semibold text-gray-100">Upcoming Events</h2>
             </div>
@@ -310,7 +310,7 @@ export default function CalendarPage() {
                   <div
                     key={event._id}
                     onClick={() => handleEdit(event)}
-                    className="p-3 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-gray-600 cursor-pointer transition-all group"
+                    className="p-3 rounded-lg glass card-hover highlight-top cursor-pointer transition-all group"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -360,7 +360,7 @@ export default function CalendarPage() {
             </div>
           </Card>
 
-          <Card className="bg-gray-900 border-gray-800 mt-4">
+          <Card className="glass-subtle mt-4">
             <div className="p-4 border-b border-gray-800">
               <h2 className="font-semibold text-gray-100">Legend</h2>
             </div>

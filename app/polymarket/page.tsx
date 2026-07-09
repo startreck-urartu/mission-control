@@ -300,7 +300,7 @@ export default function PolymarketPage() {
                   {positions.map((pos, i) => (
                     <tr
                       key={pos.token_id ?? i}
-                      className="border-b border-white/[0.06]/50 hover:bg-white/[0.03] transition-colors"
+                      className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors"
                     >
                       <td className="px-5 py-3 font-mono text-xs text-gray-300">
                         {pos.market_id}
@@ -431,7 +431,7 @@ export default function PolymarketPage() {
                 {(recentTrades ?? []).map((trade) => (
                   <tr
                     key={trade.tradeId}
-                    className="border-b border-white/[0.06]/50 hover:bg-white/[0.03] transition-colors"
+                    className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors"
                   >
                     <td className="px-5 py-2.5 text-xs text-gray-400 whitespace-nowrap">
                       {formatTimestamp(trade.timestampUtc)}
