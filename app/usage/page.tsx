@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DollarSign,
   TrendingUp,
@@ -43,6 +44,9 @@ export default function UsageCostsPage() {
   const createModel = useMutation(api.llmUsage.createLLMModel);
   const updateModel = useMutation(api.llmUsage.updateLLMModel);
   const deleteModel = useMutation(api.llmUsage.deleteLLMModel);
+
+  const statsLoading = totalStats === undefined;
+  const modelsLoading = llmModels === undefined;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<Doc<"llmUsage"> | null>(null);
@@ -149,7 +153,7 @@ export default function UsageCostsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="glass card-hover highlight-top">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Total Spend</CardTitle>
             <div className="p-2 rounded-lg bg-green-400/10">
@@ -158,13 +162,13 @@ export default function UsageCostsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {totalStats ? formatCurrency(totalStats.totalCost) : "$0.00"}
+              {statsLoading ? <Skeleton className="h-8 w-20" /> : formatCurrency(totalStats.totalCost)}
             </div>
             <p className="text-xs text-gray-400 mt-1">Across all models</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="glass card-hover highlight-top">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Input Tokens</CardTitle>
             <div className="p-2 rounded-lg bg-blue-400/10">
@@ -173,13 +177,13 @@ export default function UsageCostsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {totalStats ? formatNumber(totalStats.totalInputTokens) : "0"}
+              {statsLoading ? <Skeleton className="h-8 w-20" /> : formatNumber(totalStats.totalInputTokens)}
             </div>
             <p className="text-xs text-gray-400 mt-1">Total consumed</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="glass card-hover highlight-top">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Output Tokens</CardTitle>
             <div className="p-2 rounded-lg bg-purple-400/10">
@@ -188,13 +192,13 @@ export default function UsageCostsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {totalStats ? formatNumber(totalStats.totalOutputTokens) : "0"}
+              {statsLoading ? <Skeleton className="h-8 w-20" /> : formatNumber(totalStats.totalOutputTokens)}
             </div>
             <p className="text-xs text-gray-400 mt-1">Total generated</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="glass card-hover highlight-top">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Active Models</CardTitle>
             <div className="p-2 rounded-lg bg-yellow-400/10">
@@ -203,17 +207,48 @@ export default function UsageCostsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {totalStats?.modelCount || 0}
+              {statsLoading ? <Skeleton className="h-8 w-12" /> : totalStats.modelCount}
             </div>
-            <p className="text-xs text-gray-400 mt-1">{totalStats?.totalRequests || 0} requests</p>
+            {statsLoading ? (
+              <Skeleton className="h-4 w-24 mt-1" />
+            ) : (
+              <p className="text-xs text-gray-400 mt-1">{totalStats.totalRequests} requests</p>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Models List */}
       <div className="grid grid-cols-1 gap-4">
+        {modelsLoading &&
+          [1, 2, 3].map((i) => (
+            <Card key={i} className="glass card-hover highlight-top">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="w-3 h-3 rounded-full mt-2" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                    <div className="flex items-center gap-2 mt-2">
+                      <Skeleton className="h-6 w-36" />
+                      <Skeleton className="h-6 w-36" />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-800">
+                  {[1, 2, 3, 4].map((j) => (
+                    <div key={j} className="space-y-2">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-6 w-20" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
         {llmModels?.map((model: Doc<"llmUsage">) => (
-          <Card key={model._id} className="bg-gray-900 border-gray-800">
+          <Card key={model._id} className="glass card-hover highlight-top">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4">
@@ -224,10 +259,10 @@ export default function UsageCostsPage() {
                       {model.provider} • {model.description}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-300">
+                      <span className="text-xs px-2 py-1 rounded bg-white/[0.06] text-gray-300">
                         Input: ${model.costPerInputToken}/1K tokens
                       </span>
-                      <span className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-300">
+                      <span className="text-xs px-2 py-1 rounded bg-white/[0.06] text-gray-300">
                         Output: ${model.costPerOutputToken}/1K tokens
                       </span>
                     </div>
@@ -289,8 +324,8 @@ export default function UsageCostsPage() {
           </Card>
         ))}
 
-        {!llmModels?.length && (
-          <Card className="bg-gray-900 border-gray-800">
+        {!modelsLoading && !llmModels?.length && (
+          <Card className="glass card-hover highlight-top">
             <CardContent className="p-8 text-center">
               <Cpu className="w-12 h-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400">No LLM models configured yet.</p>
@@ -302,7 +337,7 @@ export default function UsageCostsPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-gray-900 border-gray-800 text-white">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingModel ? "Edit Model" : "Add New Model"}</DialogTitle>
           </DialogHeader>
@@ -315,7 +350,7 @@ export default function UsageCostsPage() {
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                   placeholder="claude-opus-4.5"
                   disabled={!!editingModel}
-                  className="bg-gray-800 border-gray-700"
+                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
               <div className="space-y-2">
@@ -325,7 +360,7 @@ export default function UsageCostsPage() {
                   onValueChange={(v) => setFormData({ ...formData, provider: v })}
                   disabled={!!editingModel}
                 >
-                  <SelectTrigger className="bg-gray-800 border-gray-700">
+                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
@@ -347,7 +382,7 @@ export default function UsageCostsPage() {
                   step="0.0001"
                   value={formData.costPerInputToken}
                   onChange={(e) => setFormData({ ...formData, costPerInputToken: parseFloat(e.target.value) })}
-                  className="bg-gray-800 border-gray-700"
+                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
               <div className="space-y-2">
@@ -357,7 +392,7 @@ export default function UsageCostsPage() {
                   step="0.0001"
                   value={formData.costPerOutputToken}
                   onChange={(e) => setFormData({ ...formData, costPerOutputToken: parseFloat(e.target.value) })}
-                  className="bg-gray-800 border-gray-700"
+                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
             </div>
@@ -369,7 +404,7 @@ export default function UsageCostsPage() {
                 value={formData.budgetLimit || ""}
                 onChange={(e) => setFormData({ ...formData, budgetLimit: e.target.value ? parseFloat(e.target.value) : 0 })}
                 placeholder="e.g., 1000"
-                className="bg-gray-800 border-gray-700"
+                className="bg-white/[0.03] border-white/[0.08]"
               />
             </div>
 
@@ -379,7 +414,7 @@ export default function UsageCostsPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="e.g., High-performance reasoning model"
-                className="bg-gray-800 border-gray-700"
+                className="bg-white/[0.03] border-white/[0.08]"
               />
             </div>
 

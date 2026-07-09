@@ -35,6 +35,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -105,7 +106,7 @@ function SortableTaskCard({
       {...listeners}
       className="group"
     >
-      <Card className="p-4 bg-gray-800 border-gray-700 hover:border-gray-600 cursor-move transition-all hover:shadow-lg">
+      <Card className="p-4 glass card-hover highlight-top cursor-move transition-all hover:shadow-lg">
         <div className="flex items-start justify-between">
           <h3 className="text-sm font-medium text-gray-100 leading-tight">
             {task.title}
@@ -175,7 +176,7 @@ function SortableTaskCard({
             {task.tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-300"
+                className="text-xs px-2 py-0.5 bg-white/[0.06] rounded-full text-gray-300"
               >
                 {tag}
               </span>
@@ -199,7 +200,7 @@ function DroppableColumnBody({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex-1 bg-gray-900/50 rounded-b-lg border border-gray-800 border-t-0 p-2 overflow-y-auto transition-colors",
+        "flex-1 glass-subtle rounded-b-lg border-t-0 p-2 overflow-y-auto transition-colors",
         isOver && "bg-gray-800/60 border-gray-600"
       )}
     >
@@ -210,7 +211,7 @@ function DroppableColumnBody({
 
 function DragOverlayCard({ task }: { task: Task }) {
   return (
-    <Card className="p-4 bg-gray-800 border-gray-600 shadow-2xl rotate-2 scale-105">
+    <Card className="p-4 glass border-white/[0.08] shadow-2xl rotate-2 scale-105">
       <h3 className="text-sm font-medium text-gray-100">{task.title}</h3>
       <Badge
         className={cn(
@@ -224,8 +225,40 @@ function DragOverlayCard({ task }: { task: Task }) {
   );
 }
 
+function TasksBoardSkeleton() {
+  return (
+    <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 min-h-0 overflow-x-auto">
+      {COLUMNS.map((column) => (
+        <div key={column.id} className="flex flex-col min-h-0">
+          <div className={cn("p-3 rounded-t-lg border-t-2", column.color)}>
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-5 w-8 rounded-full" />
+            </div>
+          </div>
+          <div className="flex-1 glass-subtle rounded-b-lg border-t-0 p-2 overflow-y-auto">
+            {[1, 2].map((i) => (
+              <div key={i} className="mb-2">
+                <Card className="p-4 glass highlight-top">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-full mt-2" />
+                  <div className="flex items-center gap-2 mt-3">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-3 w-3" />
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function TasksPage() {
   const tasks = useQuery(api.tasks.getAllTasks);
+  const isLoading = tasks === undefined;
   const moveTask = useMutation(api.tasks.moveTask);
   const createTask = useMutation(api.tasks.createTask);
   const updateTask = useMutation(api.tasks.updateTask);
@@ -370,6 +403,9 @@ export default function TasksPage() {
         </Button>
       </div>
 
+      {isLoading ? (
+        <TasksBoardSkeleton />
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -390,7 +426,7 @@ export default function TasksPage() {
               >
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-gray-100">{column.title}</h2>
-                  <Badge variant="secondary" className="bg-gray-800">
+                  <Badge variant="secondary" className="bg-white/[0.06]">
                     {tasksByColumn[column.id]?.length || 0}
                   </Badge>
                 </div>
@@ -420,6 +456,7 @@ export default function TasksPage() {
           {activeTask && <DragOverlayCard task={activeTask} />}
         </DragOverlay>
       </DndContext>
+      )}
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">

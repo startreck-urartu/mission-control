@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatDate } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
@@ -84,7 +85,7 @@ function ContentCard({
   const TypeIcon = CONTENT_TYPES[content.contentType].icon;
 
   return (
-    <Card className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-all group overflow-hidden">
+    <Card className="glass card-hover highlight-top transition-all group overflow-hidden">
       <div className="h-1 w-full bg-gray-700">
         <div
           className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
@@ -164,7 +165,7 @@ function ContentCard({
             {content.tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-300"
+                className="text-xs px-2 py-0.5 bg-white/[0.06] rounded-full text-gray-300"
               >
                 {tag}
               </span>
@@ -207,8 +208,38 @@ function ContentCard({
   );
 }
 
+function ContentSkeleton() {
+  return (
+    <div className="flex gap-4 pb-4 min-w-0 md:min-w-max">
+      {STAGES.map((stage) => (
+        <div key={stage.id} className="w-60 sm:w-72 flex-shrink-0">
+          <div className="flex items-center gap-2 mb-3">
+            <Skeleton className="w-8 h-8 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-0.5 w-full" />
+            </div>
+          </div>
+          <div className="space-y-3">
+            {[1, 2].map((i) => (
+              <Card key={i} className="glass highlight-top overflow-hidden">
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ContentPage() {
-  const content = useQuery(api.content.getAllContent) || [];
+  const content = useQuery(api.content.getAllContent);
+  const isLoading = content === undefined;
   const createContent = useMutation(api.content.createContent);
   const updateContent = useMutation(api.content.updateContent);
   const deleteContent = useMutation(api.content.deleteContent);
@@ -246,7 +277,7 @@ export default function ContentPage() {
 
   const contentByStage = useMemo(() => {
     return STAGES.reduce((acc, stage) => {
-      acc[stage.id] = content.filter((c) => c.stage === stage.id);
+      acc[stage.id] = (content ?? []).filter((c) => c.stage === stage.id);
       return acc;
     }, {} as Record<string, Content[]>);
   }, [content]);
@@ -316,7 +347,7 @@ export default function ContentPage() {
   };
 
   const handlePrevious = async (id: Id<"content">) => {
-    const c = content.find((x) => x._id === id);
+    const c = (content ?? []).find((x) => x._id === id);
     if (!c) return;
     const currentIndex = STAGES.findIndex((s) => s.id === c.stage);
     const prevStage = STAGES[currentIndex - 1];
@@ -341,6 +372,9 @@ export default function ContentPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto">
+        {isLoading ? (
+          <ContentSkeleton />
+        ) : (
         <div className="flex gap-4 pb-4 min-w-0 md:min-w-max">
           {STAGES.map((stage, index) => {
             const StageIcon = stage.icon;
@@ -360,7 +394,7 @@ export default function ContentPage() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h2 className="font-semibold text-gray-100">{stage.label}</h2>
-                      <Badge variant="secondary" className="bg-gray-800">
+                      <Badge variant="secondary" className="bg-white/[0.06]">
                         {stageContent.length}
                       </Badge>
                     </div>
@@ -397,6 +431,7 @@ export default function ContentPage() {
             );
           })}
         </div>
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

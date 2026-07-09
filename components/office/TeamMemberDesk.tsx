@@ -101,10 +101,10 @@ export function TeamMemberDesk({
       className={cn(
         "relative p-6 rounded-xl border-2 backdrop-blur-sm overflow-hidden",
         isWorking
-          ? "bg-gray-800/90 border-blue-500/50"
+          ? "glass card-hover border-blue-500/50"
           : isActive
-          ? "bg-gray-800/70 border-gray-700"
-          : "bg-gray-900/50 border-gray-800"
+          ? "glass card-hover highlight-top"
+          : "glass card-hover highlight-top"
       )}
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
       animate={isVisible ? { opacity: 1, y: 0, scale: 1 } : {}}
@@ -226,8 +226,8 @@ export function TeamMemberDesk({
                   variant="outline"
                   className={cn(
                     "text-[10px] border-gray-700 transition-colors duration-200",
-                    isWorking && "bg-gray-700/50 text-gray-300",
-                    !isWorking && "bg-gray-800 text-gray-400"
+                    isWorking && "bg-white/[0.06] text-gray-300",
+                    !isWorking && "bg-white/[0.06] text-gray-400"
                   )}
                 >
                   {skill}
@@ -237,7 +237,7 @@ export function TeamMemberDesk({
             {member.skills.length > 3 && (
               <Badge
                 variant="outline"
-                className="text-[10px] bg-gray-800/50 border-gray-700 text-gray-500"
+                className="text-[10px] bg-white/[0.06] border-gray-700 text-gray-500"
               >
                 +{member.skills.length - 3}
               </Badge>

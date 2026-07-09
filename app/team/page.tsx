@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
@@ -227,7 +228,8 @@ function TeamMemberCard({
 }
 
 export default function TeamPage() {
-  const team = useQuery(api.team.getAllTeamMembers) || [];
+  const team = useQuery(api.team.getAllTeamMembers);
+  const isLoading = team === undefined;
   const createTeamMember = useMutation(api.team.createTeamMember);
   const updateTeamMember = useMutation(api.team.updateTeamMember);
   const deleteTeamMember = useMutation(api.team.deleteTeamMember);
@@ -260,10 +262,11 @@ export default function TeamPage() {
   });
 
   const filteredTeam = useMemo(() => {
+    const members = team ?? [];
     const filtered =
       activeTab === "all"
-        ? team
-        : team.filter((m) => m.type === activeTab);
+        ? members
+        : members.filter((m) => m.type === activeTab);
     return filtered.sort((a, b) => {
       // Main agent first, then by status (online first)
       if (a.isMainAgent && !b.isMainAgent) return -1;
@@ -274,11 +277,12 @@ export default function TeamPage() {
   }, [team, activeTab]);
 
   const stats = useMemo(() => {
+    const members = team ?? [];
     return {
-      total: team.length,
-      human: team.filter((m) => m.type === "human").length,
-      agents: team.filter((m) => m.type === "agent").length,
-      online: team.filter((m) => m.status === "online").length,
+      total: members.length,
+      human: members.filter((m) => m.type === "human").length,
+      agents: members.filter((m) => m.type === "agent").length,
+      online: members.filter((m) => m.status === "online").length,
     };
   }, [team]);
 
@@ -358,24 +362,38 @@ export default function TeamPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Total", value: stats.total, icon: Users },
-          { label: "Human", value: stats.human, icon: User },
-          { label: "Agents", value: stats.agents, icon: Bot },
-          { label: "Online", value: stats.online, icon: Activity },
-        ].map((stat) => (
-          <Card key={stat.label} className="glass">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <stat.icon className="w-8 h-8 text-gray-500" />
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-white">{stat.value}</div>
-                  <div className="text-xs text-gray-400">{stat.label}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {isLoading
+          ? [1, 2, 3, 4].map((i) => (
+              <Card key={i} className="glass">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="w-8 h-8" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-7 w-10 ml-auto" />
+                      <Skeleton className="h-3 w-14" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          : [
+              { label: "Total", value: stats.total, icon: Users },
+              { label: "Human", value: stats.human, icon: User },
+              { label: "Agents", value: stats.agents, icon: Bot },
+              { label: "Online", value: stats.online, icon: Activity },
+            ].map((stat) => (
+              <Card key={stat.label} className="glass">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <stat.icon className="w-8 h-8 text-gray-500" />
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-white">{stat.value}</div>
+                      <div className="text-xs text-gray-400">{stat.label}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
       </div>
 
       <Card className="glass mb-6">
@@ -398,6 +416,29 @@ export default function TeamPage() {
       </Card>
 
       <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="glass overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="w-14 h-14 rounded-full shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-4 w-24" />
+                      <div className="flex gap-1">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                      <Skeleton className="h-7 w-32" />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
           {filteredTeam.map((member) => (
             <TeamMemberCard
@@ -418,6 +459,7 @@ export default function TeamPage() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

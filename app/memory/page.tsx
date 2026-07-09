@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
@@ -68,7 +69,7 @@ function MemoryCard({
   const TypeIcon = MEMORY_TYPES[memory.type].icon;
 
   return (
-    <Card className="group bg-gray-800 border-gray-700 hover:border-gray-600 transition-all overflow-hidden">
+    <Card className="group glass card-hover highlight-top transition-all overflow-hidden">
       <div className="p-4">
         <div className="flex items-start gap-3">
           <div
@@ -131,7 +132,7 @@ function MemoryCard({
                 {memory.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-300"
+                    className="text-xs px-2 py-0.5 bg-white/[0.06] rounded-full text-gray-300"
                   >
                     #{tag}
                   </span>
@@ -145,8 +146,30 @@ function MemoryCard({
   );
 }
 
+function MemorySkeleton() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <Card key={i} className="glass highlight-top overflow-hidden">
+          <div className="p-4">
+            <div className="flex items-start gap-3">
+              <Skeleton className="w-10 h-10 rounded-lg flex-shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function MemoryPage() {
-  const memories = useQuery(api.memories.getAllMemories) || [];
+  const memories = useQuery(api.memories.getAllMemories);
+  const isLoading = memories === undefined;
   const createMemory = useMutation(api.memories.createMemory);
   const updateMemory = useMutation(api.memories.updateMemory);
   const deleteMemory = useMutation(api.memories.deleteMemory);
@@ -174,7 +197,7 @@ export default function MemoryPage() {
   });
 
   const filteredMemories = useMemo(() => {
-    return memories
+    return (memories ?? [])
       .filter((memory) => {
         if (typeFilter && memory.type !== typeFilter) return false;
         if (importanceFilter && memory.importance !== importanceFilter) return false;
@@ -262,7 +285,7 @@ export default function MemoryPage() {
         </Button>
       </div>
 
-      <Card className="bg-gray-900 border-gray-800 mb-6">
+      <Card className="glass-subtle mb-6">
         <div className="p-4 flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -315,6 +338,9 @@ export default function MemoryPage() {
       </Card>
 
       <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <MemorySkeleton />
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
           {filteredMemories.map((memory) => (
             <MemoryCard
@@ -328,16 +354,17 @@ export default function MemoryPage() {
             <div className="col-span-full text-center py-12">
               <Brain className="w-12 h-12 text-gray-600 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-300">
-                {memories.length === 0 ? "No memories yet" : "No matches found"}
+                {(memories ?? []).length === 0 ? "No memories yet" : "No matches found"}
               </h3>
               <p className="text-gray-500 mt-1">
-                {memories.length === 0
+                {(memories ?? []).length === 0
                   ? "Start building your memory archive"
                   : "Try adjusting your filters or search query"}
               </p>
             </div>
           )}
         </div>
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

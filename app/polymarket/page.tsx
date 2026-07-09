@@ -14,6 +14,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -300,7 +301,7 @@ export default function PolymarketPage() {
                   {positions.map((pos, i) => (
                     <tr
                       key={pos.token_id ?? i}
-                      className="border-b border-white/[0.06]/50 hover:bg-white/[0.03] transition-colors"
+                      className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors"
                     >
                       <td className="px-5 py-3 font-mono text-xs text-gray-300">
                         {pos.market_id}
@@ -401,13 +402,13 @@ export default function PolymarketPage() {
           <span className="text-xs text-gray-500">Last 50</span>
         </div>
 
-        {isLoading ? (
+        {recentTrades === undefined ? (
           <div className="p-5 space-y-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-10 bg-gray-700 rounded animate-pulse" />
+              <Skeleton key={i} className="h-10 w-full" />
             ))}
           </div>
-        ) : (recentTrades?.length ?? 0) === 0 ? (
+        ) : recentTrades.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-gray-500">
             No trades recorded yet
           </div>
@@ -431,7 +432,7 @@ export default function PolymarketPage() {
                 {(recentTrades ?? []).map((trade) => (
                   <tr
                     key={trade.tradeId}
-                    className="border-b border-white/[0.06]/50 hover:bg-white/[0.03] transition-colors"
+                    className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors"
                   >
                     <td className="px-5 py-2.5 text-xs text-gray-400 whitespace-nowrap">
                       {formatTimestamp(trade.timestampUtc)}

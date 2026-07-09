@@ -30,6 +30,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -173,8 +174,57 @@ function CalendarGrid({
   );
 }
 
+function CalendarPageSkeleton() {
+  return (
+    <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="grid grid-cols-7 gap-1">
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="p-2 flex justify-center">
+              <Skeleton className="h-4 w-8" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1 flex-1">
+          {Array.from({ length: 35 }).map((_, i) => (
+            <div
+              key={i}
+              className="min-h-[100px] p-2 rounded-lg border bg-gray-900 border-gray-800"
+            >
+              <Skeleton className="h-4 w-6" />
+              <Skeleton className="h-5 w-full mt-2" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="w-full lg:w-80 lg:flex-shrink-0">
+        <Card className="glass-subtle">
+          <div className="p-4 border-b border-gray-800">
+            <h2 className="font-semibold text-gray-100">Upcoming Events</h2>
+          </div>
+          <div className="p-4 space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-3 rounded-lg glass highlight-top">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="w-8 h-8 rounded flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2 mt-2" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 export default function CalendarPage() {
-  const events = useQuery(api.calendar.getAllEvents) || [];
+  const events = useQuery(api.calendar.getAllEvents);
+  const isLoading = events === undefined;
   const createEvent = useMutation(api.calendar.createEvent);
   const updateEvent = useMutation(api.calendar.updateEvent);
   const deleteEvent = useMutation(api.calendar.deleteEvent);
@@ -257,7 +307,7 @@ export default function CalendarPage() {
     }
   };
 
-  const upcomingEvents = events
+  const upcomingEvents = (events ?? [])
     .filter((e) => new Date(e.startDate) >= new Date())
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     .slice(0, 10);
@@ -288,18 +338,21 @@ export default function CalendarPage() {
         </Button>
       </div>
 
+      {isLoading ? (
+        <CalendarPageSkeleton />
+      ) : (
       <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
         <div className="flex-1 flex flex-col min-h-0">
           <CalendarGrid
             currentDate={currentDate}
-            events={events}
+            events={events ?? []}
             onSelectDate={handleCreate}
             onSelectEvent={handleEdit}
           />
         </div>
 
         <div className="w-full lg:w-80 lg:flex-shrink-0">
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="glass-subtle">
             <div className="p-4 border-b border-gray-800">
               <h2 className="font-semibold text-gray-100">Upcoming Events</h2>
             </div>
@@ -310,7 +363,7 @@ export default function CalendarPage() {
                   <div
                     key={event._id}
                     onClick={() => handleEdit(event)}
-                    className="p-3 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-gray-600 cursor-pointer transition-all group"
+                    className="p-3 rounded-lg glass card-hover highlight-top cursor-pointer transition-all group"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -360,7 +413,7 @@ export default function CalendarPage() {
             </div>
           </Card>
 
-          <Card className="bg-gray-900 border-gray-800 mt-4">
+          <Card className="glass-subtle mt-4">
             <div className="p-4 border-b border-gray-800">
               <h2 className="font-semibold text-gray-100">Legend</h2>
             </div>
@@ -379,6 +432,7 @@ export default function CalendarPage() {
           </Card>
         </div>
       </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
