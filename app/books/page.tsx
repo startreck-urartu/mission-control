@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   BookOpen,
   Plus,
@@ -83,6 +84,9 @@ export default function BooksPage() {
   const updateBook = useMutation(api.books.updateBook);
   const deleteBook = useMutation(api.books.deleteBook);
   const recordAccess = useMutation(api.books.recordAccess);
+
+  const statsLoading = stats === undefined;
+  const booksLoading = books === undefined;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
@@ -280,7 +284,7 @@ export default function BooksPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {stats?.totalBooks || 0}
+              {statsLoading ? <Skeleton className="h-8 w-12" /> : stats.totalBooks}
             </div>
           </CardContent>
         </Card>
@@ -294,7 +298,7 @@ export default function BooksPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {stats?.currentlyReading || 0}
+              {statsLoading ? <Skeleton className="h-8 w-12" /> : stats.currentlyReading}
             </div>
           </CardContent>
         </Card>
@@ -308,7 +312,7 @@ export default function BooksPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {stats?.completed || 0}
+              {statsLoading ? <Skeleton className="h-8 w-12" /> : stats.completed}
             </div>
           </CardContent>
         </Card>
@@ -322,7 +326,7 @@ export default function BooksPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {stats ? formatFileSize(stats.totalSize) : "0 B"}
+              {statsLoading ? <Skeleton className="h-8 w-16" /> : formatFileSize(stats.totalSize)}
             </div>
           </CardContent>
         </Card>
@@ -371,6 +375,23 @@ export default function BooksPage() {
 
       {/* Books Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {booksLoading &&
+          [1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="glass card-hover highlight-top">
+              <CardContent className="p-4">
+                <div className="flex gap-4">
+                  <Skeleton className="w-16 h-20 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
         {filteredBooks?.map((book) => (
           <Card
             key={book._id}
@@ -468,7 +489,7 @@ export default function BooksPage() {
           </Card>
         ))}
 
-        {!filteredBooks?.length && (
+        {!booksLoading && !filteredBooks?.length && (
           <Card className="glass card-hover highlight-top col-span-full">
             <CardContent className="p-8 text-center">
               <BookMarked className="w-12 h-12 text-gray-600 mx-auto mb-4" />

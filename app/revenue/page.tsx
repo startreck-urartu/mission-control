@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatDate } from "@/lib/utils";
 
 type Revenue = Doc<"revenue">;
@@ -77,6 +78,7 @@ export default function RevenuePage() {
   const allRevenue = useQuery(api.revenue.getAllRevenue);
   const goals = useQuery(api.goals.getGoalProgress);
   const clients = useQuery(api.clients.getAllClients);
+  const isLoading = allRevenue === undefined;
 
   const createRevenue = useMutation(api.revenue.createRevenue);
   const updateRevenue = useMutation(api.revenue.updateRevenue);
@@ -324,7 +326,9 @@ export default function RevenuePage() {
                   <stat.icon className={cn("w-4 h-4", stat.color)} />
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-white">{stat.value}</div>
+                  <div className="text-xl font-bold text-white">
+                    {isLoading ? <Skeleton className="h-7 w-16 ml-auto" /> : stat.value}
+                  </div>
                   <div className="text-[11px] text-gray-500">{stat.label}</div>
                 </div>
               </div>
@@ -349,7 +353,19 @@ export default function RevenuePage() {
         <h2 className="text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
           <Target className="w-4 h-4 text-amber-400" /> Active Goals
         </h2>
-        {goals && goals.length > 0 ? (
+        {goals === undefined ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="glass border border-amber-500/10">
+                <CardContent className="p-4 space-y-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-7 w-40" />
+                  <Skeleton className="h-1.5 w-full rounded-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : goals.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {goals.map((goal) => (
               <Card key={goal._id} className="glass border border-amber-500/10 group">
@@ -413,7 +429,17 @@ export default function RevenuePage() {
         </h2>
         <Card className="glass">
           <CardContent className="p-2">
-            {entries.length > 0 ? (
+            {isLoading ? (
+              <div className="divide-y divide-white/[0.04]">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5">
+                    <Skeleton className="h-3 w-20 shrink-0" />
+                    <Skeleton className="h-4 flex-1" />
+                    <Skeleton className="h-4 w-24 shrink-0" />
+                  </div>
+                ))}
+              </div>
+            ) : entries.length > 0 ? (
               <div className="divide-y divide-white/[0.04]">
                 {entries.slice(0, visibleEntries).map((r) => (
                   <div key={r._id} className="flex items-center gap-3 p-2.5 group hover:bg-white/[0.02] rounded-lg">

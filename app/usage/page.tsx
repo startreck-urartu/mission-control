@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DollarSign,
   TrendingUp,
@@ -43,6 +44,9 @@ export default function UsageCostsPage() {
   const createModel = useMutation(api.llmUsage.createLLMModel);
   const updateModel = useMutation(api.llmUsage.updateLLMModel);
   const deleteModel = useMutation(api.llmUsage.deleteLLMModel);
+
+  const statsLoading = totalStats === undefined;
+  const modelsLoading = llmModels === undefined;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<Doc<"llmUsage"> | null>(null);
@@ -158,7 +162,7 @@ export default function UsageCostsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {totalStats ? formatCurrency(totalStats.totalCost) : "$0.00"}
+              {statsLoading ? <Skeleton className="h-8 w-20" /> : formatCurrency(totalStats.totalCost)}
             </div>
             <p className="text-xs text-gray-400 mt-1">Across all models</p>
           </CardContent>
@@ -173,7 +177,7 @@ export default function UsageCostsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {totalStats ? formatNumber(totalStats.totalInputTokens) : "0"}
+              {statsLoading ? <Skeleton className="h-8 w-20" /> : formatNumber(totalStats.totalInputTokens)}
             </div>
             <p className="text-xs text-gray-400 mt-1">Total consumed</p>
           </CardContent>
@@ -188,7 +192,7 @@ export default function UsageCostsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {totalStats ? formatNumber(totalStats.totalOutputTokens) : "0"}
+              {statsLoading ? <Skeleton className="h-8 w-20" /> : formatNumber(totalStats.totalOutputTokens)}
             </div>
             <p className="text-xs text-gray-400 mt-1">Total generated</p>
           </CardContent>
@@ -203,15 +207,46 @@ export default function UsageCostsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {totalStats?.modelCount || 0}
+              {statsLoading ? <Skeleton className="h-8 w-12" /> : totalStats.modelCount}
             </div>
-            <p className="text-xs text-gray-400 mt-1">{totalStats?.totalRequests || 0} requests</p>
+            {statsLoading ? (
+              <Skeleton className="h-4 w-24 mt-1" />
+            ) : (
+              <p className="text-xs text-gray-400 mt-1">{totalStats.totalRequests} requests</p>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Models List */}
       <div className="grid grid-cols-1 gap-4">
+        {modelsLoading &&
+          [1, 2, 3].map((i) => (
+            <Card key={i} className="glass card-hover highlight-top">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="w-3 h-3 rounded-full mt-2" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                    <div className="flex items-center gap-2 mt-2">
+                      <Skeleton className="h-6 w-36" />
+                      <Skeleton className="h-6 w-36" />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-800">
+                  {[1, 2, 3, 4].map((j) => (
+                    <div key={j} className="space-y-2">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-6 w-20" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
         {llmModels?.map((model: Doc<"llmUsage">) => (
           <Card key={model._id} className="glass card-hover highlight-top">
             <CardContent className="p-6">
@@ -289,7 +324,7 @@ export default function UsageCostsPage() {
           </Card>
         ))}
 
-        {!llmModels?.length && (
+        {!modelsLoading && !llmModels?.length && (
           <Card className="glass card-hover highlight-top">
             <CardContent className="p-8 text-center">
               <Cpu className="w-12 h-12 text-gray-600 mx-auto mb-4" />

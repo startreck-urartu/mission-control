@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import Link from "next/link";
 
@@ -64,6 +65,16 @@ export default function DashboardPage() {
   const clientMetrics = useQuery(api.clients.getPipelineMetrics);
   const monthRevenue = useQuery(api.revenue.getCurrentMonthRevenue);
   const goals = useQuery(api.goals.getGoalProgress);
+
+  const tasksLoading = tasks === undefined;
+  const contentLoading = content === undefined;
+  const teamLoading = team === undefined;
+  const activityLoading = activity === undefined;
+  const metricsLoading = metrics === undefined;
+  const financialLoading =
+    clientMetrics === undefined || monthRevenue === undefined || goals === undefined;
+  const statsLoading =
+    tasksLoading || contentLoading || teamLoading || clientMetrics === undefined;
 
   const tradingAgents = team?.filter((m) =>
     TRADING_AGENTS.some((name) => m.name.toLowerCase() === name.toLowerCase())
@@ -122,7 +133,19 @@ export default function DashboardPage() {
 
       {/* Top-level stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 stagger-in">
-        {[
+        {statsLoading ? (
+          [1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <Skeleton className="w-8 h-8 rounded-lg mb-3" />
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-3 w-20 mt-1.5" />
+                <Skeleton className="h-2.5 w-24 mt-1.5" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+        [
           {
             label: "Active Tasks",
             value: inProgressTasks,
@@ -172,11 +195,25 @@ export default function DashboardPage() {
               <div className="text-[11px] text-gray-600 mt-1">{stat.sub}</div>
             </CardContent>
           </Card>
-        ))}
+        ))
+        )}
       </div>
 
       {/* Financial Snapshot */}
-      {(clientMetrics || goals) && (
+      {financialLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 stagger-in">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="glass">
+              <CardContent className="p-4">
+                <Skeleton className="w-8 h-8 rounded-lg mb-3" />
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-3 w-28 mt-1.5" />
+                <Skeleton className="h-3 w-32 mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (clientMetrics || goals) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 stagger-in">
           {/* Pipeline Value */}
           <Card className="glass border border-purple-500/10 hover:border-purple-500/20 transition-all duration-300 hover:shadow-purple-500/5">
@@ -279,7 +316,16 @@ export default function DashboardPage() {
       )}
 
       {/* Task Pipeline Metrics */}
-      {metrics && (
+      {metricsLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 stagger-in">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="glass-subtle rounded-xl px-3 py-3">
+              <Skeleton className="h-3 w-16 mb-2" />
+              <Skeleton className="h-6 w-10" />
+            </div>
+          ))}
+        </div>
+      ) : metrics && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 stagger-in">
           {[
             { label: "Done 24h", value: metrics.completedLast24h, icon: CheckCircle2, color: "text-green-400" },
@@ -335,7 +381,20 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {tradingAgents.length > 0 ? (
+              {teamLoading || tasksLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="p-3 rounded-xl glass-subtle">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Skeleton className="w-8 h-8 rounded-lg" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                      <Skeleton className="h-3 w-20 mb-2" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  ))}
+                </div>
+              ) : tradingAgents.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {tradingAgents.map((agent) => {
                     const colors = AGENT_COLORS[agent.name] || AGENT_COLORS["Mercury"];
@@ -506,6 +565,18 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-0.5">
+                {tasksLoading && (
+                  [1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg">
+                      <Skeleton className="w-3.5 h-3.5 rounded-full shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-24 mt-1.5" />
+                      </div>
+                      <Skeleton className="h-4 w-12 shrink-0" />
+                    </div>
+                  ))
+                )}
                 {recentTasks.map((task) => (
                   <div
                     key={task._id}
@@ -558,7 +629,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
-                {recentTasks.length === 0 && (
+                {!tasksLoading && recentTasks.length === 0 && (
                   <div className="text-center py-8">
                     <Inbox className="w-10 h-10 text-gray-700 mx-auto mb-3 empty-state-icon" />
                     <p className="text-sm text-gray-500">No tasks yet</p>
@@ -575,15 +646,23 @@ export default function DashboardPage() {
           {/* Quick stats */}
           <div className="grid grid-cols-2 gap-2 stagger-in">
             <div className="glass rounded-xl p-4 text-center glow-green">
-              <div className="text-2xl font-bold text-green-400">
-                {completedTradingTasks.length}
-              </div>
+              {tasksLoading ? (
+                <Skeleton className="h-8 w-10 mx-auto" />
+              ) : (
+                <div className="text-2xl font-bold text-green-400">
+                  {completedTradingTasks.length}
+                </div>
+              )}
               <div className="text-[11px] text-gray-500 mt-0.5">Trading Done</div>
             </div>
             <div className="glass rounded-xl p-4 text-center glow-blue">
-              <div className="text-2xl font-bold text-blue-400">
-                {activeTradingTasks.length}
-              </div>
+              {tasksLoading ? (
+                <Skeleton className="h-8 w-10 mx-auto" />
+              ) : (
+                <div className="text-2xl font-bold text-blue-400">
+                  {activeTradingTasks.length}
+                </div>
+              )}
               <div className="text-[11px] text-gray-500 mt-0.5">Trading Active</div>
             </div>
           </div>
@@ -606,7 +685,18 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {[
+                {contentLoading ? (
+                  [1, 2, 3, 4].map((i) => (
+                    <div key={i}>
+                      <div className="flex items-center justify-between mb-1">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-6" />
+                      </div>
+                      <Skeleton className="w-full h-1 rounded-full" />
+                    </div>
+                  ))
+                ) : (
+                [
                   { label: "Ideas", count: contentByStage.idea, color: "bg-blue-500", track: "bg-blue-500/20" },
                   { label: "Scripts", count: contentByStage.script, color: "bg-purple-500", track: "bg-purple-500/20" },
                   { label: "Production", count: contentByStage.filming, color: "bg-yellow-500", track: "bg-yellow-500/20" },
@@ -628,7 +718,8 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   );
-                })}
+                })
+                )}
               </div>
             </CardContent>
           </Card>
@@ -643,6 +734,17 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
+                {activityLoading && (
+                  [1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg">
+                      <Skeleton className="w-5 h-5 rounded-full shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <Skeleton className="h-3 w-5/6" />
+                        <Skeleton className="h-2.5 w-16 mt-1.5" />
+                      </div>
+                    </div>
+                  ))
+                )}
                 {activity?.slice(0, 10).map((item) => (
                   <div
                     key={item._id}
@@ -679,7 +781,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
-                {!activity?.length && (
+                {!activityLoading && !activity?.length && (
                   <div className="text-center py-6">
                     <Activity className="w-8 h-8 text-gray-700 mx-auto mb-2 empty-state-icon" />
                     <p className="text-sm text-gray-500">No activity yet</p>

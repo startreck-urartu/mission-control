@@ -35,6 +35,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -224,8 +225,40 @@ function DragOverlayCard({ task }: { task: Task }) {
   );
 }
 
+function TasksBoardSkeleton() {
+  return (
+    <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 min-h-0 overflow-x-auto">
+      {COLUMNS.map((column) => (
+        <div key={column.id} className="flex flex-col min-h-0">
+          <div className={cn("p-3 rounded-t-lg border-t-2", column.color)}>
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-5 w-8 rounded-full" />
+            </div>
+          </div>
+          <div className="flex-1 glass-subtle rounded-b-lg border-t-0 p-2 overflow-y-auto">
+            {[1, 2].map((i) => (
+              <div key={i} className="mb-2">
+                <Card className="p-4 glass highlight-top">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-full mt-2" />
+                  <div className="flex items-center gap-2 mt-3">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-3 w-3" />
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function TasksPage() {
   const tasks = useQuery(api.tasks.getAllTasks);
+  const isLoading = tasks === undefined;
   const moveTask = useMutation(api.tasks.moveTask);
   const createTask = useMutation(api.tasks.createTask);
   const updateTask = useMutation(api.tasks.updateTask);
@@ -370,6 +403,9 @@ export default function TasksPage() {
         </Button>
       </div>
 
+      {isLoading ? (
+        <TasksBoardSkeleton />
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -420,6 +456,7 @@ export default function TasksPage() {
           {activeTask && <DragOverlayCard task={activeTask} />}
         </DragOverlay>
       </DndContext>
+      )}
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">

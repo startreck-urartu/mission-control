@@ -8,6 +8,7 @@ import { Send, Plus, MessageCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Citation = {
   lessonTitle: string;
@@ -38,7 +39,9 @@ function fmtTs(s: number): string {
 }
 
 export default function AssistantPage() {
-  const threads = useQuery(api.assistant.listThreads) ?? [];
+  const threadsResult = useQuery(api.assistant.listThreads);
+  const threadsLoading = threadsResult === undefined;
+  const threads = threadsResult ?? [];
   const [activeThreadId, setActiveThreadId] = useState<Id<"assistantThreads"> | null>(null);
   const messages = useQuery(
     api.assistant.getMessages,
@@ -166,6 +169,10 @@ export default function AssistantPage() {
           <Plus className="h-4 w-4" /> New chat
         </Button>
         <div className="flex flex-col gap-1 overflow-y-auto">
+          {threadsLoading &&
+            [...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-8 w-full" />
+            ))}
           {threads.map((t: Doc<"assistantThreads">) => (
             <button
               key={t._id}

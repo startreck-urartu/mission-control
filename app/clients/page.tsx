@@ -52,6 +52,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatDate } from "@/lib/utils";
 
 type Client = Doc<"clients">;
@@ -269,8 +270,30 @@ function StageColumn({
   );
 }
 
+function StageColumnSkeleton({ stage }: { stage: (typeof STAGES)[number] }) {
+  return (
+    <div className="w-72 sm:w-80 flex-shrink-0 flex flex-col">
+      <div className={cn("p-3 rounded-t-lg border-t-2", stage.border)}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className={cn("w-2 h-2 rounded-full", stage.color)} />
+            <h2 className="text-sm font-semibold text-gray-200">{stage.label}</h2>
+          </div>
+          <Skeleton className="h-3 w-6" />
+        </div>
+      </div>
+      <div className="flex-1 bg-[var(--surface-1)]/50 rounded-b-lg border border-white/[0.04] border-t-0 p-2 space-y-2">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-xl" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ClientsPage() {
   const clients = useQuery(api.clients.getAllClients);
+  const isLoading = clients === undefined;
   const createClient = useMutation(api.clients.createClient);
   const updateClient = useMutation(api.clients.updateClient);
   const deleteClient = useMutation(api.clients.deleteClient);
@@ -470,7 +493,9 @@ export default function ClientsPage() {
                   <stat.icon className={cn("w-4 h-4", stat.color)} />
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-white">{stat.value}</div>
+                  <div className="text-xl font-bold text-white">
+                    {isLoading ? <Skeleton className="h-7 w-16 ml-auto" /> : stat.value}
+                  </div>
                   <div className="text-[11px] text-gray-500">{stat.label}</div>
                 </div>
               </div>
@@ -497,16 +522,20 @@ export default function ClientsPage() {
       >
         <div className="flex-1 overflow-x-auto min-h-0">
           <div className="flex gap-3 pb-4 min-w-max">
-            {STAGES.map((stage) => (
-              <StageColumn
-                key={stage.id}
-                stage={stage}
-                clients={clientsByStage[stage.id] ?? []}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onMove={handleMove}
-              />
-            ))}
+            {isLoading
+              ? STAGES.map((stage) => (
+                  <StageColumnSkeleton key={stage.id} stage={stage} />
+                ))
+              : STAGES.map((stage) => (
+                  <StageColumn
+                    key={stage.id}
+                    stage={stage}
+                    clients={clientsByStage[stage.id] ?? []}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onMove={handleMove}
+                  />
+                ))}
           </div>
         </div>
 

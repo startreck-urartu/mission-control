@@ -14,6 +14,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -401,13 +402,13 @@ export default function PolymarketPage() {
           <span className="text-xs text-gray-500">Last 50</span>
         </div>
 
-        {isLoading ? (
+        {recentTrades === undefined ? (
           <div className="p-5 space-y-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-10 bg-gray-700 rounded animate-pulse" />
+              <Skeleton key={i} className="h-10 w-full" />
             ))}
           </div>
-        ) : (recentTrades?.length ?? 0) === 0 ? (
+        ) : recentTrades.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-gray-500">
             No trades recorded yet
           </div>

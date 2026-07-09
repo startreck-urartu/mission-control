@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/select";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { FormattedResult } from "@/components/ui/formatted-result";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Doc } from "@/convex/_generated/dataModel";
 
 type TeamMember = Doc<"team">;
@@ -412,12 +413,13 @@ function TaskRow({
 }
 
 export default function TradingTeamPage() {
-  const team = useQuery(api.team.getAllTeamMembers) ?? [];
-  const tasks = useQuery(api.tasks.getAllTasks) ?? [];
+  const team = useQuery(api.team.getAllTeamMembers);
+  const tasks = useQuery(api.tasks.getAllTasks);
   const agentResults = useQuery(api.tasks.getLatestAgentResults, {
     agentNames: TRADING_AGENT_NAMES,
   });
   const createTask = useMutation(api.tasks.createTask);
+  const isLoading = team === undefined || tasks === undefined;
 
   const [dispatchAgent, setDispatchAgent] = useState<string | null>(null);
   const [taskTitle, setTaskTitle] = useState("");
@@ -435,7 +437,7 @@ export default function TradingTeamPage() {
 
   const tradingAgents = useMemo(
     () =>
-      team.filter((m) =>
+      (team ?? []).filter((m) =>
         TRADING_AGENT_NAMES.some(
           (name) => m.name.toLowerCase() === name.toLowerCase()
         )
@@ -445,7 +447,7 @@ export default function TradingTeamPage() {
 
   const tradingTasks = useMemo(
     () =>
-      tasks.filter(
+      (tasks ?? []).filter(
         (t) =>
           t.tags?.some((tag: string) =>
             [
@@ -529,22 +531,43 @@ export default function TradingTeamPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full glass text-sm">
-            <div
-              className={cn(
-                "w-2 h-2 rounded-full",
-                stats.onlineAgents > 0
-                  ? "bg-green-500 animate-pulse"
-                  : "bg-gray-500"
-              )}
-            />
-            <span className="text-gray-300">
-              {stats.onlineAgents}/{tradingAgents.length} Online
-            </span>
-          </div>
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 rounded-full" />
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full glass text-sm">
+              <div
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  stats.onlineAgents > 0
+                    ? "bg-green-500 animate-pulse"
+                    : "bg-gray-500"
+                )}
+              />
+              <span className="text-gray-300">
+                {stats.onlineAgents}/{tradingAgents.length} Online
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="w-7 h-7 rounded-lg" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-6 w-8 ml-auto" />
+                    <Skeleton className="h-3 w-14" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6 stagger-in">
         {[
           {
@@ -600,15 +623,42 @@ export default function TradingTeamPage() {
           </Card>
         ))}
       </div>
+      )}
 
       <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="glass overflow-hidden">
+                <div className="p-5">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-12 h-12 rounded-xl" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-28" />
+                      <Skeleton className="h-4 w-40" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[1, 2, 3].map((j) => (
+                      <Skeleton key={j} className="h-14 rounded-lg" />
+                    ))}
+                  </div>
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+        <>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
           {tradingAgents.length > 0 ? (
             tradingAgents.map((agent) => (
               <AgentCard
                 key={agent._id}
                 agent={agent}
-                tasks={tasks}
+                tasks={tasks ?? []}
                 agentResult={agentResults?.[agent.name] ?? null}
                 onDispatch={setDispatchAgent}
                 onViewResult={handleViewResult}
@@ -753,6 +803,8 @@ export default function TradingTeamPage() {
               </CardContent>
             </Card>
           </div>
+        )}
+        </>
         )}
       </div>
 
