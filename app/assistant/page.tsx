@@ -18,6 +18,16 @@ type Citation = {
   snippet: string;
 };
 
+// Raw citation shape as streamed by the KB service (snake_case).
+type KBCitation = {
+  lesson_title: string;
+  software: string;
+  start_ts: number;
+  video_path?: string;
+  score: number;
+  snippet: string;
+};
+
 const HISTORY_TURNS = 6;
 
 function fmtTs(s: number): string {
@@ -41,11 +51,13 @@ export default function AssistantPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [streamText, setStreamText] = useState("");
+  const [streamCitations, setStreamCitations] = useState<Citation[]>([]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, sending]);
+  }, [messages, sending, streamText]);
 
   async function handleSend() {
     const question = input.trim();
@@ -65,27 +77,80 @@ export default function AssistantPage() {
 
       await addMessage({ threadId, role: "user", content: question });
       setInput("");
+      setStreamText("");
+      setStreamCitations([]);
 
       const res = await fetch("/api/assistant/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, history: priorHistory }),
       });
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         const e = await res.json().catch(() => ({}));
         throw new Error(e.error ?? `Request failed (${res.status})`);
       }
-      const data = (await res.json()) as { answer: string; citations: Citation[] };
-      await addMessage({
-        threadId,
-        role: "assistant",
-        content: data.answer,
-        citations: data.citations,
-      });
+
+      // Read the NDJSON token stream and render the answer as it arrives.
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let answer = "";
+      let citations: Citation[] = [];
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let obj: {
+            status?: string;
+            citations?: KBCitation[];
+            delta?: string;
+            error?: string;
+            done?: boolean;
+          };
+          try {
+            obj = JSON.parse(line);
+          } catch {
+            continue;
+          }
+          if (obj.error) {
+            throw new Error(
+              obj.error === "answer_unavailable"
+                ? "The assistant couldn't generate an answer."
+                : obj.error === "embeddings_unavailable"
+                ? "The knowledge base is unavailable right now."
+                : obj.error
+            );
+          }
+          if (obj.citations) {
+            citations = obj.citations.map((c) => ({
+              lessonTitle: c.lesson_title,
+              software: c.software,
+              startTs: c.start_ts,
+              videoPath: c.video_path || undefined,
+              score: c.score,
+              snippet: c.snippet,
+            }));
+            setStreamCitations(citations);
+          } else if (obj.delta) {
+            answer += obj.delta;
+            setStreamText(answer);
+          }
+        }
+      }
+
+      if (answer) {
+        await addMessage({ threadId, role: "assistant", content: answer, citations });
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setSending(false);
+      setStreamText("");
+      setStreamCitations([]);
     }
   }
 
@@ -155,15 +220,36 @@ export default function AssistantPage() {
           ))}
           {sending && (
             <div className="text-left">
-              <Card className="inline-block p-3">
-                <span className="flex items-center gap-2 text-gray-400 text-sm">
-                  <span className="inline-flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.3s]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.15s]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" />
+              <Card className="inline-block max-w-[80%] p-3 text-sm whitespace-pre-wrap">
+                {streamText ? (
+                  <>
+                    {streamText}
+                    <span className="inline-block w-1.5 h-4 ml-0.5 -mb-0.5 bg-gray-400 animate-pulse" />
+                    {streamCitations.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {streamCitations.map((c, i) => (
+                          <span
+                            key={i}
+                            title={c.snippet}
+                            className="text-xs bg-white/[0.04] text-gray-400 rounded px-2 py-0.5"
+                          >
+                            {c.lessonTitle}
+                            {fmtTs(c.startTs)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <span className="flex items-center gap-2 text-gray-400">
+                    <span className="inline-flex gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" />
+                    </span>
+                    Searching the knowledge base…
                   </span>
-                  Searching the knowledge base…
-                </span>
+                )}
               </Card>
             </div>
           )}
