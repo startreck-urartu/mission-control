@@ -95,7 +95,8 @@ export function NavigationSidebar() {
         </div>
         <button
           onClick={() => setMobileOpen(false)}
-          className="md:hidden p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
+          aria-label="Close navigation menu"
+          className="md:hidden p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
         >
           <X className="w-5 h-5 text-gray-400" />
         </button>
@@ -144,7 +145,8 @@ export function NavigationSidebar() {
       <div className="p-3 border-t border-white/[0.04] space-y-1">
         <button
           onClick={toggleTheme}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-gray-500 hover:bg-white/[0.04] hover:text-gray-300 transition-all duration-150"
+          aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-gray-500 hover:bg-white/[0.04] hover:text-gray-300 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
         >
           {theme === "dark" ? (
             <Sun className="w-4 h-4 text-amber-400" />
@@ -169,7 +171,8 @@ export function NavigationSidebar() {
       {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-lg glass"
+        aria-label="Open navigation menu"
+        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-lg glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
       >
         <Menu className="w-5 h-5 text-gray-300" />
       </button>
@@ -177,6 +180,7 @@ export function NavigationSidebar() {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
+          aria-hidden="true"
           className="fixed inset-0 z-40 bg-black/60 md:hidden"
           onClick={() => setMobileOpen(false)}
         />

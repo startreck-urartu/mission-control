@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatDate } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
@@ -108,13 +109,15 @@ function ContentCard({
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(content)}
-              className="p-1 hover:bg-gray-700 rounded"
+              aria-label="Edit content"
+              className="p-1 hover:bg-gray-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
               <Edit className="w-3 h-3 text-gray-400" />
             </button>
             <button
               onClick={() => onDelete(content._id)}
-              className="p-1 hover:bg-red-900/30 rounded"
+              aria-label="Delete content"
+              className="p-1 hover:bg-red-900/30 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
               <Trash2 className="w-3 h-3 text-red-400" />
             </button>
@@ -248,6 +251,7 @@ export default function ContentPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
+  const { confirm, confirmDialog } = useConfirm();
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -337,9 +341,8 @@ export default function ContentPage() {
   };
 
   const handleDelete = async (id: Id<"content">) => {
-    if (confirm("Delete this content?")) {
-      await deleteContent({ id });
-    }
+    if (!(await confirm({ title: "Delete this content?", destructive: true }))) return;
+    await deleteContent({ id });
   };
 
   const handleAdvance = async (id: Id<"content">) => {
@@ -616,6 +619,7 @@ export default function ContentPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {confirmDialog}
     </div>
   );
 }

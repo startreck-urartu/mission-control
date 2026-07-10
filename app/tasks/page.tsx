@@ -52,6 +52,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatDate } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
@@ -117,7 +118,8 @@ function SortableTaskCard({
                 e.stopPropagation();
                 onEdit(task);
               }}
-              className="p-1 hover:bg-gray-700 rounded"
+              aria-label={`Edit task "${task.title}"`}
+              className="p-1 hover:bg-gray-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
               <Edit className="w-3 h-3 text-gray-400" />
             </button>
@@ -126,7 +128,8 @@ function SortableTaskCard({
                 e.stopPropagation();
                 onDelete(task._id);
               }}
-              className="p-1 hover:bg-red-900/30 rounded"
+              aria-label={`Delete task "${task.title}"`}
+              className="p-1 hover:bg-red-900/30 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
               <Trash2 className="w-3 h-3 text-red-400" />
             </button>
@@ -264,6 +267,8 @@ export default function TasksPage() {
   const updateTask = useMutation(api.tasks.updateTask);
   const deleteTask = useMutation(api.tasks.deleteTask);
 
+  const { confirm, confirmDialog } = useConfirm();
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -383,9 +388,8 @@ export default function TasksPage() {
   }
 
   async function handleDelete(id: Id<"tasks">) {
-    if (confirm("Are you sure you want to delete this task?")) {
-      await deleteTask({ id });
-    }
+    if (!(await confirm({ title: "Are you sure you want to delete this task?", destructive: true }))) return;
+    await deleteTask({ id });
   }
 
   return (
@@ -587,6 +591,8 @@ export default function TasksPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {confirmDialog}
     </div>
   );
 }

@@ -177,7 +177,7 @@ export default function AssistantPage() {
             <button
               key={t._id}
               onClick={() => setActiveThreadId(t._id)}
-              className={`text-left text-sm px-2 py-1.5 rounded truncate transition-colors hover:bg-white/[0.04] ${
+              className={`text-left text-sm px-2 py-1.5 rounded truncate transition-colors hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
                 activeThreadId === t._id ? "bg-white/[0.06]" : ""
               }`}
             >

@@ -324,7 +324,7 @@ function AgentCard({
             {agentTasks.length > 3 && (
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1 mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors mx-auto"
+                className="flex items-center gap-1 mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 rounded"
               >
                 {expanded ? (
                   <>

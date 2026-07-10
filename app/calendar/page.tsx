@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
@@ -229,6 +230,8 @@ export default function CalendarPage() {
   const updateEvent = useMutation(api.calendar.updateEvent);
   const deleteEvent = useMutation(api.calendar.deleteEvent);
 
+  const { confirm, confirmDialog } = useConfirm();
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
@@ -302,9 +305,8 @@ export default function CalendarPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Delete this event?")) {
-      await deleteEvent({ id: id as Id<"calendar"> });
-    }
+    if (!(await confirm({ title: "Delete this event?", destructive: true }))) return;
+    await deleteEvent({ id: id as Id<"calendar"> });
   };
 
   const upcomingEvents = (events ?? [])
@@ -318,13 +320,13 @@ export default function CalendarPage() {
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-white">Calendar</h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
+            <Button variant="outline" size="icon" aria-label="Previous month" onClick={handlePreviousMonth}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <span className="text-xl font-medium text-gray-200 w-40 text-center">
               {format(currentDate, "MMMM yyyy")}
             </span>
-            <Button variant="outline" size="icon" onClick={handleNextMonth}>
+            <Button variant="outline" size="icon" aria-label="Next month" onClick={handleNextMonth}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -396,7 +398,8 @@ export default function CalendarPage() {
                             e.stopPropagation();
                             handleDelete(event._id);
                           }}
-                          className="p-1 hover:bg-red-900/30 rounded"
+                          aria-label={`Delete event "${event.title}"`}
+                          className="p-1 hover:bg-red-900/30 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                         >
                           <Trash2 className="w-3 h-3 text-red-400" />
                         </button>
@@ -568,6 +571,8 @@ export default function CalendarPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {confirmDialog}
     </div>
   );
 }

@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn, formatDate } from "@/lib/utils";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
 type Revenue = Doc<"revenue">;
 type Goal = Doc<"goals">;
@@ -86,6 +87,8 @@ export default function RevenuePage() {
   const createGoal = useMutation(api.goals.createGoal);
   const updateGoal = useMutation(api.goals.updateGoal);
   const deleteGoal = useMutation(api.goals.deleteGoal);
+
+  const { confirm, confirmDialog } = useConfirm();
 
   const [revenueDialogOpen, setRevenueDialogOpen] = useState(false);
   const [editingRevenue, setEditingRevenue] = useState<Revenue | null>(null);
@@ -207,9 +210,8 @@ export default function RevenuePage() {
   };
 
   const removeRevenue = async (id: Id<"revenue">) => {
-    if (confirm("Delete this revenue entry?")) {
-      await deleteRevenue({ id });
-    }
+    if (!(await confirm({ title: "Delete this revenue entry?", destructive: true }))) return;
+    await deleteRevenue({ id });
   };
 
   // ── Goal handlers ────────────────────────────────────
@@ -265,9 +267,8 @@ export default function RevenuePage() {
   };
 
   const removeGoal = async (id: Id<"goals">) => {
-    if (confirm("Delete this goal?")) {
-      await deleteGoal({ id });
-    }
+    if (!(await confirm({ title: "Delete this goal?", destructive: true }))) return;
+    await deleteGoal({ id });
   };
 
   return (
@@ -292,21 +293,21 @@ export default function RevenuePage() {
         {[
           {
             label: "Received This Month",
-            value: `$${(monthRevenue?.received ?? 0).toLocaleString()}`,
+            value: formatCurrency(monthRevenue?.received ?? 0, { decimals: 0 }),
             icon: DollarSign,
             color: "text-green-400",
             bg: "bg-green-500/10",
           },
           {
             label: "Pending This Month",
-            value: `$${(monthRevenue?.pending ?? 0).toLocaleString()}`,
+            value: formatCurrency(monthRevenue?.pending ?? 0, { decimals: 0 }),
             icon: Clock,
             color: (monthRevenue?.pending ?? 0) > 0 ? "text-yellow-400" : "text-gray-600",
             bg: (monthRevenue?.pending ?? 0) > 0 ? "bg-yellow-500/10" : "bg-white/[0.03]",
           },
           {
             label: "All-Time Received",
-            value: `$${allTimeReceived.toLocaleString()}`,
+            value: formatCurrency(allTimeReceived, { decimals: 0 }),
             icon: TrendingUp,
             color: "text-blue-400",
             bg: "bg-blue-500/10",
@@ -342,7 +343,7 @@ export default function RevenuePage() {
         <div className="flex flex-wrap gap-2">
           {Object.entries(monthRevenue.byCategory).map(([cat, data]) => (
             <Badge key={cat} variant="outline" className={cn("text-xs", categoryConfig(cat).color)}>
-              {categoryConfig(cat).label}: ${data.amount.toLocaleString()} ({data.count})
+              {categoryConfig(cat).label}: {formatCurrency(data.amount, { decimals: 0 })} ({data.count})
             </Badge>
           ))}
         </div>
@@ -381,17 +382,17 @@ export default function RevenuePage() {
                       </p>
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button onClick={() => openEditGoal(goal)} className="p-1 rounded hover:bg-white/[0.06]">
+                      <button onClick={() => openEditGoal(goal)} aria-label="Edit goal" className="p-1 rounded hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
                         <Edit className="w-3 h-3 text-gray-400" />
                       </button>
-                      <button onClick={() => removeGoal(goal._id)} className="p-1 rounded hover:bg-red-900/30">
+                      <button onClick={() => removeGoal(goal._id)} aria-label="Delete goal" className="p-1 rounded hover:bg-red-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
                         <Trash2 className="w-3 h-3 text-red-400" />
                       </button>
                     </div>
                   </div>
                   <div className="text-xl font-bold text-white mt-3">
-                    ${goal.currentAmount.toLocaleString()}
-                    <span className="text-sm font-normal text-gray-500"> / ${goal.targetAmount.toLocaleString()}</span>
+                    {formatCurrency(goal.currentAmount, { decimals: 0 })}
+                    <span className="text-sm font-normal text-gray-500"> / {formatCurrency(goal.targetAmount, { decimals: 0 })}</span>
                   </div>
                   <div className="mt-2 w-full h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
                     <div
@@ -402,7 +403,7 @@ export default function RevenuePage() {
                   <div className="flex justify-between mt-1">
                     <span className="text-[11px] text-gray-600">{goal.progressPct}%</span>
                     <span className="text-[11px] text-amber-400">
-                      ${Math.max(0, goal.targetAmount - goal.currentAmount).toLocaleString()} to go
+                      {formatCurrency(Math.max(0, goal.targetAmount - goal.currentAmount), { decimals: 0 })} to go
                     </span>
                   </div>
                 </CardContent>
@@ -468,10 +469,10 @@ export default function RevenuePage() {
                       ${r.amount.toLocaleString()}
                     </span>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button onClick={() => openEditRevenue(r)} className="p-1 rounded hover:bg-white/[0.06]">
+                      <button onClick={() => openEditRevenue(r)} aria-label="Edit revenue entry" className="p-1 rounded hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
                         <Edit className="w-3 h-3 text-gray-400" />
                       </button>
-                      <button onClick={() => removeRevenue(r._id)} className="p-1 rounded hover:bg-red-900/30">
+                      <button onClick={() => removeRevenue(r._id)} aria-label="Delete revenue entry" className="p-1 rounded hover:bg-red-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
                         <Trash2 className="w-3 h-3 text-red-400" />
                       </button>
                     </div>
@@ -634,6 +635,8 @@ export default function RevenuePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {confirmDialog}
     </div>
   );
 }

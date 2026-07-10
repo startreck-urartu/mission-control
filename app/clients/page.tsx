@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatDate } from "@/lib/utils";
 
 type Client = Doc<"clients">;
@@ -113,7 +114,8 @@ function ClientCard({
                 e.stopPropagation();
                 setShowActions(!showActions);
               }}
-              className="p-1 rounded hover:bg-white/[0.06] transition-colors"
+              className="p-1 rounded hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+              aria-label="Client actions"
             >
               <MoreHorizontal className="w-3.5 h-3.5 text-gray-500" />
             </button>
@@ -121,21 +123,21 @@ function ClientCard({
               <div className="absolute right-0 top-7 z-10 min-w-[120px] rounded-lg bg-[var(--surface-3)] border border-white/[0.08] shadow-xl py-1">
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(client); setShowActions(false); }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-gray-300 hover:bg-white/[0.04]"
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-gray-300 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 rounded"
                 >
                   <Edit className="w-3 h-3" /> Edit
                 </button>
                 {nextStage && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onMove(client._id, nextStage); setShowActions(false); }}
-                    className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-green-300 hover:bg-white/[0.04]"
+                    className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-green-300 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 rounded"
                   >
                     <ChevronDown className="w-3 h-3" /> Advance
                   </button>
                 )}
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(client._id); setShowActions(false); }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-red-400 hover:bg-white/[0.04]"
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-red-400 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 rounded"
                 >
                   <Trash2 className="w-3 h-3" /> Delete
                 </button>
@@ -302,6 +304,7 @@ export default function ClientsPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeClient, setActiveClient] = useState<Client | null>(null);
+  const { confirm, confirmDialog } = useConfirm();
 
   // distance threshold keeps card buttons clickable without starting a drag
   const sensors = useSensors(
@@ -417,9 +420,8 @@ export default function ClientsPage() {
   };
 
   const handleDelete = async (id: Id<"clients">) => {
-    if (confirm("Remove this client?")) {
-      await deleteClient({ id });
-    }
+    if (!(await confirm({ title: "Remove this client?", destructive: true }))) return;
+    await deleteClient({ id });
   };
 
   const handleMove = async (id: Id<"clients">, stage: Client["stage"]) => {
@@ -642,6 +644,8 @@ export default function ClientsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {confirmDialog}
     </div>
   );
 }

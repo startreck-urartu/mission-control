@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   BookOpen,
   Plus,
@@ -84,6 +85,7 @@ export default function BooksPage() {
   const updateBook = useMutation(api.books.updateBook);
   const deleteBook = useMutation(api.books.deleteBook);
   const recordAccess = useMutation(api.books.recordAccess);
+  const { confirm, confirmDialog } = useConfirm();
 
   const statsLoading = stats === undefined;
   const booksLoading = books === undefined;
@@ -225,9 +227,8 @@ export default function BooksPage() {
   };
 
   const handleDelete = async (id: Id<"books">) => {
-    if (confirm("Delete this book from the library?")) {
-      await deleteBook({ id });
-    }
+    if (!(await confirm({ title: "Delete this book from the library?", destructive: true }))) return;
+    await deleteBook({ id });
   };
 
   const handleOpenBook = async (book: Book) => {
@@ -466,6 +467,7 @@ export default function BooksPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="Edit book"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit(book);
@@ -476,6 +478,7 @@ export default function BooksPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="Delete book"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(book._id);
@@ -708,6 +711,7 @@ export default function BooksPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {confirmDialog}
     </div>
   );
 }

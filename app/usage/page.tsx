@@ -27,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { formatCurrency } from "@/lib/utils";
 import {
   DollarSign,
   TrendingUp,
@@ -44,6 +46,7 @@ export default function UsageCostsPage() {
   const createModel = useMutation(api.llmUsage.createLLMModel);
   const updateModel = useMutation(api.llmUsage.updateLLMModel);
   const deleteModel = useMutation(api.llmUsage.deleteLLMModel);
+  const { confirm, confirmDialog } = useConfirm();
 
   const statsLoading = totalStats === undefined;
   const modelsLoading = llmModels === undefined;
@@ -108,17 +111,8 @@ export default function UsageCostsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Delete this model?")) {
-      await deleteModel({ id: id as Id<"llmUsage"> });
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
+    if (!(await confirm({ title: "Delete this model?", destructive: true }))) return;
+    await deleteModel({ id: id as Id<"llmUsage"> });
   };
 
   const formatNumber = (num: number) => {
@@ -273,6 +267,7 @@ export default function UsageCostsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    aria-label="Edit model"
                     onClick={() => handleEdit(model)}
                   >
                     <Edit2 className="w-4 h-4" />
@@ -280,6 +275,7 @@ export default function UsageCostsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    aria-label="Delete model"
                     onClick={() => handleDelete(model._id)}
                     className="text-red-400 hover:text-red-300"
                   >
@@ -433,6 +429,7 @@ export default function UsageCostsPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {confirmDialog}
     </div>
   );
 }

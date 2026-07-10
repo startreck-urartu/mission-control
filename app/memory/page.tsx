@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
@@ -91,7 +92,8 @@ function MemoryCard({
                     e.stopPropagation();
                     onEdit(memory);
                   }}
-                  className="p-1 hover:bg-gray-700 rounded"
+                  aria-label="Edit memory"
+                  className="p-1 hover:bg-gray-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                 >
                   <Edit className="w-3 h-3 text-gray-400" />
                 </button>
@@ -100,7 +102,8 @@ function MemoryCard({
                     e.stopPropagation();
                     onDelete(memory._id);
                   }}
-                  className="p-1 hover:bg-red-900/30 rounded"
+                  aria-label="Delete memory"
+                  className="p-1 hover:bg-red-900/30 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                 >
                   <Trash2 className="w-3 h-3 text-red-400" />
                 </button>
@@ -179,6 +182,7 @@ export default function MemoryPage() {
   const [importanceFilter, setImportanceFilter] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
+  const { confirm, confirmDialog } = useConfirm();
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -259,9 +263,8 @@ export default function MemoryPage() {
   };
 
   const handleDelete = async (id: Id<"memories">) => {
-    if (confirm("Delete this memory?")) {
-      await deleteMemory({ id });
-    }
+    if (!(await confirm({ title: "Delete this memory?", destructive: true }))) return;
+    await deleteMemory({ id });
   };
 
   const clearFilters = () => {
@@ -473,6 +476,7 @@ export default function MemoryPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {confirmDialog}
     </div>
   );
 }

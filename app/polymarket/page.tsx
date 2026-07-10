@@ -4,7 +4,6 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
   TrendingUp,
-  TrendingDown,
   Activity,
   DollarSign,
   BarChart2,
@@ -15,14 +14,13 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Thin wrapper over the shared formatCurrency so call sites stay unchanged.
 function formatUSD(n: number | null | undefined, decimals = 2) {
-  if (n === null || n === undefined) return "—";
-  const formatted = Math.abs(n).toFixed(decimals);
-  return (n < 0 ? "-$" : "$") + formatted;
+  return formatCurrency(n, { decimals });
 }
 
 function formatNum(n: number | null | undefined, decimals = 2) {
@@ -137,13 +135,6 @@ export default function PolymarketPage() {
   const isLoading =
     traderState === undefined || recentTrades === undefined || tradeStats === undefined;
 
-  const statusColors: Record<string, string> = {
-    running: "text-green-400",
-    stopped: "text-gray-400",
-    error: "text-red-400",
-    unknown: "text-yellow-400",
-  };
-
   const statusDot: Record<string, string> = {
     running: "bg-green-500 animate-pulse",
     stopped: "bg-gray-500",
@@ -219,7 +210,7 @@ export default function PolymarketPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label="Daily P&L"
-            value={isLoading ? "…" : formatUSD(dailyPnl)}
+            value={isLoading ? "…" : (dailyPnl > 0 ? "+" : "") + formatUSD(dailyPnl)}
             sub={`Reset: ${traderState?.dailyResetDate ?? "—"}`}
             icon={DollarSign}
             color="bg-green-500/10 text-green-400"
@@ -325,7 +316,8 @@ export default function PolymarketPage() {
                             : "text-gray-400"
                         )}
                       >
-                        {formatUSD(pos.unrealized_pnl)}
+                        {((pos.unrealized_pnl ?? 0) > 0 ? "+" : "") +
+                          formatUSD(pos.unrealized_pnl)}
                       </td>
                     </tr>
                   ))}
@@ -496,7 +488,7 @@ export default function PolymarketPage() {
                       )}
                     >
                       {trade.pnl !== null && trade.pnl !== undefined
-                        ? formatUSD(trade.pnl)
+                        ? (trade.pnl > 0 ? "+" : "") + formatUSD(trade.pnl)
                         : "open"}
                     </td>
                   </tr>
@@ -523,7 +515,7 @@ export default function PolymarketPage() {
                 key={f}
                 onClick={() => setLogFilter(f)}
                 className={cn(
-                  "px-2.5 py-1 rounded text-xs font-medium transition-colors",
+                  "px-2.5 py-1 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40",
                   logFilter === f
                     ? "bg-gray-700 text-white"
                     : "text-gray-500 hover:text-gray-300"

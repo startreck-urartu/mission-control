@@ -35,6 +35,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
@@ -123,7 +125,8 @@ function TeamMemberCard({
                     e.stopPropagation();
                     onEdit(member);
                   }}
-                  className="p-1.5 hover:bg-gray-700 rounded"
+                  aria-label={`Edit ${member.name}`}
+                  className="p-1.5 hover:bg-gray-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                 >
                   <Edit className="w-4 h-4 text-gray-400" />
                 </button>
@@ -132,7 +135,8 @@ function TeamMemberCard({
                     e.stopPropagation();
                     onDelete(member._id);
                   }}
-                  className="p-1.5 hover:bg-red-900/30 rounded"
+                  aria-label={`Remove ${member.name}`}
+                  className="p-1.5 hover:bg-red-900/30 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                 >
                   <Trash2 className="w-4 h-4 text-red-400" />
                 </button>
@@ -234,6 +238,7 @@ export default function TeamPage() {
   const updateTeamMember = useMutation(api.team.updateTeamMember);
   const deleteTeamMember = useMutation(api.team.deleteTeamMember);
   const updateStatus = useMutation(api.team.updateStatus);
+  const { confirm, confirmDialog } = useConfirm();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
@@ -339,9 +344,8 @@ export default function TeamPage() {
   };
 
   const handleDelete = async (id: Id<"team">) => {
-    if (confirm("Remove this team member?")) {
-      await deleteTeamMember({ id });
-    }
+    if (!(await confirm({ title: "Remove this team member?", destructive: true }))) return;
+    await deleteTeamMember({ id });
   };
 
   const handleStatusChange = async (id: Id<"team">, status: TeamMember["status"]) => {
@@ -382,17 +386,12 @@ export default function TeamPage() {
               { label: "Agents", value: stats.agents, icon: Bot },
               { label: "Online", value: stats.online, icon: Activity },
             ].map((stat) => (
-              <Card key={stat.label} className="glass">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <stat.icon className="w-8 h-8 text-gray-500" />
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-white">{stat.value}</div>
-                      <div className="text-xs text-gray-400">{stat.label}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <StatCard
+                key={stat.label}
+                label={stat.label}
+                value={stat.value}
+                icon={stat.icon}
+              />
             ))}
       </div>
 
@@ -589,6 +588,7 @@ export default function TeamPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {confirmDialog}
     </div>
   );
 }
