@@ -106,7 +106,7 @@ function ContentCard({
               {content.contentType}
             </Badge>
           </div>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(content)}
               aria-label="Edit content"

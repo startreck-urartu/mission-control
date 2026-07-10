@@ -317,7 +317,7 @@ export default function CalendarPage() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <h1 className="text-3xl font-bold text-white">Calendar</h1>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" aria-label="Previous month" onClick={handlePreviousMonth}>
@@ -392,7 +392,7 @@ export default function CalendarPage() {
                           </div>
                         )}
                       </div>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

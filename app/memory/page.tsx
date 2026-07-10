@@ -83,10 +83,10 @@ function MemoryCard({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-sm font-medium text-gray-100 leading-tight">
+              <h3 className="text-sm font-medium text-gray-100 leading-tight min-w-0 break-words">
                 {memory.title}
               </h3>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+              <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity shrink-0">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

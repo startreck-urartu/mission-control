@@ -463,7 +463,7 @@ export default function BooksPage() {
               </div>
 
               {/* Action Buttons (visible on hover) */}
-              <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-800 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-800 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
                   size="sm"

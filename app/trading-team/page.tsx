@@ -389,7 +389,7 @@ function TaskRow({
         <div className="flex items-center gap-2 mt-0.5">
           <p className="text-xs text-gray-500">{formatTimeAgo(task.updatedAt)}</p>
           {task.lastAgentResult && (
-            <span className="text-[10px] text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+            <span className="text-[10px] text-blue-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity flex items-center gap-0.5">
               <Eye className="w-2.5 h-2.5" /> view result
             </span>
           )}

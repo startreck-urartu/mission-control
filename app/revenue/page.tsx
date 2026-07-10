@@ -381,7 +381,7 @@ export default function RevenuePage() {
                         )}
                       </p>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity shrink-0">
                       <button onClick={() => openEditGoal(goal)} aria-label="Edit goal" className="p-1 rounded hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
                         <Edit className="w-3 h-3 text-gray-400" />
                       </button>
@@ -468,7 +468,7 @@ export default function RevenuePage() {
                     <span className="text-sm font-semibold text-green-400 w-24 text-right shrink-0">
                       ${r.amount.toLocaleString()}
                     </span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity shrink-0">
                       <button onClick={() => openEditRevenue(r)} aria-label="Edit revenue entry" className="p-1 rounded hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
                         <Edit className="w-3 h-3 text-gray-400" />
                       </button>

@@ -157,14 +157,14 @@ export default function PolymarketPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-white">Polymarket Trader</h1>
           <p className="text-sm text-gray-400 mt-0.5">
             Autonomous prediction market trading system
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {traderState && (
             <span className="text-xs text-gray-500">
               Synced {timeAgo(traderState.lastSyncedAt)}
