@@ -122,7 +122,7 @@ function CalendarGrid({
               key={day.toISOString()}
               onClick={() => onSelectDate(day)}
               className={cn(
-                "min-h-[100px] p-2 rounded-lg border cursor-pointer transition-all hover:border-separator",
+                "min-h-[100px] p-2 rounded-lg border cursor-pointer transition-all hover:border-accent-blue/40",
                 isCurrentMonth
                   ? "bg-glass border-separator"
                   : "bg-glass/50 border-separator",
