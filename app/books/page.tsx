@@ -472,9 +472,9 @@ export default function BooksPage() {
                     e.stopPropagation();
                     handleDelete(book._id);
                   }}
-                  className="hover:bg-fill"
+                  className="hover:bg-accent-red-tint"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 text-accent-red" />
                 </Button>
               </div>
             </CardContent>
