@@ -8,6 +8,7 @@ interface StatCardProps {
   value: React.ReactNode;
   icon?: LucideIcon;
   accent?: AccentName;
+  /** Applied to the CHIP wrapper, not the icon — prefer `accent`; do not pass text-* colors here. */
   iconClassName?: string;
   sub?: React.ReactNode;
   className?: string;

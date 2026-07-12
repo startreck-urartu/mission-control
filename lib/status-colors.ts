@@ -2,6 +2,8 @@
  * Single source of truth mapping every domain status to the Apple accent
  * palette. Pages must import from here — no local color maps.
  * Each entry pairs bright text with its tint background (pill idiom).
+ * Policy: the palette is pure Apple system colors — there is no `amber`;
+ * anything formerly amber maps to `orange` (or `yellow` where truly yellow).
  */
 export type AccentName =
   | "blue" | "green" | "orange" | "red" | "purple"
@@ -61,6 +63,12 @@ export const teamStatusAccent: Record<string, AccentName> = {
 export const revenueCategoryAccent: Record<string, AccentName> = {
   "cadcam-design": "blue", "3dgoldsmith": "purple",
   trading: "green", consulting: "orange", other: "gray",
+};
+
+/* Polymarket signal queue (polymarketSignals.status) */
+export const polymarketSignalAccent: Record<string, AccentName> = {
+  pending: "gray", claimed: "blue", executed: "green",
+  "paper-filled": "green", expired: "gray", rejected: "red",
 };
 
 /* Recharts series palette (ordered) */
