@@ -16,12 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className="antialiased bg-background text-foreground">
         <ConvexClientProvider>
           <ThemeProvider>
             <div className="flex h-screen gap-4 p-4">
               <NavigationSidebar />
-              <main className="flex-1 overflow-auto pt-12 md:pt-0">
+              <main className="flex-1 overflow-auto pt-14 md:pt-0">
                 <div className="max-w-[1600px] mx-auto">{children}</div>
               </main>
             </div>

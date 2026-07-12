@@ -111,7 +111,9 @@ export function NavigationSidebar() {
       </div>
 
       <nav className="flex-1 px-3 overflow-y-auto space-y-5">
-        {sections.map((section) => (
+        {sections.map((section) => {
+          const accent = sectionAccent[section.label] ?? sectionAccent.Overview;
+          return (
           <div key={section.label}>
             <p className="text-[10px] font-semibold text-tertiary uppercase tracking-[0.12em] px-3 mb-1.5">
               {section.label}
@@ -131,12 +133,12 @@ export function NavigationSidebar() {
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150",
                       isActive
-                        ? cn(sectionAccent[section.label].activeBg, "text-foreground")
+                        ? cn(accent.activeBg, "text-foreground")
                         : "text-muted hover:bg-fill hover:text-foreground"
                     )}
                   >
                     <Icon
-                      className={cn("w-4 h-4", isActive ? sectionAccent[section.label].icon : "text-tertiary")}
+                      className={cn("w-4 h-4", isActive ? accent.icon : "text-tertiary")}
                     />
                     <span>{item.name}</span>
                   </Link>
@@ -144,7 +146,8 @@ export function NavigationSidebar() {
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div className="p-3 border-t border-separator space-y-1">
@@ -154,9 +157,9 @@ export function NavigationSidebar() {
           className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-[13px] text-muted hover:bg-fill hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
         >
           {theme === "dark" ? (
-            <Sun className="w-4 h-4 text-muted" />
+            <Sun className="w-4 h-4 text-accent-orange" />
           ) : (
-            <Moon className="w-4 h-4 text-muted" />
+            <Moon className="w-4 h-4 text-accent-blue" />
           )}
           <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
         </button>
@@ -199,7 +202,7 @@ export function NavigationSidebar() {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden md:flex w-64 flex-col glass-pane rounded-2xl overflow-hidden">
+      <div className="hidden md:flex w-64 flex-col glass-pane rounded-2xl">
         {navContent}
       </div>
     </>
