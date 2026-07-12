@@ -81,6 +81,8 @@ function CalendarGrid({
   onSelectDate: (date: Date) => void;
   onSelectEvent: (event: CalendarEvent) => void;
 }) {
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
   const calendarStart = startOfWeek(monthStart);
@@ -113,9 +115,11 @@ function CalendarGrid({
 
       <div className="grid grid-cols-7 gap-1 flex-1">
         {days.map((day) => {
-          const dayEvents = eventsByDay[format(day, "yyyy-MM-dd")] || [];
+          const dayKey = format(day, "yyyy-MM-dd");
+          const dayEvents = eventsByDay[dayKey] || [];
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isTodayDate = isToday(day);
+          const isExpanded = expandedDays.has(dayKey);
 
           return (
             <div
@@ -149,7 +153,7 @@ function CalendarGrid({
                 )}
               </div>
               <div className="space-y-1 mt-1">
-                {dayEvents.slice(0, 3).map((event) => {
+                {(isExpanded ? dayEvents : dayEvents.slice(0, 3)).map((event) => {
                   const accent = EVENT_TYPE_ACCENT[event.type] ?? "gray";
                   return (
                     <div
@@ -168,8 +172,21 @@ function CalendarGrid({
                   );
                 })}
                 {dayEvents.length > 3 && (
-                  <div className="text-xs text-muted px-2">
-                    +{dayEvents.length - 3} more
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedDays((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(dayKey)) next.delete(dayKey); else next.add(dayKey);
+                        return next;
+                      });
+                    }}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); (e.currentTarget as HTMLElement).click(); } }}
+                    className="text-xs text-muted px-2 cursor-pointer hover:text-foreground select-none"
+                  >
+                    {isExpanded ? "Show less" : `+${dayEvents.length - 3} more`}
                   </div>
                 )}
               </div>
