@@ -19,7 +19,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatCurrency } from "@/lib/utils";
-import { accentBg, accentPill, accentText, pnlDisplay, type AccentName } from "@/lib/status-colors";
+import { accentBg, accentPill, accentText, pnlDisplay, pnlDisplayUSD, type AccentName } from "@/lib/status-colors";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -186,7 +186,7 @@ export default function PolymarketPage() {
           ) : (
             <>
               {(() => {
-                const p = pnlDisplay(dailyPnl);
+                const p = pnlDisplayUSD(dailyPnl);
                 return (
                   <StatCard
                     label="Daily P&L"
@@ -276,7 +276,7 @@ export default function PolymarketPage() {
                 <tbody>
                   {positions.map((pos, i) => {
                     const upnl = pos.unrealized_pnl ?? 0;
-                    const p = pnlDisplay(upnl);
+                    const p = pnlDisplayUSD(upnl);
                     return (
                       <tr
                         key={pos.token_id ?? i}
@@ -408,7 +408,7 @@ export default function PolymarketPage() {
                   const pnlEl =
                     tradePnl !== null && tradePnl !== undefined
                       ? (() => {
-                          const p = pnlDisplay(tradePnl);
+                          const p = pnlDisplayUSD(tradePnl);
                           return (
                             <span className={cn("tabular-nums", p.className)}>
                               {p.text}

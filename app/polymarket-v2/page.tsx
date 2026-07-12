@@ -142,7 +142,7 @@ function SignalRow({ sig }: { sig: Signal }) {
   if (pnl === undefined || pnl === null) {
     pnlEl = <span className="text-muted">—</span>;
   } else {
-    const p = pnlDisplay(pnl);
+    const p = pnlDisplay(Math.round(pnl));
     pnlEl = <span className={cn("tabular-nums", p.className)}>{p.text} bps</span>;
   }
 
@@ -345,17 +345,15 @@ export default function PolymarketV2Page() {
   // Median P&L display
   const medianPnlDisplay =
     medianPnl !== null ? (() => {
-      const p = pnlDisplay(medianPnl);
+      const p = pnlDisplay(Math.round(medianPnl));
       return { text: `${p.text} bps`, className: p.className };
     })() : null;
 
   // Total bps display
+  const totalPnl = pnlDisplay(Math.round(totalBps));
   const totalPnlDisplay =
     fillPnls.length > 0
-      ? (() => {
-          const p = pnlDisplay(totalBps);
-          return `Σ ${p.text} bps`;
-        })()
+      ? <span className={cn("tabular-nums", totalPnl.className)}>Σ {totalPnl.text} bps</span>
       : "no fills yet";
 
   return (

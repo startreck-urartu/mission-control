@@ -105,3 +105,13 @@ export function pnlDisplay(value: number): { text: string; className: string } {
     className: value > 0 ? "text-accent-green" : value < 0 ? "text-accent-red" : "text-muted",
   };
 }
+
+/* USD variant: sign, then $, e.g. "+$1.23" / "−$4.56" */
+export function pnlDisplayUSD(value: number): { text: string; className: string } {
+  const base = pnlDisplay(value);
+  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+  return {
+    text: `${sign}$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    className: base.className,
+  };
+}
