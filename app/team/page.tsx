@@ -115,7 +115,7 @@ function TeamMemberCard({
                     <Crown className="w-4 h-4 text-accent-yellow" />
                   )}
                   {!isSubagent && member.parentId && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge color="gray" className="text-xs">
                       Subagent
                     </Badge>
                   )}
@@ -153,7 +153,7 @@ function TeamMemberCard({
                 </Badge>
               ))}
               {member.skills?.length > 4 && (
-                <Badge variant="outline" className="text-xs">
+                <Badge color="gray" className="text-xs">
                   +{member.skills.length - 4}
                 </Badge>
               )}

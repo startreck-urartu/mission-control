@@ -344,7 +344,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Radio className="w-4 h-4 text-accent-orange" />
                   Trading Team
-                  <Badge variant="outline" className="text-[10px] ml-1">
+                  <Badge color="gray" className="text-[10px] ml-1">
                     {tradingAgentsOnline}/{tradingAgents.length} online
                   </Badge>
                 </CardTitle>
@@ -575,7 +575,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <Badge
-                        variant="outline"
+                        color="gray"
                         className={cn(
                           "text-[10px]",
                           accentPill[priorityAccent[task.priority ?? "low"] ?? "gray"]
