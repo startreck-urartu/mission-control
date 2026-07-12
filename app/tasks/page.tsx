@@ -51,29 +51,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatDate } from "@/lib/utils";
+import {
+  accentBg,
+  accentPill,
+  taskStatusAccent,
+  priorityAccent,
+} from "@/lib/status-colors";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type Task = Doc<"tasks">;
 
 const COLUMNS = [
-  { id: "todo", title: "To Do", color: "bg-red-500/20 border-red-500/50" },
-  { id: "in-progress", title: "In Progress", color: "bg-yellow-500/20 border-yellow-500/50" },
-  { id: "processing", title: "Processing", color: "bg-purple-500/20 border-purple-500/50" },
-  { id: "review", title: "Review", color: "bg-blue-500/20 border-blue-500/50" },
-  { id: "agent-reviewed", title: "Agent Reviewed", color: "bg-cyan-500/20 border-cyan-500/50" },
-  { id: "done", title: "Done", color: "bg-green-500/20 border-green-500/50" },
-  { id: "validation-error", title: "Validation Error", color: "bg-orange-500/20 border-orange-500/50" },
-  { id: "failed", title: "Failed", color: "bg-red-700/20 border-red-700/50" },
+  { id: "todo", title: "To Do" },
+  { id: "in-progress", title: "In Progress" },
+  { id: "processing", title: "Processing" },
+  { id: "review", title: "Review" },
+  { id: "agent-reviewed", title: "Agent Reviewed" },
+  { id: "done", title: "Done" },
+  { id: "validation-error", title: "Validation Error" },
+  { id: "failed", title: "Failed" },
 ] as const;
-
-const PRIORITY_COLORS = {
-  high: "bg-red-500 text-white",
-  medium: "bg-yellow-500 text-black",
-  low: "bg-blue-500 text-white",
-};
 
 function SortableTaskCard({
   task,
@@ -107,9 +107,9 @@ function SortableTaskCard({
       {...listeners}
       className="group"
     >
-      <Card className="p-4 glass card-hover highlight-top cursor-move transition-all hover:shadow-lg">
+      <Card className="p-4 kanban-card cursor-move transition-all hover:shadow-lg">
         <div className="flex items-start justify-between">
-          <h3 className="text-sm font-medium text-gray-100 leading-tight">
+          <h3 className="text-sm font-medium text-foreground leading-tight">
             {task.title}
           </h3>
           <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
@@ -119,9 +119,9 @@ function SortableTaskCard({
                 onEdit(task);
               }}
               aria-label={`Edit task "${task.title}"`}
-              className="p-1 hover:bg-gray-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+              className="p-1 hover:bg-fill rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
             >
-              <Edit className="w-3 h-3 text-gray-400" />
+              <Edit className="w-3 h-3 text-muted" />
             </button>
             <button
               onClick={(e) => {
@@ -129,32 +129,31 @@ function SortableTaskCard({
                 onDelete(task._id);
               }}
               aria-label={`Delete task "${task.title}"`}
-              className="p-1 hover:bg-red-900/30 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+              className="p-1 hover:bg-accent-red-tint rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
             >
-              <Trash2 className="w-3 h-3 text-red-400" />
+              <Trash2 className="w-3 h-3 text-accent-red" />
             </button>
           </div>
         </div>
 
         {task.description && (
-          <p className="text-xs text-gray-400 mt-2 line-clamp-2">
+          <p className="text-xs text-muted mt-2 line-clamp-2">
             {task.description}
           </p>
         )}
 
         <div className="flex items-center gap-2 mt-3 flex-wrap">
-          <Badge
-            variant="outline"
+          <span
             className={cn(
-              "text-xs",
-              PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS]
+              "inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium",
+              accentPill[priorityAccent[task.priority] ?? "gray"]
             )}
           >
-            <Flag className="w-3 h-3 mr-1" />
+            <Flag className="w-3 h-3" />
             {task.priority}
-          </Badge>
+          </span>
 
-          <div className="flex items-center gap-1 text-xs text-gray-400">
+          <div className="flex items-center gap-1 text-xs text-muted">
             {task.assignee === "human" ? (
               <User className="w-3 h-3" />
             ) : (
@@ -163,10 +162,10 @@ function SortableTaskCard({
           </div>
 
           {task.dueDate && (
-            <div className="flex items-center gap-1 text-xs text-gray-400">
+            <div className="flex items-center gap-1 text-xs text-muted">
               <Clock className="w-3 h-3" />
               {new Date(task.dueDate) < new Date() ? (
-                <span className="text-red-400">{formatDate(task.dueDate)}</span>
+                <span className="text-accent-red">{formatDate(task.dueDate)}</span>
               ) : (
                 formatDate(task.dueDate)
               )}
@@ -179,7 +178,7 @@ function SortableTaskCard({
             {task.tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs px-2 py-0.5 bg-white/[0.06] rounded-full text-gray-300"
+                className="text-xs px-2 py-0.5 bg-fill rounded-full text-muted"
               >
                 {tag}
               </span>
@@ -203,8 +202,8 @@ function DroppableColumnBody({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex-1 glass-subtle rounded-b-lg border-t-0 p-2 overflow-y-auto transition-colors",
-        isOver && "bg-gray-800/60 border-gray-600"
+        "flex-1 rounded-b-lg border-t-0 p-2 overflow-y-auto transition-colors",
+        isOver ? "bg-fill border-separator" : "bg-glass"
       )}
     >
       {children}
@@ -214,16 +213,16 @@ function DroppableColumnBody({
 
 function DragOverlayCard({ task }: { task: Task }) {
   return (
-    <Card className="p-4 glass border-white/[0.08] shadow-2xl rotate-2 scale-105">
-      <h3 className="text-sm font-medium text-gray-100">{task.title}</h3>
-      <Badge
+    <Card className="p-4 glass-pane-elevated rounded-2xl shadow-2xl rotate-2 scale-105">
+      <h3 className="text-sm font-medium text-foreground">{task.title}</h3>
+      <span
         className={cn(
-          "mt-2 text-xs",
-          PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS]
+          "inline-flex items-center text-xs px-2 py-0.5 rounded-full font-medium mt-2",
+          accentPill[priorityAccent[task.priority] ?? "gray"]
         )}
       >
         {task.priority}
-      </Badge>
+      </span>
     </Card>
   );
 }
@@ -233,16 +232,16 @@ function TasksBoardSkeleton() {
     <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 min-h-0 overflow-x-auto">
       {COLUMNS.map((column) => (
         <div key={column.id} className="flex flex-col min-h-0">
-          <div className={cn("p-3 rounded-t-lg border-t-2", column.color)}>
+          <div className="p-3 rounded-t-lg glass-pane border-separator border-t-2">
             <div className="flex items-center justify-between">
               <Skeleton className="h-5 w-20" />
               <Skeleton className="h-5 w-8 rounded-full" />
             </div>
           </div>
-          <div className="flex-1 glass-subtle rounded-b-lg border-t-0 p-2 overflow-y-auto">
+          <div className="flex-1 bg-glass rounded-b-lg border-t-0 p-2 overflow-y-auto">
             {[1, 2].map((i) => (
               <div key={i} className="mb-2">
-                <Card className="p-4 glass highlight-top">
+                <Card className="p-4">
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-3 w-full mt-2" />
                   <div className="flex items-center gap-2 mt-3">
@@ -394,18 +393,12 @@ export default function TasksPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Tasks Board</h1>
-          <p className="text-gray-400 mt-1">
-            Drag and drop tasks to organize your workflow
-          </p>
-        </div>
+      <PageHeader title="Tasks Board" subtitle="Drag and drop tasks to organize your workflow">
         <Button onClick={handleCreate} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New Task
         </Button>
-      </div>
+      </PageHeader>
 
       {isLoading ? (
         <TasksBoardSkeleton />
@@ -422,17 +415,20 @@ export default function TasksPage() {
               key={column.id}
               className="flex flex-col min-h-0"
             >
-              <div
-                className={cn(
-                  "p-3 rounded-t-lg border-t-2",
-                  column.color
-                )}
-              >
+              <div className="p-3 rounded-t-lg glass-pane border-separator border-t-2">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-gray-100">{column.title}</h2>
-                  <Badge variant="secondary" className="bg-white/[0.06]">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full shrink-0",
+                        accentBg[taskStatusAccent[column.id] ?? "gray"]
+                      )}
+                    />
+                    <h2 className="font-semibold text-foreground text-sm">{column.title}</h2>
+                  </div>
+                  <span className="text-xs text-muted tabular-nums">
                     {tasksByColumn[column.id]?.length || 0}
-                  </Badge>
+                  </span>
                 </div>
               </div>
               <DroppableColumnBody columnId={column.id}>
@@ -476,7 +472,7 @@ export default function TasksPage() {
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <label className="text-sm font-medium text-gray-200">Title</label>
+              <label className="text-sm font-medium text-foreground">Title</label>
               <Input
                 value={formData.title}
                 onChange={(e) =>
@@ -486,7 +482,7 @@ export default function TasksPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Description</label>
+              <label className="text-sm font-medium text-foreground">Description</label>
               <Textarea
                 value={formData.description}
                 onChange={(e) =>
@@ -497,7 +493,7 @@ export default function TasksPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Status</label>
+                <label className="text-sm font-medium text-foreground">Status</label>
                 <Select
                   value={formData.status}
                   onValueChange={(v) =>
@@ -520,7 +516,7 @@ export default function TasksPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Priority</label>
+                <label className="text-sm font-medium text-foreground">Priority</label>
                 <Select
                   value={formData.priority}
                   onValueChange={(v) =>
@@ -540,7 +536,7 @@ export default function TasksPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Assignee</label>
+                <label className="text-sm font-medium text-foreground">Assignee</label>
                 <Select
                   value={formData.assignee}
                   onValueChange={(v) =>
@@ -557,7 +553,7 @@ export default function TasksPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Due Date</label>
+                <label className="text-sm font-medium text-foreground">Due Date</label>
                 <Input
                   type="datetime-local"
                   value={formData.dueDate}
@@ -568,7 +564,7 @@ export default function TasksPage() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Tags (comma separated)</label>
+              <label className="text-sm font-medium text-foreground">Tags (comma separated)</label>
               <Input
                 value={formData.tags}
                 onChange={(e) =>
