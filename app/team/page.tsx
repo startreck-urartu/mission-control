@@ -101,7 +101,7 @@ function TeamMemberCard({
             </Avatar>
             <div
               className={cn(
-                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[hsl(var(--glass-bg))]",
+                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-background",
                 accentBg[statusAccent]
               )}
             />
@@ -139,7 +139,7 @@ function TeamMemberCard({
                     onDelete(member._id);
                   }}
                   aria-label={`Remove ${member.name}`}
-                  className="p-1.5 hover:bg-fill rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/40"
+                  className="p-1.5 hover:bg-accent-red-tint rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/40"
                 >
                   <Trash2 className="w-4 h-4 text-accent-red" />
                 </button>
