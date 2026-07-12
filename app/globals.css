@@ -131,9 +131,7 @@
 
 /* ── Glass recipe ────────────────────────────────────────────────── */
 @layer components {
-  /* TEMP: `.glass` is a compat alias for pages not yet swept — remove in final QA (Task 26) */
-  .glass-pane,
-  .glass {
+  .glass-pane {
     background: var(--glass);
     border: 0.5px solid var(--glass-border);
     backdrop-filter: blur(24px) saturate(180%);
