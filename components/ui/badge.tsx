@@ -1,38 +1,39 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
+import { accentPill, type AccentName } from "@/lib/status-colors"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-blue-600 text-white shadow hover:bg-blue-600/80",
-        secondary:
-          "border-transparent bg-gray-700 text-gray-200 hover:bg-gray-700/80",
-        destructive:
-          "border-transparent bg-red-600 text-white shadow hover:bg-red-600/80",
-        outline: "text-gray-300 border-gray-600",
-        success:
-          "border-transparent bg-green-600 text-white shadow hover:bg-green-600/80",
-        warning:
-          "border-transparent bg-yellow-600 text-white shadow hover:bg-yellow-600/80",
+        default: "", secondary: "", destructive: "", outline: "",
+        success: "", warning: "",
       },
     },
-    defaultVariants: {
-      variant: "default",
-    },
+    defaultVariants: { variant: "default" },
   }
 )
 
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+const legacyVariantColor: Record<string, AccentName> = {
+  default: "blue", secondary: "gray", destructive: "red",
+  outline: "gray", success: "green", warning: "yellow",
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
+export interface BadgeProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "color">,
+    VariantProps<typeof badgeVariants> {
+  color?: AccentName
+}
+
+function Badge({ className, variant, color, ...props }: BadgeProps) {
+  const accent = color ?? legacyVariantColor[variant ?? "default"]
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div
+      className={cn(badgeVariants({ variant }), accentPill[accent], className)}
+      {...props}
+    />
   )
 }
 
