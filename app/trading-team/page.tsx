@@ -440,6 +440,17 @@ export default function TradingTeamPage() {
     [tasks]
   );
 
+  const sortedTradingTasks = useMemo(
+    () =>
+      tradingTasks
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        ),
+    [tradingTasks]
+  );
+
   const stats = useMemo(() => {
     const completed = tradingTasks.filter(
       (t) => t.status === "done" || t.status === "agent-reviewed"
@@ -604,12 +615,7 @@ export default function TradingTeamPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-0.5">
-                      {tradingTasks
-                        .sort(
-                          (a, b) =>
-                            new Date(b.updatedAt).getTime() -
-                            new Date(a.updatedAt).getTime()
-                        )
+                      {sortedTradingTasks
                         .slice(0, 12)
                         .map((task) => {
                           const statusAccent: AccentName =

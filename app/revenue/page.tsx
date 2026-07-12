@@ -195,7 +195,7 @@ export default function RevenuePage() {
 
   const submitRevenue = async () => {
     const amount = parseFloat(revenueForm.amount);
-    if (!revenueForm.description.trim() || !revenueForm.date || isNaN(amount)) return;
+    if (!revenueForm.description.trim() || !revenueForm.date || isNaN(amount) || amount <= 0) return;
 
     const data = {
       amount,
@@ -253,7 +253,7 @@ export default function RevenuePage() {
 
   const submitGoal = async () => {
     const targetAmount = parseFloat(goalForm.targetAmount);
-    if (!goalForm.title.trim() || isNaN(targetAmount) || !goalForm.startDate || !goalForm.endDate) return;
+    if (!goalForm.title.trim() || isNaN(targetAmount) || targetAmount <= 0 || !goalForm.startDate || !goalForm.endDate) return;
 
     const data = {
       title: goalForm.title.trim(),
@@ -412,7 +412,7 @@ export default function RevenuePage() {
                     </div>
                     <div className="flex justify-between mt-1">
                       <span className={cn("text-[11px]", met ? accentText["green"] : "text-tertiary")}>
-                        {goal.progressPct}%
+                        {Math.min(100, Math.round(goal.progressPct))}%
                       </span>
                       <span className={cn("text-[11px]", met ? accentText["green"] : accentText["orange"])}>
                         {met
@@ -528,23 +528,23 @@ export default function RevenuePage() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-foreground">Amount ($) *</label>
-                <Input type="number" value={revenueForm.amount} onChange={(e) => setRevenueForm({ ...revenueForm, amount: e.target.value })} placeholder="1500" />
+                <label htmlFor="rev-amount" className="text-sm font-medium text-foreground">Amount ($) *</label>
+                <Input id="rev-amount" type="number" value={revenueForm.amount} onChange={(e) => setRevenueForm({ ...revenueForm, amount: e.target.value })} placeholder="1500" />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Date *</label>
-                <Input type="date" value={revenueForm.date} onChange={(e) => setRevenueForm({ ...revenueForm, date: e.target.value })} />
+                <label htmlFor="rev-date" className="text-sm font-medium text-foreground">Date *</label>
+                <Input id="rev-date" type="date" value={revenueForm.date} onChange={(e) => setRevenueForm({ ...revenueForm, date: e.target.value })} />
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground">Description *</label>
-              <Textarea value={revenueForm.description} onChange={(e) => setRevenueForm({ ...revenueForm, description: e.target.value })} placeholder="Ring CAD model — final payment" rows={2} />
+              <label htmlFor="rev-description" className="text-sm font-medium text-foreground">Description *</label>
+              <Textarea id="rev-description" value={revenueForm.description} onChange={(e) => setRevenueForm({ ...revenueForm, description: e.target.value })} placeholder="Ring CAD model — final payment" rows={2} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-foreground">Category</label>
+                <label htmlFor="rev-category" className="text-sm font-medium text-foreground">Category</label>
                 <Select value={revenueForm.category} onValueChange={(v) => setRevenueForm({ ...revenueForm, category: v as Revenue["category"] })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="rev-category"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
@@ -553,9 +553,9 @@ export default function RevenuePage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Status</label>
+                <label htmlFor="rev-status" className="text-sm font-medium text-foreground">Status</label>
                 <Select value={revenueForm.status} onValueChange={(v) => setRevenueForm({ ...revenueForm, status: v as Revenue["status"] })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="rev-status"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="received">Received</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
@@ -565,9 +565,9 @@ export default function RevenuePage() {
             </div>
             {(clients?.length ?? 0) > 0 && (
               <div>
-                <label className="text-sm font-medium text-foreground">Client (optional)</label>
+                <label htmlFor="rev-client" className="text-sm font-medium text-foreground">Client (optional)</label>
                 <Select value={revenueForm.clientId || "none"} onValueChange={(v) => setRevenueForm({ ...revenueForm, clientId: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="rev-client"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">— none —</SelectItem>
                     {clients?.map((c) => (
@@ -579,7 +579,7 @@ export default function RevenuePage() {
             )}
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setRevenueDialogOpen(false)}>Cancel</Button>
-              <Button onClick={submitRevenue} disabled={!revenueForm.description.trim() || !revenueForm.amount}>
+              <Button onClick={submitRevenue} disabled={!revenueForm.description.trim() || !(parseFloat(revenueForm.amount) > 0)}>
                 {editingRevenue ? "Update" : "Add"}
               </Button>
             </div>
@@ -598,18 +598,18 @@ export default function RevenuePage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium text-foreground">Title *</label>
-              <Input value={goalForm.title} onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })} placeholder="July Revenue Target" />
+              <label htmlFor="goal-title" className="text-sm font-medium text-foreground">Title *</label>
+              <Input id="goal-title" value={goalForm.title} onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })} placeholder="July Revenue Target" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-foreground">Target ($) *</label>
-                <Input type="number" value={goalForm.targetAmount} onChange={(e) => setGoalForm({ ...goalForm, targetAmount: e.target.value })} placeholder="10000" />
+                <label htmlFor="goal-target" className="text-sm font-medium text-foreground">Target ($) *</label>
+                <Input id="goal-target" type="number" value={goalForm.targetAmount} onChange={(e) => setGoalForm({ ...goalForm, targetAmount: e.target.value })} placeholder="10000" />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Category</label>
+                <label htmlFor="goal-category" className="text-sm font-medium text-foreground">Category</label>
                 <Select value={goalForm.category} onValueChange={(v) => setGoalForm({ ...goalForm, category: v as Goal["category"] })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="goal-category"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {GOAL_CATEGORIES.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
@@ -620,27 +620,27 @@ export default function RevenuePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-foreground">Start *</label>
-                <Input type="date" value={goalForm.startDate} onChange={(e) => setGoalForm({ ...goalForm, startDate: e.target.value })} />
+                <label htmlFor="goal-start" className="text-sm font-medium text-foreground">Start *</label>
+                <Input id="goal-start" type="date" value={goalForm.startDate} onChange={(e) => setGoalForm({ ...goalForm, startDate: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">End *</label>
-                <Input type="date" value={goalForm.endDate} onChange={(e) => setGoalForm({ ...goalForm, endDate: e.target.value })} />
+                <label htmlFor="goal-end" className="text-sm font-medium text-foreground">End *</label>
+                <Input id="goal-end" type="date" value={goalForm.endDate} onChange={(e) => setGoalForm({ ...goalForm, endDate: e.target.value })} />
               </div>
             </div>
             {goalForm.category !== "revenue" && (
               <div>
-                <label className="text-sm font-medium text-foreground">Current Progress ($)</label>
-                <Input type="number" value={goalForm.currentAmount} onChange={(e) => setGoalForm({ ...goalForm, currentAmount: e.target.value })} placeholder="0" />
+                <label htmlFor="goal-current" className="text-sm font-medium text-foreground">Current Progress ($)</label>
+                <Input id="goal-current" type="number" value={goalForm.currentAmount} onChange={(e) => setGoalForm({ ...goalForm, currentAmount: e.target.value })} placeholder="0" />
               </div>
             )}
             <div>
-              <label className="text-sm font-medium text-foreground">Description</label>
-              <Textarea value={goalForm.description} onChange={(e) => setGoalForm({ ...goalForm, description: e.target.value })} rows={2} />
+              <label htmlFor="goal-description" className="text-sm font-medium text-foreground">Description</label>
+              <Textarea id="goal-description" value={goalForm.description} onChange={(e) => setGoalForm({ ...goalForm, description: e.target.value })} rows={2} />
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setGoalDialogOpen(false)}>Cancel</Button>
-              <Button onClick={submitGoal} disabled={!goalForm.title.trim() || !goalForm.targetAmount}>
+              <Button onClick={submitGoal} disabled={!goalForm.title.trim() || !(parseFloat(goalForm.targetAmount) > 0)}>
                 {editingGoal ? "Update" : "Create"}
               </Button>
             </div>

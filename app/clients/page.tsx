@@ -66,6 +66,12 @@ import {
   type AccentName,
 } from "@/lib/status-colors";
 
+/** Local (not UTC) YYYY-MM-DD — bare Date parsing of followUpDate is UTC and fires "overdue" early. */
+function localTodayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 type Client = Doc<"clients">;
 
 const STAGES = [
@@ -173,7 +179,7 @@ function ClientCard({
           </Badge>
           {client.followUpDate && (
             <span className={cn("text-[10px] flex items-center gap-1",
-              new Date(client.followUpDate) <= new Date() ? "text-accent-red" : "text-muted"
+              client.followUpDate.slice(0, 10) <= localTodayStr() ? "text-accent-red" : "text-muted"
             )}>
               <Calendar className="w-2.5 h-2.5" />{formatDate(client.followUpDate)}
             </span>
@@ -308,6 +314,8 @@ export default function ClientsPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeClient, setActiveClient] = useState<Client | null>(null);
   const { confirm, confirmDialog } = useConfirm();
@@ -336,8 +344,7 @@ export default function ClientsPage() {
   // full-table subscription (getPipelineMetrics) for numbers it can derive here
   const metrics = useMemo(() => {
     if (!clients) return undefined;
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const today = localTodayStr();
     let totalPipeline = 0;
     let totalWon = 0;
     let followUpNeeded = 0;
@@ -368,6 +375,7 @@ export default function ClientsPage() {
 
   const handleCreate = () => {
     setEditingClient(null);
+    setSaveError(null);
     setFormData({
       name: "",
       company: "",
@@ -387,6 +395,7 @@ export default function ClientsPage() {
 
   const handleEdit = (client: Client) => {
     setEditingClient(client);
+    setSaveError(null);
     setFormData({
       name: client.name,
       company: client.company || "",
@@ -405,9 +414,11 @@ export default function ClientsPage() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
     const name = formData.name.trim();
     if (!name) return;
 
+    setIsSubmitting(true);
     const data = {
       ...formData,
       name,
@@ -417,12 +428,20 @@ export default function ClientsPage() {
         : [],
     };
 
-    if (editingClient) {
-      await updateClient({ id: editingClient._id, ...data });
-    } else {
-      await createClient(data);
+    try {
+      setSaveError(null);
+      if (editingClient) {
+        await updateClient({ id: editingClient._id, ...data });
+      } else {
+        await createClient(data);
+      }
+      setIsDialogOpen(false);
+    } catch (err) {
+      console.error("Client save failed:", err);
+      setSaveError("Save failed — check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsDialogOpen(false);
   };
 
   const handleDelete = async (id: Id<"clients">) => {
@@ -431,7 +450,11 @@ export default function ClientsPage() {
   };
 
   const handleMove = async (id: Id<"clients">, stage: Client["stage"]) => {
-    await updateClient({ id, stage });
+    try {
+      await updateClient({ id, stage });
+    } catch (err) {
+      console.error("Stage move failed:", err);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -618,9 +641,10 @@ export default function ClientsPage() {
               <label className="text-sm font-medium text-foreground">Tags</label>
               <Input value={formData.tags} onChange={(e) => setFormData({ ...formData, tags: e.target.value })} placeholder="tag1, tag2" />
             </div>
+            {saveError && <p className="text-[13px] text-accent-red">{saveError}</p>}
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSubmit} disabled={!formData.name.trim()}>
+              <Button onClick={handleSubmit} disabled={!formData.name.trim() || isSubmitting}>
                 {editingClient ? "Update" : "Create"}
               </Button>
             </div>

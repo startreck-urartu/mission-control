@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
@@ -111,10 +112,14 @@ export default function DashboardPage() {
     published: content?.filter((c) => c.stage === "published").length ?? 0,
   };
 
-  const recentTasks = tasks
-    ?.slice()
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 8) ?? [];
+  const recentTasks = useMemo(
+    () =>
+      tasks
+        ?.slice()
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .slice(0, 8) ?? [],
+    [tasks]
+  );
 
   return (
     <div className="space-y-6">
@@ -344,7 +349,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Radio className="w-4 h-4 text-accent-orange" />
                   Trading Team
-                  <Badge variant="outline" className="text-[10px] ml-1">
+                  <Badge color="gray" className="text-[10px] ml-1">
                     {tradingAgentsOnline}/{tradingAgents.length} online
                   </Badge>
                 </CardTitle>
@@ -575,7 +580,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <Badge
-                        variant="outline"
+                        color="gray"
                         className={cn(
                           "text-[10px]",
                           accentPill[priorityAccent[task.priority ?? "low"] ?? "gray"]

@@ -225,7 +225,7 @@ export function TeamMemberDesk({
                 whileHover={{ scale: 1.1, y: -2 }}
               >
                 <Badge
-                  variant="outline"
+                  color="gray"
                   className={cn(
                     "text-[10px] transition-colors duration-200",
                     isWorking ? "bg-fill text-foreground" : "bg-fill text-muted"
@@ -237,7 +237,7 @@ export function TeamMemberDesk({
             ))}
             {member.skills.length > 3 && (
               <Badge
-                variant="outline"
+                color="gray"
                 className="text-[10px]"
               >
                 +{member.skills.length - 3}
