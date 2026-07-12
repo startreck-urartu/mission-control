@@ -43,7 +43,7 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import { accentBg, priorityAccent, type AccentName } from "@/lib/status-colors";
+import { accentBg, type AccentName } from "@/lib/status-colors";
 
 type Book = Doc<"books">;
 
