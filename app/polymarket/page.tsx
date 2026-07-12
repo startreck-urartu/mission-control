@@ -142,12 +142,8 @@ export default function PolymarketPage() {
         )}
         <div
           className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border",
-            statusAccent === "green"
-              ? "bg-accent-green-tint border-separator text-accent-green"
-              : statusAccent === "red"
-              ? "bg-accent-red-tint border-separator text-accent-red"
-              : "bg-fill border-separator text-muted"
+            "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border border-separator",
+            accentPill[statusAccent]
           )}
         >
           <span
