@@ -38,24 +38,32 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatTimeAgo } from "@/lib/utils";
+import { accentPill, priorityAccent, type AccentName } from "@/lib/status-colors";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type Memory = Doc<"memories">;
 
-const MEMORY_TYPES = {
-  conversation: { icon: MessageSquare, color: "bg-blue-500", label: "Conversation" },
-  task: { icon: CheckSquare, color: "bg-green-500", label: "Task" },
-  decision: { icon: Lightbulb, color: "bg-yellow-500", label: "Decision" },
-  insight: { icon: Sparkles, color: "bg-purple-500", label: "Insight" },
-  note: { icon: StickyNote, color: "bg-gray-500", label: "Note" },
+const MEMORY_TYPES: Record<
+  string,
+  { icon: React.ElementType; label: string }
+> = {
+  conversation: { icon: MessageSquare, label: "Conversation" },
+  task:         { icon: CheckSquare,   label: "Task" },
+  decision:     { icon: Lightbulb,     label: "Decision" },
+  insight:      { icon: Sparkles,      label: "Insight" },
+  note:         { icon: StickyNote,    label: "Note" },
 };
 
-const IMPORTANCE_COLORS = {
-  high: "bg-red-500",
-  medium: "bg-yellow-500",
-  low: "bg-blue-500",
+const MEMORY_TYPE_ACCENT: Record<string, AccentName> = {
+  conversation: "blue",
+  task:         "teal",
+  decision:     "orange",
+  insight:      "purple",
+  note:         "gray",
 };
 
 function MemoryCard({
@@ -68,22 +76,23 @@ function MemoryCard({
   onDelete: (id: Id<"memories">) => void;
 }) {
   const TypeIcon = MEMORY_TYPES[memory.type].icon;
+  const typeAccent = MEMORY_TYPE_ACCENT[memory.type] ?? "gray";
 
   return (
-    <Card className="group glass card-hover highlight-top transition-all overflow-hidden">
+    <Card className="group transition-all overflow-hidden">
       <div className="p-4">
         <div className="flex items-start gap-3">
           <div
             className={cn(
               "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
-              MEMORY_TYPES[memory.type].color
+              accentPill[typeAccent]
             )}
           >
-            <TypeIcon className="w-5 h-5 text-white" />
+            <TypeIcon className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-sm font-medium text-gray-100 leading-tight min-w-0 break-words">
+              <h3 className="text-sm font-medium text-foreground leading-tight min-w-0 break-words">
                 {memory.title}
               </h3>
               <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity shrink-0">
@@ -93,9 +102,9 @@ function MemoryCard({
                     onEdit(memory);
                   }}
                   aria-label="Edit memory"
-                  className="p-1 hover:bg-gray-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                  className="p-1 hover:bg-fill rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
                 >
-                  <Edit className="w-3 h-3 text-gray-400" />
+                  <Edit className="w-3 h-3 text-muted" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -103,31 +112,25 @@ function MemoryCard({
                     onDelete(memory._id);
                   }}
                   aria-label="Delete memory"
-                  className="p-1 hover:bg-red-900/30 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                  className="p-1 hover:bg-fill rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
                 >
-                  <Trash2 className="w-3 h-3 text-red-400" />
+                  <Trash2 className="w-3 h-3 text-accent-red" />
                 </button>
               </div>
             </div>
-            <p className="text-sm text-gray-300 mt-2 leading-relaxed">
+            <p className="text-sm text-muted mt-2 leading-relaxed">
               {memory.content}
             </p>
             <div className="flex items-center gap-3 mt-3 flex-wrap">
-              <Badge
-                variant="outline"
-                className={cn(
-                  "text-xs text-white border-0",
-                  IMPORTANCE_COLORS[memory.importance]
-                )}
-              >
+              <Badge color={priorityAccent[memory.importance] ?? "gray"}>
                 {memory.importance}
               </Badge>
-              <div className="flex items-center gap-1 text-xs text-gray-500">
+              <div className="flex items-center gap-1 text-xs text-tertiary">
                 <Calendar className="w-3 h-3" />
                 {formatTimeAgo(memory.createdAt)}
               </div>
               {memory.source && (
-                <span className="text-xs text-gray-500">via {memory.source}</span>
+                <span className="text-xs text-tertiary">via {memory.source}</span>
               )}
             </div>
             {memory.tags && memory.tags.length > 0 && (
@@ -135,7 +138,7 @@ function MemoryCard({
                 {memory.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs px-2 py-0.5 bg-white/[0.06] rounded-full text-gray-300"
+                    className="text-xs px-2 py-0.5 bg-fill rounded-full text-muted"
                   >
                     #{tag}
                   </span>
@@ -153,7 +156,7 @@ function MemorySkeleton() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <Card key={i} className="glass highlight-top overflow-hidden">
+        <Card key={i} className="overflow-hidden">
           <div className="p-4">
             <div className="flex items-start gap-3">
               <Skeleton className="w-10 h-10 rounded-lg flex-shrink-0" />
@@ -275,23 +278,20 @@ export default function MemoryPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Memory Archive</h1>
-          <p className="text-gray-400 mt-1">
-            Search and manage your archived memories
-          </p>
-        </div>
+      <PageHeader
+        title="Memory Archive"
+        subtitle="Search and manage your archived memories"
+      >
         <Button onClick={handleCreate} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New Memory
         </Button>
-      </div>
+      </PageHeader>
 
-      <Card className="glass-subtle mb-6">
+      <Card className="mb-6">
         <div className="p-4 flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
             <Input
               placeholder="Search memories..."
               value={searchQuery}
@@ -354,16 +354,20 @@ export default function MemoryPage() {
             />
           ))}
           {filteredMemories.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <Brain className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-300">
-                {(memories ?? []).length === 0 ? "No memories yet" : "No matches found"}
-              </h3>
-              <p className="text-gray-500 mt-1">
-                {(memories ?? []).length === 0
-                  ? "Start building your memory archive"
-                  : "Try adjusting your filters or search query"}
-              </p>
+            <div className="col-span-full">
+              <EmptyState
+                icon={Brain}
+                message={
+                  (memories ?? []).length === 0
+                    ? "No memories yet"
+                    : "No matches found"
+                }
+                hint={
+                  (memories ?? []).length === 0
+                    ? "Start building your memory archive"
+                    : "Try adjusting your filters or search query"
+                }
+              />
             </div>
           )}
         </div>
@@ -382,7 +386,7 @@ export default function MemoryPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium text-gray-200">Title</label>
+              <label className="text-sm font-medium text-foreground">Title</label>
               <Input
                 value={formData.title}
                 onChange={(e) =>
@@ -392,7 +396,7 @@ export default function MemoryPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Content</label>
+              <label className="text-sm font-medium text-foreground">Content</label>
               <Textarea
                 value={formData.content}
                 onChange={(e) =>
@@ -404,7 +408,7 @@ export default function MemoryPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Type</label>
+                <label className="text-sm font-medium text-foreground">Type</label>
                 <Select
                   value={formData.type}
                   onValueChange={(v) =>
@@ -427,7 +431,7 @@ export default function MemoryPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Importance</label>
+                <label className="text-sm font-medium text-foreground">Importance</label>
                 <Select
                   value={formData.importance}
                   onValueChange={(v) =>
@@ -446,7 +450,7 @@ export default function MemoryPage() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Source</label>
+              <label className="text-sm font-medium text-foreground">Source</label>
               <Input
                 value={formData.source}
                 onChange={(e) =>
@@ -456,7 +460,7 @@ export default function MemoryPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Tags</label>
+              <label className="text-sm font-medium text-foreground">Tags</label>
               <Input
                 value={formData.tags}
                 onChange={(e) =>
