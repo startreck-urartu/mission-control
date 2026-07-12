@@ -171,13 +171,17 @@ function ClientCard({
           <Badge color={priorityAccent[client.priority] ?? "gray"}>
             <Flag className="w-2.5 h-2.5 mr-1" />{client.priority}
           </Badge>
-          {client.followUpDate && (
-            <span className={cn("text-[10px] flex items-center gap-1",
-              new Date(client.followUpDate) <= new Date() ? "text-accent-red" : "text-muted"
-            )}>
-              <Calendar className="w-2.5 h-2.5" />{formatDate(client.followUpDate)}
-            </span>
-          )}
+          {client.followUpDate && (() => {
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+            return (
+              <span className={cn("text-[10px] flex items-center gap-1",
+                client.followUpDate.slice(0, 10) <= todayStr ? "text-accent-red" : "text-muted"
+              )}>
+                <Calendar className="w-2.5 h-2.5" />{formatDate(client.followUpDate)}
+              </span>
+            );
+          })()}
         </div>
 
         <div className="flex items-center gap-2 mt-2 text-[10px] text-tertiary">
@@ -308,6 +312,7 @@ export default function ClientsPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeClient, setActiveClient] = useState<Client | null>(null);
   const { confirm, confirmDialog } = useConfirm();
@@ -405,9 +410,11 @@ export default function ClientsPage() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
     const name = formData.name.trim();
     if (!name) return;
 
+    setIsSubmitting(true);
     const data = {
       ...formData,
       name,
@@ -417,12 +424,18 @@ export default function ClientsPage() {
         : [],
     };
 
-    if (editingClient) {
-      await updateClient({ id: editingClient._id, ...data });
-    } else {
-      await createClient(data);
+    try {
+      if (editingClient) {
+        await updateClient({ id: editingClient._id, ...data });
+      } else {
+        await createClient(data);
+      }
+      setIsDialogOpen(false);
+    } catch (err) {
+      console.error("Client save failed:", err);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsDialogOpen(false);
   };
 
   const handleDelete = async (id: Id<"clients">) => {
@@ -431,7 +444,11 @@ export default function ClientsPage() {
   };
 
   const handleMove = async (id: Id<"clients">, stage: Client["stage"]) => {
-    await updateClient({ id, stage });
+    try {
+      await updateClient({ id, stage });
+    } catch (err) {
+      console.error("Stage move failed:", err);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -620,7 +637,7 @@ export default function ClientsPage() {
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSubmit} disabled={!formData.name.trim()}>
+              <Button onClick={handleSubmit} disabled={!formData.name.trim() || isSubmitting}>
                 {editingClient ? "Update" : "Create"}
               </Button>
             </div>
