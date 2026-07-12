@@ -36,10 +36,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import {
-  accentPill,
   accentBg,
   accentText,
   revenueCategoryAccent,
@@ -81,7 +81,7 @@ function monthBounds() {
 }
 
 // Summary stat config — accent keys only (no raw class strings)
-const STAT_ACCENTS: AccentName[] = ["green", "yellow", "blue", "purple"];
+const STAT_ACCENTS: AccentName[] = ["green", "orange", "blue", "purple"];
 
 export default function RevenuePage() {
   const allRevenue = useQuery(api.revenue.getAllRevenue);
@@ -322,21 +322,13 @@ export default function RevenuePage() {
             accent: STAT_ACCENTS[3],
           },
         ].map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className={cn("p-1.5 rounded-lg", accentPill[stat.accent])}>
-                  <stat.icon className="w-4 h-4" />
-                </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold text-foreground tabular-nums tracking-tight">
-                    {isLoading ? <Skeleton className="h-7 w-16 ml-auto" /> : stat.value}
-                  </div>
-                  <div className="text-[11px] text-muted">{stat.label}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            key={stat.label}
+            label={stat.label}
+            value={isLoading ? <Skeleton className="h-7 w-16 ml-auto" /> : stat.value}
+            icon={stat.icon}
+            accent={stat.accent}
+          />
         ))}
       </div>
 
