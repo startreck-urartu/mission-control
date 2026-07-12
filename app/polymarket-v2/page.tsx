@@ -14,6 +14,18 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  accentBg,
+  accentPill,
+  accentText,
+  polymarketSignalAccent,
+  pnlDisplay,
+  type AccentName,
+} from "@/lib/status-colors";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -96,12 +108,6 @@ function timeAgo(tsIsoOrUnix: string | number) {
   return `${d}d ago`;
 }
 
-function formatBps(bps: number | null | undefined, signed = true) {
-  if (bps === null || bps === undefined) return "—";
-  const sign = signed && bps > 0 ? "+" : "";
-  return `${sign}${Math.round(bps)} bps`;
-}
-
 function formatUsdM(n: number) {
   if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}k`;
@@ -121,117 +127,57 @@ function median(xs: number[]): number | null {
     : sorted[mid];
 }
 
+// formatBps: sign-prefixed via pnlDisplay for P&L bps, raw for deviation
+function formatBpsRaw(bps: number | null | undefined) {
+  if (bps === null || bps === undefined) return "—";
+  return `${Math.round(bps)} bps`;
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  iconBg,
-  valueColor,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: React.ComponentType<{ className?: string }>;
-  iconBg: string;
-  valueColor?: string;
-}) {
-  return (
-    <div className="glass rounded-xl p-5">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm text-gray-400">{label}</span>
-        <div className={cn("p-2 rounded-lg", iconBg)}>
-          <Icon className="w-4 h-4" />
-        </div>
-      </div>
-      <p className={cn("text-2xl font-bold", valueColor ?? "text-white")}>
-        {value}
-      </p>
-      {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
-    </div>
-  );
-}
-
-const STATUS_STYLES: Record<Signal["status"], string> = {
-  pending: "bg-blue-500/15 text-blue-300 border-blue-500/30",
-  claimed: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  executed: "bg-purple-500/15 text-purple-300 border-purple-500/30",
-  "paper-filled": "bg-green-500/15 text-green-300 border-green-500/30",
-  expired: "bg-gray-700/40 text-gray-400 border-gray-600/40",
-  rejected: "bg-gray-700/40 text-gray-500 border-gray-600/30",
-};
-
-const DIRECTION_STYLES: Record<Signal["direction"], string> = {
-  long_basket: "bg-green-500/10 text-green-300 border-green-500/20",
-  short_basket: "bg-red-500/10 text-red-300 border-red-500/20",
-};
-
-function StatusBadge({ status }: { status: Signal["status"] }) {
-  return (
-    <span
-      className={cn(
-        "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded border",
-        STATUS_STYLES[status]
-      )}
-    >
-      {status}
-    </span>
-  );
-}
-
-function DirectionBadge({ direction }: { direction: Signal["direction"] }) {
-  const short = direction === "long_basket" ? "LONG" : "SHORT";
-  return (
-    <span
-      className={cn(
-        "px-2 py-0.5 text-[10px] font-semibold rounded border",
-        DIRECTION_STYLES[direction]
-      )}
-    >
-      {short}
-    </span>
-  );
-}
 
 function SignalRow({ sig }: { sig: Signal }) {
   const pnl = sig.paperPnlBps;
-  const pnlClass =
-    pnl === undefined
-      ? "text-gray-500"
-      : pnl > 0
-      ? "text-green-400"
-      : "text-red-400";
+
+  let pnlEl: React.ReactNode;
+  if (pnl === undefined || pnl === null) {
+    pnlEl = <span className="text-muted">—</span>;
+  } else {
+    const p = pnlDisplay(pnl);
+    pnlEl = <span className={cn("tabular-nums", p.className)}>{p.text} bps</span>;
+  }
 
   return (
-    <tr className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+    <tr className="border-b border-separator/40 hover:bg-fill/50 transition-colors">
       <td className="px-3 py-2.5 text-xs">
         <div className="flex items-center gap-2">
-          <StatusBadge status={sig.status} />
-          <DirectionBadge direction={sig.direction} />
+          <Badge color={polymarketSignalAccent[sig.status] ?? "gray"}>
+            {sig.status}
+          </Badge>
+          <Badge color={sig.direction === "long_basket" ? "green" : "red"}>
+            {sig.direction === "long_basket" ? "LONG" : "SHORT"}
+          </Badge>
         </div>
       </td>
       <td className="px-3 py-2.5">
-        <div className="text-sm text-gray-200 truncate max-w-[280px]" title={sig.eventTitle}>
+        <div className="text-sm text-foreground truncate max-w-[280px]" title={sig.eventTitle}>
           {sig.eventTitle ?? sig.eventId}
         </div>
-        <div className="text-[11px] text-gray-500">
+        <div className="text-[11px] text-muted">
           {sig.nLegs}/{sig.totalLegs} legs · {formatUsdM(sig.eventVolume)}
         </div>
       </td>
-      <td className="px-3 py-2.5 text-sm text-gray-300 font-mono text-right">
+      <td className="px-3 py-2.5 text-sm text-foreground font-mono text-right tabular-nums">
         {sig.sumYesProb.toFixed(4)}
       </td>
       <td className="px-3 py-2.5 text-sm text-right">
-        <span className="font-mono text-gray-300">
-          {formatBps(sig.absDeviationBps, false)}
+        <span className="font-mono text-foreground tabular-nums">
+          {formatBpsRaw(sig.absDeviationBps)}
         </span>
       </td>
-      <td className={cn("px-3 py-2.5 text-sm font-mono text-right", pnlClass)}>
-        {formatBps(pnl)}
+      <td className="px-3 py-2.5 text-sm font-mono text-right">
+        {pnlEl}
       </td>
-      <td className="px-3 py-2.5 text-xs text-gray-500 text-right">
+      <td className="px-3 py-2.5 text-xs text-muted text-right">
         {timeAgo(sig.scanTs)}
       </td>
     </tr>
@@ -239,19 +185,17 @@ function SignalRow({ sig }: { sig: Signal }) {
 }
 
 function HealthPill({ status }: { status: TethysStatus }) {
-  // Tethys runs every 30 min. Treat >45 min as "stale" — something stopped the cron.
   const STALE_AFTER_MS = 45 * 60 * 1000;
 
   if (status === null) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border bg-gray-700/40 border-gray-600/40 text-gray-400">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border bg-fill border-separator text-muted">
         <HeartPulse className="w-3.5 h-3.5" />
         Health: unknown
       </div>
     );
   }
 
-  // Staleness is intentionally computed against wall-clock time at render.
   // eslint-disable-next-line react-hooks/purity
   const ageMs = Date.now() - new Date(status.createdAt).getTime();
   const stale = ageMs > STALE_AFTER_MS;
@@ -260,21 +204,25 @@ function HealthPill({ status }: { status: TethysStatus }) {
   const checks = status.metadata?.checks ?? [];
   const failedChecks = checks.filter((c) => c.status === "fail");
 
-  let styles: string;
+  let dotAccent: AccentName;
+  let pillClass: string;
   let label: string;
-  let dotColor: string;
+  let dotPulse = false;
+
   if (stale) {
-    styles = "bg-amber-500/10 border-amber-500/30 text-amber-300";
+    dotAccent = "orange";
+    pillClass = cn(accentPill["orange"], "border border-separator");
     label = `Health: stale (${timeAgo(status.createdAt)})`;
-    dotColor = "bg-amber-400";
   } else if (overall === "ok") {
-    styles = "bg-green-500/10 border-green-500/30 text-green-300";
+    dotAccent = "green";
+    pillClass = cn(accentPill["green"], "border border-separator");
     label = "Health: OK";
-    dotColor = "bg-green-400 animate-pulse";
+    dotPulse = true;
   } else {
-    styles = "bg-red-500/10 border-red-500/30 text-red-300";
+    dotAccent = "red";
+    pillClass = cn(accentPill["red"], "border border-separator");
     label = `Health: ${failureCount} failure${failureCount === 1 ? "" : "s"}`;
-    dotColor = "bg-red-400 animate-pulse";
+    dotPulse = true;
   }
 
   const tooltip = [
@@ -285,16 +233,22 @@ function HealthPill({ status }: { status: TethysStatus }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border cursor-help",
-        styles,
+        "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium cursor-help",
+        pillClass,
       )}
       title={tooltip}
     >
-      <span className={cn("w-2 h-2 rounded-full", dotColor)} />
+      <span
+        className={cn(
+          "w-2 h-2 rounded-full border border-background",
+          accentBg[dotAccent],
+          dotPulse ? "animate-pulse" : ""
+        )}
+      />
       <HeartPulse className="w-3.5 h-3.5" />
       {label}
       {failedChecks.length > 0 && !stale && (
-        <span className="text-xs font-normal text-red-200/80 max-w-[220px] truncate">
+        <span className={cn("text-xs font-normal max-w-[220px] truncate", accentText["red"])}>
           · {failedChecks.map((c) => c.name).join(", ")}
         </span>
       )}
@@ -305,14 +259,14 @@ function HealthPill({ status }: { status: TethysStatus }) {
 function SignalTable({ rows, emptyMessage }: { rows: Signal[]; emptyMessage: string }) {
   if (rows.length === 0) {
     return (
-      <div className="p-6 text-center text-sm text-gray-500">{emptyMessage}</div>
+      <div className="p-6 text-center text-sm text-muted">{emptyMessage}</div>
     );
   }
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-white/[0.06] text-[10px] uppercase tracking-wider text-gray-500">
+          <tr className="border-b border-separator text-[10px] uppercase tracking-wider text-muted">
             <th className="px-3 py-2 text-left font-medium">Status / Dir</th>
             <th className="px-3 py-2 text-left font-medium">Event</th>
             <th className="px-3 py-2 text-right font-medium">Σ YES</th>
@@ -348,8 +302,17 @@ export default function PolymarketV2Page() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="text-sm text-gray-500">Loading POLY-DELTA signals…</div>
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+        </div>
+        <Skeleton className="h-48 rounded-2xl" />
       </div>
     );
   }
@@ -373,111 +336,126 @@ export default function PolymarketV2Page() {
     0
   );
 
-  // Recent fills + expires, newest first, for the history table.
   const recentClosed = signals
     .filter((s) =>
       ["paper-filled", "executed", "expired", "rejected"].includes(s.status)
     )
     .slice(0, 40);
 
+  // Median P&L display
+  const medianPnlDisplay =
+    medianPnl !== null ? (() => {
+      const p = pnlDisplay(medianPnl);
+      return { text: `${p.text} bps`, className: p.className };
+    })() : null;
+
+  // Total bps display
+  const totalPnlDisplay =
+    fillPnls.length > 0
+      ? (() => {
+          const p = pnlDisplay(totalBps);
+          return `Σ ${p.text} bps`;
+        })()
+      : "no fills yet";
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Polymarket Trader v2</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            POLY-DELTA cross-market arb · negRisk mutex events · paper mode
-          </p>
+      <PageHeader
+        title="Polymarket Trader v2"
+        subtitle="POLY-DELTA cross-market arb · negRisk mutex events · paper mode"
+      >
+        <span className="text-xs text-muted">
+          {mostRecentScanTs > 0
+            ? `Last signal ${timeAgo(mostRecentScanTs)}`
+            : "No signals yet"}
+        </span>
+        <HealthPill status={tethysStatus === undefined ? null : tethysStatus} />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border bg-accent-blue-tint border-separator text-accent-blue">
+          <span className="w-2 h-2 rounded-full bg-accent-blue border border-background animate-pulse" />
+          Live
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-xs text-gray-500">
-            {mostRecentScanTs > 0
-              ? `Last signal ${timeAgo(mostRecentScanTs)}`
-              : "No signals yet"}
-          </span>
-          <HealthPill status={tethysStatus === undefined ? null : tethysStatus} />
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border bg-blue-500/10 border-blue-500/30 text-blue-300">
-            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-            Live
-          </div>
-        </div>
-      </div>
+      </PageHeader>
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           label="Pending"
-          value={String(pending.length + claimed.length)}
+          value={<span className="tabular-nums">{String(pending.length + claimed.length)}</span>}
           sub={claimed.length > 0 ? `${claimed.length} claimed` : "awaiting fill"}
           icon={Clock}
-          iconBg="bg-blue-500/20 text-blue-300"
+          accent="blue"
         />
         <StatCard
           label="Paper Filled"
-          value={String(filled.length)}
+          value={<span className="tabular-nums">{String(filled.length)}</span>}
           sub={filled.length > 0 ? `${wins}W / ${filled.length - wins}L` : "—"}
           icon={CheckCircle2}
-          iconBg="bg-green-500/20 text-green-300"
+          accent="green"
         />
         <StatCard
           label="Win Rate"
-          value={wr === null ? "—" : formatPct(wr)}
+          value={
+            <span
+              className={cn(
+                "tabular-nums",
+                wr === null
+                  ? "text-muted"
+                  : wr >= 0.8
+                  ? "text-accent-green"
+                  : wr >= 0.5
+                  ? "text-accent-yellow"
+                  : "text-accent-red"
+              )}
+            >
+              {wr === null ? "—" : formatPct(wr)}
+            </span>
+          }
           sub={fillPnls.length > 0 ? `n=${fillPnls.length}` : "no fills yet"}
           icon={Activity}
-          iconBg="bg-purple-500/20 text-purple-300"
-          valueColor={
-            wr === null
-              ? "text-gray-400"
-              : wr >= 0.8
-              ? "text-green-400"
-              : wr >= 0.5
-              ? "text-yellow-400"
-              : "text-red-400"
-          }
+          accent="purple"
         />
         <StatCard
           label="Median P&L"
-          value={medianPnl === null ? "—" : formatBps(medianPnl)}
-          sub={
-            fillPnls.length > 0 ? `Σ ${formatBps(totalBps)}` : "no fills yet"
+          value={
+            medianPnlDisplay ? (
+              <span className={cn("tabular-nums", medianPnlDisplay.className)}>
+                {medianPnlDisplay.text}
+              </span>
+            ) : (
+              <span className="tabular-nums text-muted">—</span>
+            )
           }
+          sub={totalPnlDisplay}
           icon={TrendingUp}
-          iconBg="bg-amber-500/20 text-amber-300"
-          valueColor={
-            medianPnl === null
-              ? "text-gray-400"
-              : medianPnl > 0
-              ? "text-green-400"
-              : "text-red-400"
-          }
+          accent={medianPnl === null ? "gray" : medianPnl > 0 ? "green" : "red"}
         />
         <StatCard
           label="Expired / Rejected"
-          value={String(expired.length + rejected.length)}
+          value={<span className="tabular-nums">{String(expired.length + rejected.length)}</span>}
           sub={expired.length > 0 ? `${expired.length} aged out` : "—"}
           icon={AlertCircle}
-          iconBg="bg-gray-700/50 text-gray-400"
+          accent="gray"
         />
       </div>
 
       {/* Pending panel */}
-      <div className="glass rounded-xl">
-        <div className="flex items-center justify-between p-5 border-b border-white/[0.04]">
+      <div className="glass-pane rounded-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-separator">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
+            <div className={cn("p-2 rounded-lg", accentPill["blue"])}>
               <Clock className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">
+              <h2 className="text-base font-semibold text-foreground">
                 Pending Signals
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 Live — updates automatically as scanner enqueues matches
               </p>
             </div>
           </div>
-          <span className="text-sm text-gray-400 font-mono">
+          <span className="text-sm text-foreground font-mono tabular-nums">
             {pending.length + claimed.length}
           </span>
         </div>
@@ -488,22 +466,22 @@ export default function PolymarketV2Page() {
       </div>
 
       {/* Recent fills panel */}
-      <div className="glass rounded-xl">
-        <div className="flex items-center justify-between p-5 border-b border-white/[0.04]">
+      <div className="glass-pane rounded-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-separator">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/20 text-green-300">
+            <div className={cn("p-2 rounded-lg", accentPill["green"])}>
               <Layers className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">
+              <h2 className="text-base font-semibold text-foreground">
                 Recent Fills &amp; Closed
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 Paper-filled, executed, expired, and rejected signals
               </p>
             </div>
           </div>
-          <span className="text-sm text-gray-400 font-mono">
+          <span className="text-sm text-foreground font-mono tabular-nums">
             {recentClosed.length}
           </span>
         </div>
@@ -514,17 +492,17 @@ export default function PolymarketV2Page() {
       </div>
 
       {/* Footer legend */}
-      <div className="text-[11px] text-gray-600 flex flex-wrap items-center gap-x-5 gap-y-1 pt-2">
+      <div className="text-[11px] text-tertiary flex flex-wrap items-center gap-x-5 gap-y-1 pt-2">
         <span className="flex items-center gap-1.5">
-          <TrendingUp className="w-3 h-3 text-green-400" /> LONG = Σ YES &lt; 1 ·
+          <TrendingUp className="w-3 h-3 text-accent-green" /> LONG = Σ YES &lt; 1 ·
           buy basket
         </span>
         <span className="flex items-center gap-1.5">
-          <TrendingDown className="w-3 h-3 text-red-400" /> SHORT = Σ YES &gt; 1
+          <TrendingDown className="w-3 h-3 text-accent-red" /> SHORT = Σ YES &gt; 1
           · sell basket
         </span>
         <span className="flex items-center gap-1.5">
-          <XCircle className="w-3 h-3 text-gray-500" /> Expired = resolver
+          <XCircle className="w-3 h-3 text-muted" /> Expired = resolver
           couldn&apos;t fill after 14 days
         </span>
       </div>
