@@ -5,7 +5,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
 import { Send, Plus, MessageCircle } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -160,7 +159,7 @@ export default function AssistantPage() {
   return (
     <div className="flex h-[calc(100dvh-5rem)] md:h-[calc(100dvh-3rem)]">
       {/* Thread sidebar */}
-      <div className="w-64 border-r p-3 flex flex-col gap-2">
+      <div className="w-64 border-r border-separator p-3 flex flex-col gap-2">
         <Button
           variant="outline"
           className="w-full justify-start gap-2"
@@ -177,8 +176,8 @@ export default function AssistantPage() {
             <button
               key={t._id}
               onClick={() => setActiveThreadId(t._id)}
-              className={`text-left text-sm px-2 py-1.5 rounded truncate transition-colors hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
-                activeThreadId === t._id ? "bg-white/[0.06]" : ""
+              className={`text-left text-sm px-2 py-1.5 rounded truncate transition-colors text-foreground hover:bg-fill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 ${
+                activeThreadId === t._id ? "bg-fill" : ""
               }`}
             >
               {t.title}
@@ -189,22 +188,24 @@ export default function AssistantPage() {
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col">
-        <div className="flex items-center gap-2 border-b px-4 py-3">
-          <MessageCircle className="h-5 w-5" />
-          <h1 className="font-semibold">CAD Assistant</h1>
+        <div className="flex items-center gap-2 border-b border-separator px-4 py-3">
+          <MessageCircle className="h-5 w-5 text-muted" />
+          <span className="font-semibold text-foreground">CAD Assistant</span>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
-            <p className="text-gray-400 text-sm">
+            <p className="text-muted text-sm">
               Ask anything about your CAD-jewelry courses.
             </p>
           )}
           {messages.map((m: Doc<"assistantMessages">) => (
             <div key={m._id} className={m.role === "user" ? "text-right" : "text-left"}>
-              <Card
+              <div
                 className={`inline-block max-w-[80%] p-3 text-sm whitespace-pre-wrap ${
-                  m.role === "user" ? "bg-blue-500/15 text-blue-100 border-blue-500/20" : ""
+                  m.role === "user"
+                    ? "bg-accent-blue text-white rounded-2xl"
+                    : "glass-pane rounded-2xl text-foreground"
                 }`}
               >
                 {m.content}
@@ -214,7 +215,7 @@ export default function AssistantPage() {
                       <span
                         key={i}
                         title={c.snippet}
-                        className="text-xs bg-white/[0.04] text-gray-400 rounded px-2 py-0.5"
+                        className="text-xs bg-fill text-muted rounded px-2 py-0.5"
                       >
                         {c.lessonTitle}
                         {fmtTs(c.startTs)}
@@ -222,23 +223,23 @@ export default function AssistantPage() {
                     ))}
                   </div>
                 )}
-              </Card>
+              </div>
             </div>
           ))}
           {sending && (
             <div className="text-left">
-              <Card className="inline-block max-w-[80%] p-3 text-sm whitespace-pre-wrap">
+              <div className="inline-block max-w-[80%] p-3 text-sm whitespace-pre-wrap glass-pane rounded-2xl text-foreground">
                 {streamText ? (
                   <>
                     {streamText}
-                    <span className="inline-block w-1.5 h-4 ml-0.5 -mb-0.5 bg-gray-400 animate-pulse" />
+                    <span className="inline-block w-1.5 h-4 ml-0.5 -mb-0.5 bg-fill animate-pulse" />
                     {streamCitations.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {streamCitations.map((c, i) => (
                           <span
                             key={i}
                             title={c.snippet}
-                            className="text-xs bg-white/[0.04] text-gray-400 rounded px-2 py-0.5"
+                            className="text-xs bg-fill text-muted rounded px-2 py-0.5"
                           >
                             {c.lessonTitle}
                             {fmtTs(c.startTs)}
@@ -248,26 +249,26 @@ export default function AssistantPage() {
                     )}
                   </>
                 ) : (
-                  <span className="flex items-center gap-2 text-gray-400">
+                  <span className="flex items-center gap-2 text-muted">
                     <span className="inline-flex gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.3s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:-0.15s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-fill animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-fill animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-fill animate-bounce" />
                     </span>
                     Searching the knowledge base…
                   </span>
                 )}
-              </Card>
+              </div>
             </div>
           )}
           <div ref={bottomRef} />
         </div>
 
         {error && (
-          <div role="alert" className="px-4 py-2 text-sm text-red-400">{error}</div>
+          <div role="alert" className="px-4 py-2 text-sm text-accent-red">{error}</div>
         )}
 
-        <div className="border-t p-3 flex gap-2">
+        <div className="border-t border-separator p-3 flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
