@@ -31,6 +31,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import {
   accentPill,
+  accentBg,
   accentText,
   taskStatusAccent,
   priorityAccent,
@@ -416,13 +417,13 @@ export default function DashboardPage() {
                                 <div
                                   className={cn(
                                     "w-1.5 h-1.5 rounded-full shrink-0",
-                                    accentPill[statusAccent].split(" ")[0]
+                                    accentBg[statusAccent]
                                   )}
                                 />
                                 {agent.status === "online" && (
                                   <div className={cn(
                                     "absolute inset-0 w-1.5 h-1.5 rounded-full animate-ping opacity-40",
-                                    accentPill[statusAccent].split(" ")[0]
+                                    accentBg[statusAccent]
                                   )} />
                                 )}
                               </div>

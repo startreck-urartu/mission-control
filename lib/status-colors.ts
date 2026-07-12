@@ -22,6 +22,15 @@ export const accentPill: Record<AccentName, string> = {
   gray: "bg-fill text-muted",
 };
 
+/* Solid backgrounds — for indicator dots and progress-bar fills */
+export const accentBg: Record<AccentName, string> = {
+  blue: "bg-accent-blue", green: "bg-accent-green",
+  orange: "bg-accent-orange", red: "bg-accent-red",
+  purple: "bg-accent-purple", teal: "bg-accent-teal",
+  yellow: "bg-accent-yellow", pink: "bg-accent-pink",
+  indigo: "bg-accent-indigo", gray: "bg-fill",
+};
+
 export const accentText: Record<AccentName, string> = {
   blue: "text-accent-blue", green: "text-accent-green",
   orange: "text-accent-orange", red: "text-accent-red",
