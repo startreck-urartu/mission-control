@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatTimeAgo, formatDate } from "@/lib/utils";
 import { accentBg, accentPill, accentText, pnlDisplay, pnlDisplayUSD, type AccentName,
   traderStatusAccent,
 } from "@/lib/status-colors";
@@ -39,32 +39,9 @@ function formatPct(n: number | null | undefined) {
   return n.toFixed(1) + "%";
 }
 
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  return `${h}h ago`;
-}
-
 function shortSlug(slug: string | undefined) {
   if (!slug) return "—";
   return slug.length > 42 ? slug.slice(0, 42) + "…" : slug;
-}
-
-function formatTimestamp(iso: string) {
-  try {
-    return new Date(iso).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
 }
 
 // ── Log level / source accent maps ────────────────────────────────────────────
@@ -133,7 +110,7 @@ export default function PolymarketPage() {
       >
         {traderState && (
           <span className="text-xs text-muted">
-            Synced {timeAgo(traderState.lastSyncedAt)}
+            Synced {formatTimeAgo(traderState.lastSyncedAt)}
           </span>
         )}
         <div
@@ -419,7 +396,7 @@ export default function PolymarketPage() {
                       className="border-b border-separator/40 hover:bg-fill/50 transition-colors"
                     >
                       <td className="px-5 py-2.5 text-xs text-muted whitespace-nowrap">
-                        {formatTimestamp(trade.timestampUtc)}
+                        {formatDate(trade.timestampUtc)}
                       </td>
                       <td
                         className="px-4 py-2.5 text-xs text-foreground max-w-[200px] truncate"

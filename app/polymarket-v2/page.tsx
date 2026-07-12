@@ -13,7 +13,7 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatTimeAgo } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -92,22 +92,6 @@ type Signal = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function timeAgo(tsIsoOrUnix: string | number) {
-  const ms =
-    typeof tsIsoOrUnix === "string"
-      ? new Date(tsIsoOrUnix).getTime()
-      : tsIsoOrUnix * 1000;
-  const diff = Date.now() - ms;
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 48) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
-}
-
 function formatUsdM(n: number) {
   if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}k`;
@@ -178,7 +162,7 @@ function SignalRow({ sig }: { sig: Signal }) {
         {pnlEl}
       </td>
       <td className="px-3 py-2.5 text-xs text-muted text-right">
-        {timeAgo(sig.scanTs)}
+        {formatTimeAgo(new Date(sig.scanTs * 1000).toISOString())}
       </td>
     </tr>
   );
@@ -212,7 +196,7 @@ function HealthPill({ status }: { status: TethysStatus }) {
   if (stale) {
     dotAccent = "orange";
     pillClass = cn(accentPill["orange"], "border border-separator");
-    label = `Health: stale (${timeAgo(status.createdAt)})`;
+    label = `Health: stale (${formatTimeAgo(status.createdAt)})`;
   } else if (overall === "ok") {
     dotAccent = "green";
     pillClass = cn(accentPill["green"], "border border-separator");
@@ -226,7 +210,7 @@ function HealthPill({ status }: { status: TethysStatus }) {
   }
 
   const tooltip = [
-    `Updated ${timeAgo(status.createdAt)}`,
+    `Updated ${formatTimeAgo(status.createdAt)}`,
     ...checks.map((c) => `${c.status === "ok" ? "✓" : "✗"} ${c.name}: ${c.detail}`),
   ].join("\n");
 
@@ -365,7 +349,7 @@ export default function PolymarketV2Page() {
       >
         <span className="text-xs text-muted">
           {mostRecentScanTs > 0
-            ? `Last signal ${timeAgo(mostRecentScanTs)}`
+            ? `Last signal ${formatTimeAgo(new Date(mostRecentScanTs * 1000).toISOString())}`
             : "No signals yet"}
         </span>
         <HealthPill status={tethysStatus === undefined ? null : tethysStatus} />
