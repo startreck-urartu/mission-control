@@ -117,6 +117,7 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
+    transform: translateZ(0); /* own compositor layer — avoids repaint on scroll */
     background:
       radial-gradient(ellipse 70% 55% at 20% 0%, rgba(10, 132, 255, 0.14), transparent 60%),
       radial-gradient(ellipse 60% 45% at 85% 90%, rgba(94, 92, 230, 0.11), transparent 60%),

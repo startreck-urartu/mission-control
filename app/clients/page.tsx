@@ -254,7 +254,7 @@ function StageColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 bg-glass rounded-b-lg border border-separator border-t-0 p-2 space-y-2 overflow-y-auto transition-colors",
+          "flex-1 bg-glass backdrop-blur-xl rounded-b-lg border border-separator border-t-0 p-2 space-y-2 overflow-y-auto transition-colors",
           isOver && "bg-accent-blue-tint border-accent-blue/40"
         )}
       >
@@ -290,7 +290,7 @@ function StageColumnSkeleton({ stage }: { stage: (typeof STAGES)[number] }) {
           <Skeleton className="h-3 w-6" />
         </div>
       </div>
-      <div className="flex-1 bg-glass rounded-b-lg border border-separator border-t-0 p-2 space-y-2">
+      <div className="flex-1 bg-glass backdrop-blur-xl rounded-b-lg border border-separator border-t-0 p-2 space-y-2">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-24 w-full rounded-xl" />
         ))}

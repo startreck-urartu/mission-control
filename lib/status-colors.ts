@@ -84,6 +84,16 @@ export const revenueCategoryAccent: Record<string, AccentName> = {
   trading: "green", consulting: "orange", other: "gray",
 };
 
+/* Trading agents (n8n Orion/Vega/Atlas/Mercury) — identity accents */
+export const tradingAgentAccent: Record<string, AccentName> = {
+  "Orion Prime": "orange", Vega: "teal", Atlas: "green", Mercury: "purple",
+};
+
+/* Polymarket trader process status */
+export const traderStatusAccent: Record<string, AccentName> = {
+  running: "green", stopped: "gray", error: "red", unknown: "yellow",
+};
+
 /* Polymarket signal queue (polymarketSignals.status) */
 export const polymarketSignalAccent: Record<string, AccentName> = {
   pending: "gray", claimed: "blue", executed: "green",

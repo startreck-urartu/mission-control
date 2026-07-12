@@ -58,6 +58,7 @@ import {
   taskStatusAccent,
   priorityAccent,
   type AccentName,
+  tradingAgentAccent,
 } from "@/lib/status-colors";
 
 type TeamMember = Doc<"team">;
@@ -66,12 +67,6 @@ type Task = Doc<"tasks">;
 const TRADING_AGENT_NAMES = ["Orion Prime", "Vega", "Atlas", "Mercury"];
 
 // Per-agent identity accents (AccentName values only — no raw classes)
-const AGENT_ACCENT: Record<string, AccentName> = {
-  "Orion Prime": "orange",
-  Vega: "teal",
-  Atlas: "green",
-  Mercury: "purple",
-};
 
 const AGENT_CONFIG: Record<
   string,
@@ -123,7 +118,7 @@ function AgentCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const config = AGENT_CONFIG[agent.name] ?? AGENT_CONFIG["Mercury"];
-  const accent = AGENT_ACCENT[agent.name] ?? "gray";
+  const accent = tradingAgentAccent[agent.name] ?? "gray";
   const Icon = config.icon;
   const heartbeat = getHeartbeatHealth(agent.lastActive);
   const HeartbeatIcon = heartbeat.icon;

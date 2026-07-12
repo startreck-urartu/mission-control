@@ -33,11 +33,15 @@ interface ConfirmOptions {
  *   return (<>{...page...}{confirmDialog}</>);
  */
 export function useConfirm() {
+  // `options` intentionally survives close so the title/description don't
+  // blank out mid close-animation; it's replaced on the next confirm().
   const [options, setOptions] = React.useState<ConfirmOptions | null>(null);
+  const [open, setOpen] = React.useState(false);
   const resolverRef = React.useRef<((value: boolean) => void) | null>(null);
 
   const confirm = React.useCallback((opts: ConfirmOptions) => {
     setOptions(opts);
+    setOpen(true);
     return new Promise<boolean>((resolve) => {
       resolverRef.current = resolve;
     });
@@ -46,14 +50,14 @@ export function useConfirm() {
   const settle = React.useCallback((value: boolean) => {
     resolverRef.current?.(value);
     resolverRef.current = null;
-    setOptions(null);
+    setOpen(false);
   }, []);
 
   const confirmDialog = (
     <Dialog
-      open={options !== null}
-      onOpenChange={(open) => {
-        if (!open) settle(false);
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) settle(false);
       }}
     >
       <DialogContent className="max-w-sm">

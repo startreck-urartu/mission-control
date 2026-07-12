@@ -199,7 +199,7 @@ function DroppableColumnBody({
       ref={setNodeRef}
       className={cn(
         "flex-1 rounded-b-lg border-t-0 p-2 overflow-y-auto transition-colors",
-        isOver ? "bg-accent-blue-tint border-accent-blue/40" : "bg-glass"
+        isOver ? "bg-accent-blue-tint border-accent-blue/40" : "bg-glass backdrop-blur-xl"
       )}
     >
       {children}
@@ -229,7 +229,7 @@ function TasksBoardSkeleton() {
               <Skeleton className="h-5 w-8 rounded-full" />
             </div>
           </div>
-          <div className="flex-1 bg-glass rounded-b-lg border-t-0 p-2 overflow-y-auto">
+          <div className="flex-1 bg-glass backdrop-blur-xl rounded-b-lg border-t-0 p-2 overflow-y-auto">
             {[1, 2].map((i) => (
               <div key={i} className="mb-2">
                 <Card className="p-4">

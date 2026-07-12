@@ -8,22 +8,20 @@ interface StatCardProps {
   value: React.ReactNode;
   icon?: LucideIcon;
   accent?: AccentName;
-  /** Applied to the CHIP wrapper, not the icon — prefer `accent`; do not pass text-* colors here. */
-  iconClassName?: string;
   sub?: React.ReactNode;
   className?: string;
 }
 
 /** Apple-style stat tile: tinted icon chip left, numeral right. */
 export function StatCard({
-  label, value, icon: Icon, accent = "gray", iconClassName, sub, className,
+  label, value, icon: Icon, accent = "gray", sub, className,
 }: StatCardProps) {
   return (
     <Card className={className}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           {Icon && (
-            <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", accentPill[accent], iconClassName)}>
+            <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", accentPill[accent])}>
               <Icon className="w-5 h-5" />
             </div>
           )}

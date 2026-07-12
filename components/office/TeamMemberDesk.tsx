@@ -227,7 +227,7 @@ export function TeamMemberDesk({
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[10px] border-separator transition-colors duration-200",
+                    "text-[10px] transition-colors duration-200",
                     isWorking ? "bg-fill text-foreground" : "bg-fill text-muted"
                   )}
                 >
@@ -238,7 +238,7 @@ export function TeamMemberDesk({
             {member.skills.length > 3 && (
               <Badge
                 variant="outline"
-                className="text-[10px] bg-fill border-separator text-muted"
+                className="text-[10px]"
               >
                 +{member.skills.length - 3}
               </Badge>

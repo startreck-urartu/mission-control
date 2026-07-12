@@ -37,18 +37,13 @@ import {
   priorityAccent,
   teamStatusAccent,
   type AccentName,
+  tradingAgentAccent,
 } from "@/lib/status-colors";
 import Link from "next/link";
 
 const TRADING_AGENTS = ["Orion Prime", "Vega", "Atlas", "Mercury"];
 
 /** Maps trading agent name → accent for icon chip and text */
-const AGENT_ACCENT: Record<string, AccentName> = {
-  "Orion Prime": "orange",
-  Vega: "teal",
-  Atlas: "green",
-  Mercury: "purple",
-};
 
 function StatusIcon({ status }: { status: string }) {
   if (status === "done" || status === "agent-reviewed")
@@ -349,7 +344,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Radio className="w-4 h-4 text-accent-orange" />
                   Trading Team
-                  <Badge variant="outline" className="text-[10px] border-separator text-muted ml-1">
+                  <Badge variant="outline" className="text-[10px] ml-1">
                     {tradingAgentsOnline}/{tradingAgents.length} online
                   </Badge>
                 </CardTitle>
@@ -378,7 +373,7 @@ export default function DashboardPage() {
               ) : tradingAgents.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {tradingAgents.map((agent) => {
-                    const accent: AccentName = AGENT_ACCENT[agent.name] ?? "purple";
+                    const accent: AccentName = tradingAgentAccent[agent.name] ?? "purple";
                     const statusAccent: AccentName = teamStatusAccent[agent.status] ?? "gray";
                     const agentTasks = tradingTasks.filter(
                       (t) =>

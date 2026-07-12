@@ -19,7 +19,9 @@ import { StatCard } from "@/components/ui/stat-card";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatCurrency } from "@/lib/utils";
-import { accentBg, accentPill, accentText, pnlDisplay, pnlDisplayUSD, type AccentName } from "@/lib/status-colors";
+import { accentBg, accentPill, accentText, pnlDisplay, pnlDisplayUSD, type AccentName,
+  traderStatusAccent,
+} from "@/lib/status-colors";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -88,12 +90,6 @@ type LogEntry = {
   source: string;
 };
 
-const STATUS_DOT_ACCENT: Record<string, AccentName> = {
-  running: "green",
-  stopped: "gray",
-  error: "red",
-  unknown: "yellow",
-};
 
 export default function PolymarketPage() {
   const traderState = useQuery(api.polymarketTrader.getTraderState);
@@ -149,7 +145,7 @@ export default function PolymarketPage() {
           <span
             className={cn(
               "w-2 h-2 rounded-full border border-background",
-              accentBg[STATUS_DOT_ACCENT[status] ?? "gray"],
+              accentBg[traderStatusAccent[status] ?? "gray"],
               status === "running" || status === "error" ? "animate-pulse" : ""
             )}
           />
