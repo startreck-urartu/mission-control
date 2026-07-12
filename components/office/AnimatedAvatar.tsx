@@ -19,12 +19,12 @@ const ROLE_ACCENT: Record<string, AccentName> = {
   default: "gray",
 };
 
-/** Role-based gradient map (primary fill) — gradient classes are structural, not token offenders */
+/** Role-based gradient map (primary fill) — tokenized via CSS custom properties */
 const ROLE_PRIMARY: Record<string, string> = {
-  developer: "from-emerald-500 to-emerald-700",
-  writer: "from-blue-500 to-blue-700",
-  designer: "from-purple-500 to-purple-700",
-  manager: "from-amber-500 to-amber-700",
+  developer: "from-[var(--accent-green)] to-[color-mix(in_srgb,var(--accent-green)_60%,black)]",
+  writer: "from-[var(--accent-blue)] to-[color-mix(in_srgb,var(--accent-blue)_60%,black)]",
+  designer: "from-[var(--accent-purple)] to-[color-mix(in_srgb,var(--accent-purple)_60%,black)]",
+  manager: "from-[var(--accent-orange)] to-[color-mix(in_srgb,var(--accent-orange)_60%,black)]",
   default: "from-slate-500 to-slate-700",
 };
 
