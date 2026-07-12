@@ -56,10 +56,11 @@ import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatDate } from "@/lib/utils";
 import {
   accentBg,
-  accentPill,
+  accentBorderT,
   taskStatusAccent,
   priorityAccent,
 } from "@/lib/status-colors";
+import { Badge } from "@/components/ui/badge";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type Task = Doc<"tasks">;
@@ -143,15 +144,10 @@ function SortableTaskCard({
         )}
 
         <div className="flex items-center gap-2 mt-3 flex-wrap">
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium",
-              accentPill[priorityAccent[task.priority] ?? "gray"]
-            )}
-          >
-            <Flag className="w-3 h-3" />
+          <Badge color={priorityAccent[task.priority] ?? "gray"}>
+            <Flag className="w-3 h-3 mr-1" />
             {task.priority}
-          </span>
+          </Badge>
 
           <div className="flex items-center gap-1 text-xs text-muted">
             {task.assignee === "human" ? (
@@ -213,16 +209,11 @@ function DroppableColumnBody({
 
 function DragOverlayCard({ task }: { task: Task }) {
   return (
-    <Card className="p-4 glass-pane-elevated rounded-2xl shadow-2xl rotate-2 scale-105">
+    <Card className="p-4 glass-pane-elevated rounded-2xl shadow-2xl rotate-2 scale-105 w-[260px]">
       <h3 className="text-sm font-medium text-foreground">{task.title}</h3>
-      <span
-        className={cn(
-          "inline-flex items-center text-xs px-2 py-0.5 rounded-full font-medium mt-2",
-          accentPill[priorityAccent[task.priority] ?? "gray"]
-        )}
-      >
+      <Badge color={priorityAccent[task.priority] ?? "gray"} className="mt-2">
         {task.priority}
-      </span>
+      </Badge>
     </Card>
   );
 }
@@ -232,7 +223,7 @@ function TasksBoardSkeleton() {
     <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 min-h-0 overflow-x-auto">
       {COLUMNS.map((column) => (
         <div key={column.id} className="flex flex-col min-h-0">
-          <div className="p-3 rounded-t-lg glass-pane border-separator border-t-2">
+          <div className="p-3 rounded-t-lg glass-pane border border-separator border-t-2">
             <div className="flex items-center justify-between">
               <Skeleton className="h-5 w-20" />
               <Skeleton className="h-5 w-8 rounded-full" />
@@ -415,7 +406,7 @@ export default function TasksPage() {
               key={column.id}
               className="flex flex-col min-h-0"
             >
-              <div className="p-3 rounded-t-lg glass-pane border-separator border-t-2">
+              <div className={cn("p-3 rounded-t-lg glass-pane border border-separator border-t-2", accentBorderT[taskStatusAccent[column.id] ?? "gray"])}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span

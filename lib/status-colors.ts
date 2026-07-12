@@ -31,6 +31,15 @@ export const accentBg: Record<AccentName, string> = {
   indigo: "bg-accent-indigo", gray: "bg-fill",
 };
 
+/* Top-border accents — per-column/status color identity on headers */
+export const accentBorderT: Record<AccentName, string> = {
+  blue: "border-t-accent-blue", green: "border-t-accent-green",
+  orange: "border-t-accent-orange", red: "border-t-accent-red",
+  purple: "border-t-accent-purple", teal: "border-t-accent-teal",
+  yellow: "border-t-accent-yellow", pink: "border-t-accent-pink",
+  indigo: "border-t-accent-indigo", gray: "border-t-separator",
+};
+
 export const accentText: Record<AccentName, string> = {
   blue: "text-accent-blue", green: "text-accent-green",
   orange: "text-accent-orange", red: "text-accent-red",
