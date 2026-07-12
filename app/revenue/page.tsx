@@ -474,7 +474,7 @@ export default function RevenuePage() {
                       {CATEGORIES.find((c) => c.id === r.category)?.label ?? r.category}
                     </Badge>
                     <Badge
-                      color={r.status === "received" ? "green" : "yellow"}
+                      color={r.status === "received" ? "green" : "orange"}
                       className="text-[10px] shrink-0"
                     >
                       {r.status}
