@@ -677,7 +677,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="w-full h-1 rounded-full bg-fill overflow-hidden">
                         <div
-                          className={cn("h-full rounded-full transition-all duration-300", `bg-accent-${stage.accent}`)}
+                          className={cn("h-full rounded-full transition-all duration-300", accentBg[stage.accent])}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -701,7 +701,7 @@ export default function DashboardPage() {
               <div className="divide-y divide-separator space-y-0">
                 {activityLoading && (
                   [1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg">
+                    <div key={i} className="flex items-start gap-2.5 p-2">
                       <Skeleton className="w-5 h-5 rounded-full shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <Skeleton className="h-3 w-5/6" />
