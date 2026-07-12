@@ -112,7 +112,7 @@ function MemoryCard({
                     onDelete(memory._id);
                   }}
                   aria-label="Delete memory"
-                  className="p-1 hover:bg-fill rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
+                  className="p-1 hover:bg-accent-red-tint rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
                 >
                   <Trash2 className="w-3 h-3 text-accent-red" />
                 </button>
