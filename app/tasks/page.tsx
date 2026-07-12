@@ -199,7 +199,7 @@ function DroppableColumnBody({
       ref={setNodeRef}
       className={cn(
         "flex-1 rounded-b-lg border-t-0 p-2 overflow-y-auto transition-colors",
-        isOver ? "bg-fill border-separator" : "bg-glass"
+        isOver ? "bg-accent-blue-tint border-accent-blue/40" : "bg-glass"
       )}
     >
       {children}
@@ -209,7 +209,7 @@ function DroppableColumnBody({
 
 function DragOverlayCard({ task }: { task: Task }) {
   return (
-    <Card className="p-4 glass-pane-elevated rounded-2xl shadow-2xl rotate-2 scale-105 w-[260px]">
+    <Card className="p-4 glass-pane-elevated rounded-2xl shadow-2xl rotate-2 scale-105 w-72">
       <h3 className="text-sm font-medium text-foreground">{task.title}</h3>
       <Badge color={priorityAccent[task.priority] ?? "gray"} className="mt-2">
         {task.priority}

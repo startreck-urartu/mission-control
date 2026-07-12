@@ -255,7 +255,7 @@ function StageColumn({
         ref={setNodeRef}
         className={cn(
           "flex-1 bg-glass rounded-b-lg border border-separator border-t-0 p-2 space-y-2 overflow-y-auto transition-colors",
-          isOver && "bg-fill border-separator"
+          isOver && "bg-accent-blue-tint border-accent-blue/40"
         )}
       >
         {clients.map((client) => (
@@ -526,7 +526,7 @@ export default function ClientsPage() {
 
         <DragOverlay>
           {activeClient && (
-            <div className="glass-pane-elevated rounded-2xl p-3.5 w-[260px] rotate-2 shadow-2xl">
+            <div className="glass-pane-elevated rounded-2xl p-3.5 w-72 rotate-2 shadow-2xl">
               <h3 className="text-sm font-medium text-foreground truncate">{activeClient.name}</h3>
               {!!activeClient.value && (
                 <span className="text-sm font-semibold text-accent-green tabular-nums tracking-tight">
