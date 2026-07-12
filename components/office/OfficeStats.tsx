@@ -1,10 +1,12 @@
 "use client";
 
 import { motion, useSpring, useTransform } from "framer-motion";
-import { Users, Zap, Monitor, TrendingUp } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Users, Zap, Monitor } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import type { AccentName } from "@/lib/status-colors";
 
 /**
  * Office statistics display with animated counters
@@ -26,29 +28,25 @@ function AnimatedCounter({ value }: { value: number }) {
     stiffness: 100,
     damping: 30,
   });
-  
+
   const display = useTransform(spring, (current) => Math.round(current));
-  
+
   useEffect(() => {
     spring.set(value);
   }, [value, spring]);
-  
+
   return <motion.span>{display}</motion.span>;
 }
 
-/**
- * Individual stat card with icon, label, and animated counter
- */
-interface StatCardProps {
+interface StatRowProps {
   label: string;
   value: number;
-  icon: React.ReactNode;
-  colorClass: string;
-  trend?: number;
+  accent: AccentName;
+  Icon: LucideIcon;
   index: number;
 }
 
-function StatCard({ label, value, icon, colorClass, trend, index }: StatCardProps) {
+function AnimatedStatCard({ label, value, accent, Icon, index }: StatRowProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -58,91 +56,37 @@ function StatCard({ label, value, icon, colorClass, trend, index }: StatCardProp
         delay: index * 0.1,
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
-      whileHover={{ 
+      whileHover={{
         y: -4,
-        transition: { duration: 0.2 }
+        transition: { duration: 0.2 },
       }}
     >
-      <Card className="glass card-hover highlight-top overflow-hidden group">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-gray-400 mb-1">{label}</p>
-              <div className="flex items-baseline gap-2">
-                <span className={cn("text-3xl font-bold", colorClass)}>
-                  <AnimatedCounter value={value} />
-                </span>
-                {trend !== undefined && trend !== 0 && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className={cn(
-                      "text-xs font-medium flex items-center gap-0.5",
-                      trend > 0 ? "text-green-400" : "text-red-400"
-                    )}
-                  >
-                    {trend > 0 ? "+" : ""}
-                    {trend}%
-                  </motion.span>
-                )}
-              </div>
-            </div>
-            
-            <motion.div
-              className={cn(
-                "p-3 rounded-xl transition-colors duration-300",
-                "bg-white/[0.06] group-hover:bg-white/[0.1]"
-              )}
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              {icon}
-            </motion.div>
-          </div>
-          
-          {/* Subtle progress bar indicator */}
-          <div className="mt-4 h-1 bg-white/[0.06] rounded-full overflow-hidden">
-            <motion.div
-              className={cn("h-full rounded-full", colorClass.replace("text-", "bg-"))}
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min((value / (label === "Team Members" ? Math.max(value, 10) : Math.max(value, 20))) * 100, 100)}%` }}
-              transition={{ duration: 1, delay: index * 0.1 + 0.3 }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <StatCard
+        label={label}
+        value={<AnimatedCounter value={value} />}
+        icon={Icon}
+        accent={accent}
+      />
     </motion.div>
   );
 }
 
 export default function OfficeStats({ total, online, active, className }: OfficeStatsProps) {
-  const stats = [
-    {
-      label: "Team Members",
-      value: total,
-      icon: <Users className="w-6 h-6 text-blue-400" />,
-      colorClass: "text-white",
-    },
-    {
-      label: "Online Now",
-      value: online,
-      icon: <Zap className="w-6 h-6 text-green-400" />,
-      colorClass: "text-green-400",
-    },
-    {
-      label: "Working",
-      value: active,
-      icon: <Monitor className="w-6 h-6 text-blue-400" />,
-      colorClass: "text-blue-400",
-    },
+  const stats: Array<{ label: string; value: number; accent: AccentName; Icon: LucideIcon }> = [
+    { label: "Team Members", value: total, accent: "blue",  Icon: Users },
+    { label: "Online Now",   value: online, accent: "green", Icon: Zap },
+    { label: "Working",      value: active, accent: "teal",  Icon: Monitor },
   ];
 
   return (
     <div className={cn("grid grid-cols-1 sm:grid-cols-3 gap-4", className)}>
       {stats.map((stat, index) => (
-        <StatCard
+        <AnimatedStatCard
           key={stat.label}
-          {...stat}
+          label={stat.label}
+          value={stat.value}
+          accent={stat.accent}
+          Icon={stat.Icon}
           index={index}
         />
       ))}

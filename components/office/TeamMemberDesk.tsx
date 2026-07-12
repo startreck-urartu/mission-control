@@ -26,8 +26,8 @@ interface TeamMemberDeskProps {
 export function TeamMemberDesk({
   member,
   desk,
-  row,
-  col,
+  row: _row,
+  col: _col,
   index,
 }: TeamMemberDeskProps) {
   const deskRef = useRef<HTMLDivElement>(null);
@@ -70,15 +70,15 @@ export function TeamMemberDesk({
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!deskRef.current) return;
-    
+
     const rect = deskRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     // Calculate normalized position (-1 to 1)
     const x = (e.clientX - centerX) / (rect.width / 2);
     const y = (e.clientY - centerY) / (rect.height / 2);
-    
+
     rotateX.set(y * -5); // Invert Y for natural feel
     rotateY.set(x * 5);
   }, [rotateX, rotateY]);
@@ -95,16 +95,18 @@ export function TeamMemberDesk({
    */
   const staggerDelay = Math.min(index * 0.05, 0.5); // Cap at 500ms
 
+  // Suppress unused variable warnings — mouseX/mouseY are tracked for future parallax use
+  void mouseX;
+  void mouseY;
+
   return (
     <motion.div
       ref={deskRef}
       className={cn(
-        "relative p-6 rounded-xl border-2 backdrop-blur-sm overflow-hidden",
+        "relative p-6 rounded-xl border-2 overflow-hidden glass-pane",
         isWorking
-          ? "glass card-hover border-blue-500/50"
-          : isActive
-          ? "glass card-hover highlight-top"
-          : "glass card-hover highlight-top"
+          ? "border-accent-blue/50"
+          : "border-separator"
       )}
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
       animate={isVisible ? { opacity: 1, y: 0, scale: 1 } : {}}
@@ -157,14 +159,14 @@ export function TeamMemberDesk({
 
           <div className="flex-1 min-w-0">
             <motion.h3
-              className="font-semibold text-white truncate"
+              className="font-semibold text-foreground truncate"
               layoutId={`name-${member._id}`}
             >
               {member.name}
             </motion.h3>
-            
+
             <motion.p
-              className="text-xs text-gray-400 capitalize truncate"
+              className="text-xs text-muted capitalize truncate"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: staggerDelay + 0.1 }}
@@ -181,8 +183,8 @@ export function TeamMemberDesk({
                   exit={{ opacity: 0, height: 0 }}
                   className="flex items-center gap-2 mt-2"
                 >
-                  <ActivityIndicator type="typing" className="text-blue-400" />
-                  <span className="text-xs text-blue-400 truncate max-w-[180px]">
+                  <ActivityIndicator type="typing" className="text-accent-blue" />
+                  <span className="text-xs text-accent-blue truncate max-w-[180px]">
                     {member.currentTask?.slice(0, 35) || "Working..."}
                   </span>
                 </motion.div>
@@ -198,8 +200,8 @@ export function TeamMemberDesk({
                   exit={{ opacity: 0 }}
                   className="flex items-center gap-2 mt-2"
                 >
-                  <ActivityIndicator type="idle" className="text-gray-500" />
-                  <span className="text-xs text-gray-500">Online</span>
+                  <ActivityIndicator type="idle" className="text-muted" />
+                  <span className="text-xs text-muted">Online</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -225,9 +227,8 @@ export function TeamMemberDesk({
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[10px] border-gray-700 transition-colors duration-200",
-                    isWorking && "bg-white/[0.06] text-gray-300",
-                    !isWorking && "bg-white/[0.06] text-gray-400"
+                    "text-[10px] border-separator transition-colors duration-200",
+                    isWorking ? "bg-fill text-foreground" : "bg-fill text-muted"
                   )}
                 >
                   {skill}
@@ -237,7 +238,7 @@ export function TeamMemberDesk({
             {member.skills.length > 3 && (
               <Badge
                 variant="outline"
-                className="text-[10px] bg-white/[0.06] border-gray-700 text-gray-500"
+                className="text-[10px] bg-fill border-separator text-muted"
               >
                 +{member.skills.length - 3}
               </Badge>
@@ -246,17 +247,17 @@ export function TeamMemberDesk({
         )}
       </div>
 
-      {/* Bottom activity bar */}
+      {/* Bottom activity bar — uses inline style for gradient; accent-blue hex kept in shimmer animation */}
       <AnimatePresence>
         {isWorking && (
           <motion.div
-            className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
+            className="absolute bottom-0 left-0 right-0 h-0.5"
             initial={{ scaleX: 0, opacity: 0 }}
             animate={{ scaleX: 1, opacity: 1 }}
             exit={{ scaleX: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
             style={{
-              background: "linear-gradient(90deg, transparent, #3b82f6, transparent)",
+              background: "linear-gradient(90deg, transparent, var(--accent-blue), transparent)",
               animation: "shimmer 2s linear infinite",
             }}
           />
@@ -266,7 +267,7 @@ export function TeamMemberDesk({
       {/* Corner decoration for working state */}
       {isWorking && (
         <motion.div
-          className="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-500"
+          className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent-blue"
           animate={{
             scale: [1, 1.5, 1],
             opacity: [0.5, 1, 0.5],

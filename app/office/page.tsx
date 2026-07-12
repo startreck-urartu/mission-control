@@ -6,6 +6,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Activity, LayoutGrid, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 
 // Office components
@@ -24,21 +26,21 @@ function OfficeSkeleton() {
       {/* Header skeleton */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <div className="w-32 h-8 bg-white/[0.04] rounded animate-pulse" />
-          <div className="w-48 h-4 bg-white/[0.04] rounded animate-pulse" />
+          <div className="w-32 h-8 bg-fill rounded animate-pulse" />
+          <div className="w-48 h-4 bg-fill rounded animate-pulse" />
         </div>
       </div>
 
       {/* Stats skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="glass card-hover highlight-top p-4">
+          <Card key={i} className="p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <div className="w-24 h-3 bg-white/[0.04] rounded animate-pulse" />
-                <div className="w-12 h-8 bg-white/[0.04] rounded animate-pulse" />
+                <div className="w-24 h-3 bg-fill rounded animate-pulse" />
+                <div className="w-12 h-8 bg-fill rounded animate-pulse" />
               </div>
-              <div className="w-10 h-10 bg-white/[0.04] rounded-xl animate-pulse" />
+              <div className="w-10 h-10 bg-fill rounded-xl animate-pulse" />
             </div>
           </Card>
         ))}
@@ -47,7 +49,7 @@ function OfficeSkeleton() {
       {/* Grid skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Card key={i} className="glass card-hover highlight-top p-6 h-40 animate-pulse" />
+          <Card key={i} className="p-6 h-40 animate-pulse" />
         ))}
       </div>
     </div>
@@ -64,41 +66,39 @@ function OfficeEmptyState() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="glass card-hover highlight-top p-12 text-center">
+      <Card className="p-12 text-center">
         <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
-          transition={{ 
+          transition={{
             type: "spring",
             stiffness: 200,
             damping: 15,
-            delay: 0.1 
+            delay: 0.1
           }}
         >
           <div className="relative inline-block">
-            <Activity className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <Activity className="w-16 h-16 text-tertiary mx-auto mb-4" />
             <motion.div
-              className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full"
+              className="absolute -top-2 -right-2 w-4 h-4 bg-accent-blue rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
           </div>
         </motion.div>
-        <h3 className="text-xl font-semibold text-white mb-2">
-          No Team Members Yet
-        </h3>
-        <p className="text-gray-400 max-w-md mx-auto">
-          Add team members in the Team section to see them here. 
-          They&apos;ll appear in the office with live status and activity.
-        </p>
-        <motion.div
-          className="mt-6 inline-flex items-center gap-2"
-          whileHover={{ scale: 1.05 }}
+        <EmptyState
+          message="No Team Members Yet"
+          hint="Add team members in the Team section to see them here. They'll appear in the office with live status and activity."
         >
-          <span className="text-sm text-blue-400 cursor-pointer hover:underline">
-            Go to Team section →
-          </span>
-        </motion.div>
+          <motion.div
+            className="inline-flex items-center gap-2"
+            whileHover={{ scale: 1.05 }}
+          >
+            <span className="text-sm text-accent-blue cursor-pointer hover:underline">
+              Go to Team section →
+            </span>
+          </motion.div>
+        </EmptyState>
       </Card>
     </motion.div>
   );
@@ -107,7 +107,7 @@ function OfficeEmptyState() {
 /**
  * Main Office Page component
  * Displays animated team members in a grid layout
- * 
+ *
  * Features:
  * - Performance-optimized animations with Framer Motion
  * - IntersectionObserver for lazy loading
@@ -166,17 +166,17 @@ export default function OfficePage() {
    * Respects user's accessibility settings
    */
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  
+
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     // Sync initial media-query state on mount (browser-only API, not available at render time).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPrefersReducedMotion(mediaQuery.matches);
-    
+
     const handler = (e: MediaQueryListEvent) => {
       setPrefersReducedMotion(e.matches);
     };
-    
+
     mediaQuery.addEventListener("change", handler);
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
@@ -192,40 +192,33 @@ export default function OfficePage() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
       {/* Header with stats */}
-      <motion.div 
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      <motion.div
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <div>
-          <motion.h1 
-            className="text-3xl font-bold text-white"
-            layoutId="office-title"
-          >
-            Office
-          </motion.h1>
-          <p className="text-gray-400 mt-1">
-            Visual workspace with {stats.online} online · {stats.active} active
-          </p>
-        </div>
+        <PageHeader
+          title="Office"
+          subtitle={`Visual workspace with ${stats.online} online · ${stats.active} active`}
+        />
 
         {/* View mode toggle */}
-        <div className="flex items-center gap-2 glass-subtle rounded-lg p-1">
+        <div className="flex items-center gap-2 glass-pane rounded-lg p-1 mb-6">
           <motion.button
             onClick={() => setViewMode("grid")}
             className={cn(
               "p-2 rounded-md transition-colors",
-              viewMode === "grid" 
-                ? "bg-gray-700 text-white" 
-                : "text-gray-400 hover:text-white"
+              viewMode === "grid"
+                ? "bg-fill text-foreground"
+                : "text-muted hover:text-foreground"
             )}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -236,9 +229,9 @@ export default function OfficePage() {
             onClick={() => setViewMode("list")}
             className={cn(
               "p-2 rounded-md transition-colors",
-              viewMode === "list" 
-                ? "bg-gray-700 text-white" 
-                : "text-gray-400 hover:text-white"
+              viewMode === "list"
+                ? "bg-fill text-foreground"
+                : "text-muted hover:text-foreground"
             )}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -249,10 +242,10 @@ export default function OfficePage() {
       </motion.div>
 
       {/* Statistics cards */}
-      <OfficeStats 
-        total={stats.total} 
-        online={stats.online} 
-        active={stats.active} 
+      <OfficeStats
+        total={stats.total}
+        online={stats.online}
+        active={stats.active}
       />
 
       {/* Team grid */}
@@ -294,7 +287,7 @@ export default function OfficePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="fixed bottom-4 right-4 glass rounded-lg px-3 py-2 text-xs text-gray-400 shadow-lg"
+            className="fixed bottom-4 right-4 glass-pane rounded-lg px-3 py-2 text-xs text-muted shadow-lg"
           >
             Animations reduced (accessibility on)
           </motion.div>
