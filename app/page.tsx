@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
@@ -111,10 +112,14 @@ export default function DashboardPage() {
     published: content?.filter((c) => c.stage === "published").length ?? 0,
   };
 
-  const recentTasks = tasks
-    ?.slice()
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 8) ?? [];
+  const recentTasks = useMemo(
+    () =>
+      tasks
+        ?.slice()
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .slice(0, 8) ?? [],
+    [tasks]
+  );
 
   return (
     <div className="space-y-6">
