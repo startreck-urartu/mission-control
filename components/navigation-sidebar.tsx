@@ -79,6 +79,14 @@ const sections: NavSection[] = [
   },
 ];
 
+const sectionAccent: Record<string, { icon: string; activeBg: string }> = {
+  Overview:  { icon: "text-accent-blue",   activeBg: "bg-accent-blue-tint" },
+  Business:  { icon: "text-accent-green",  activeBg: "bg-accent-green-tint" },
+  Content:   { icon: "text-accent-purple", activeBg: "bg-accent-purple-tint" },
+  Trading:   { icon: "text-accent-orange", activeBg: "bg-accent-orange-tint" },
+  Workspace: { icon: "text-accent-teal",   activeBg: "bg-accent-teal-tint" },
+};
+
 export function NavigationSidebar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
@@ -88,23 +96,26 @@ export function NavigationSidebar() {
     <>
       <div className="p-5 pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 via-blue-300 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
             Mission Control
           </h1>
-          <p className="text-[11px] text-gray-600 mt-0.5">OpenClaw AI Coordination</p>
+          <p className="text-[11px] text-tertiary mt-0.5">OpenClaw AI Coordination</p>
         </div>
         <button
           onClick={() => setMobileOpen(false)}
-          className="md:hidden p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
+          aria-label="Close navigation menu"
+          className="md:hidden p-1.5 rounded-lg hover:bg-fill transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
         >
-          <X className="w-5 h-5 text-gray-400" />
+          <X className="w-5 h-5 text-muted" />
         </button>
       </div>
 
       <nav className="flex-1 px-3 overflow-y-auto space-y-5">
-        {sections.map((section) => (
+        {sections.map((section) => {
+          const accent = sectionAccent[section.label] ?? sectionAccent.Overview;
+          return (
           <div key={section.label}>
-            <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-[0.15em] px-3 mb-1.5">
+            <p className="text-[10px] font-semibold text-tertiary uppercase tracking-[0.12em] px-3 mb-1.5">
               {section.label}
             </p>
             <div className="space-y-0.5">
@@ -120,17 +131,14 @@ export function NavigationSidebar() {
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150",
                       isActive
-                        ? "bg-blue-500/15 text-blue-300 nav-active border border-blue-500/20"
-                        : "text-gray-500 hover:bg-white/[0.04] hover:text-gray-300 border border-transparent"
+                        ? cn(accent.activeBg, "text-foreground")
+                        : "text-muted hover:bg-fill hover:text-foreground"
                     )}
                   >
                     <Icon
-                      className={cn(
-                        "w-4 h-4 transition-colors duration-150",
-                        isActive ? "text-blue-400" : "text-gray-600"
-                      )}
+                      className={cn("w-4 h-4", isActive ? accent.icon : "text-tertiary")}
                     />
                     <span>{item.name}</span>
                   </Link>
@@ -138,27 +146,26 @@ export function NavigationSidebar() {
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
-      <div className="p-3 border-t border-white/[0.04] space-y-1">
+      <div className="p-3 border-t border-separator space-y-1">
         <button
           onClick={toggleTheme}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-gray-500 hover:bg-white/[0.04] hover:text-gray-300 transition-all duration-150"
+          aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-[13px] text-muted hover:bg-fill hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
         >
           {theme === "dark" ? (
-            <Sun className="w-4 h-4 text-amber-400" />
+            <Sun className="w-4 h-4 text-accent-orange" />
           ) : (
-            <Moon className="w-4 h-4 text-blue-400" />
+            <Moon className="w-4 h-4 text-accent-blue" />
           )}
           <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
         </button>
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="relative">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-            <div className="absolute inset-0 w-2 h-2 bg-green-500 rounded-full animate-ping opacity-30" />
-          </div>
-          <span className="text-xs text-gray-600">System Online</span>
+          <div className="w-2 h-2 bg-accent-green rounded-full" />
+          <span className="text-xs text-tertiary">System Online</span>
         </div>
       </div>
     </>
@@ -169,14 +176,16 @@ export function NavigationSidebar() {
       {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-lg glass"
+        aria-label="Open navigation menu"
+        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-lg glass-pane focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
       >
-        <Menu className="w-5 h-5 text-gray-300" />
+        <Menu className="w-5 h-5 text-muted" />
       </button>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
+          aria-hidden="true"
           className="fixed inset-0 z-40 bg-black/60 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
@@ -185,7 +194,7 @@ export function NavigationSidebar() {
       {/* Mobile drawer */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-[var(--surface-1)] backdrop-blur-xl border-r border-white/[0.04] flex flex-col transition-transform duration-300 md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-64 glass-pane-elevated flex flex-col transition-transform duration-300 md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -193,8 +202,7 @@ export function NavigationSidebar() {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden md:flex w-64 bg-[var(--surface-1)]/80 backdrop-blur-xl border-r border-white/[0.04] flex-col h-full relative">
-        <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-blue-500/20 via-transparent to-purple-500/20" />
+      <div className="hidden md:flex w-64 flex-col glass-pane rounded-2xl">
         {navContent}
       </div>
     </>

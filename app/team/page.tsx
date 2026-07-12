@@ -35,29 +35,34 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { Doc, Id } from "@/convex/_generated/dataModel";
+import {
+  accentBg,
+  accentText,
+  teamStatusAccent,
+  type AccentName,
+} from "@/lib/status-colors";
 
 type TeamMember = Doc<"team">;
 
-const STATUS_COLORS = {
-  online: "bg-green-500",
-  busy: "bg-red-500",
-  away: "bg-yellow-500",
-  offline: "bg-gray-500",
+// Page-only domain: card left-border accent per member type
+const TYPE_BORDER: Record<TeamMember["type"], string> = {
+  human: "border-accent-blue/50",
+  agent: "border-accent-purple/50",
 };
 
-const STATUS_LABELS = {
-  online: "Online",
-  busy: "Busy",
-  away: "Away",
-  offline: "Offline",
-};
-
-const TYPE_COLORS = {
-  human: "border-blue-500/50",
-  agent: "border-purple-500/50",
-};
+// Status dot items for the SelectContent (index map — no template literals)
+const STATUS_DOT_ITEMS: Array<{ value: TeamMember["status"]; label: string }> = [
+  { value: "online", label: "Online" },
+  { value: "busy",   label: "Busy"   },
+  { value: "away",   label: "Away"   },
+  { value: "offline",label: "Offline"},
+];
 
 function TeamMemberCard({
   member,
@@ -72,32 +77,32 @@ function TeamMemberCard({
   onStatusChange: (id: Id<"team">, status: TeamMember["status"]) => void;
   isSubagent?: boolean;
 }) {
+  const statusAccent: AccentName = teamStatusAccent[member.status] ?? "gray";
+
   return (
     <Card
       className={cn(
-        "group glass hover:border-white/[0.1] transition-all overflow-hidden",
-        TYPE_COLORS[member.type],
+        "group hover:border-separator transition-all overflow-hidden",
+        TYPE_BORDER[member.type],
         isSubagent && "ml-4 border-l-4"
       )}
     >
       <div className="p-4">
         <div className="flex items-start gap-4">
           <div className="relative">
-            <Avatar className="w-14 h-14 border-2 border-white/[0.06]">
+            <Avatar className="w-14 h-14 border-2 border-separator">
               {member.avatar && member.avatar.startsWith("http") ? (
                 <AvatarImage src={member.avatar} alt={member.name} />
               ) : member.avatar ? (
-                <AvatarFallback className="bg-gray-700 text-2xl"
-                  >{member.avatar}</AvatarFallback>
+                <AvatarFallback className="text-2xl">{member.avatar}</AvatarFallback>
               ) : (
-                <AvatarFallback className="bg-gray-700 text-gray-300"
-                  >{member.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{member.name.slice(0, 2).toUpperCase()}</AvatarFallback>
               )}
             </Avatar>
             <div
               className={cn(
-                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800",
-                STATUS_COLORS[member.status]
+                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-background",
+                accentBg[statusAccent]
               )}
             />
           </div>
@@ -105,9 +110,9 @@ function TeamMemberCard({
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-gray-100">{member.name}</h3>
+                  <h3 className="font-semibold text-foreground">{member.name}</h3>
                   {member.isMainAgent && (
-                    <Crown className="w-4 h-4 text-yellow-400" />
+                    <Crown className="w-4 h-4 text-accent-yellow" />
                   )}
                   {!isSubagent && member.parentId && (
                     <Badge variant="outline" className="text-xs">
@@ -115,37 +120,35 @@ function TeamMemberCard({
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-400">{member.role}</p>
+                <p className="text-sm text-muted">{member.role}</p>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(member);
                   }}
-                  className="p-1.5 hover:bg-gray-700 rounded"
+                  aria-label={`Edit ${member.name}`}
+                  className="p-1.5 hover:bg-fill rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/40"
                 >
-                  <Edit className="w-4 h-4 text-gray-400" />
+                  <Edit className="w-4 h-4 text-muted" />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(member._id);
                   }}
-                  className="p-1.5 hover:bg-red-900/30 rounded"
+                  aria-label={`Remove ${member.name}`}
+                  className="p-1.5 hover:bg-accent-red-tint rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/40"
                 >
-                  <Trash2 className="w-4 h-4 text-red-400" />
+                  <Trash2 className="w-4 h-4 text-accent-red" />
                 </button>
               </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-1">
               {member.skills?.slice(0, 4).map((skill) => (
-                <Badge
-                  key={skill}
-                  variant="outline"
-                  className="text-xs bg-white/[0.04] border-white/[0.08] text-gray-300"
-                >
+                <Badge key={skill} color="gray" className="text-xs">
                   {skill}
                 </Badge>
               ))}
@@ -157,22 +160,22 @@ function TeamMemberCard({
             </div>
 
             {member.description && (
-              <p className="text-sm text-gray-400 mt-3 line-clamp-2">
+              <p className="text-sm text-muted mt-3 line-clamp-2">
                 {member.description}
               </p>
             )}
 
             {member.currentTask && (
-              <div className="mt-3 p-2 bg-white/[0.02] rounded-lg">
+              <div className="mt-3 p-2 bg-fill rounded-lg">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-3 h-3 text-blue-400" />
-                  <span className="text-xs text-gray-400">Currently:</span>
+                  <Activity className="w-3 h-3 text-accent-blue" />
+                  <span className="text-xs text-muted">Currently:</span>
                 </div>
-                <p className="text-sm text-gray-300 mt-1">{member.currentTask}</p>
+                <p className="text-sm text-foreground mt-1">{member.currentTask}</p>
               </div>
             )}
 
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.06]">
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-separator">
               <Select
                 value={member.status}
                 onValueChange={(v) => onStatusChange(member._id, v as TeamMember["status"])}
@@ -182,41 +185,32 @@ function TeamMemberCard({
                     <div
                       className={cn(
                         "w-2 h-2 rounded-full",
-                        STATUS_COLORS[member.status]
+                        accentBg[teamStatusAccent[member.status] ?? "gray"]
                       )}
                     />
-                    <span>{STATUS_LABELS[member.status]}</span>
+                    <span className={accentText[teamStatusAccent[member.status] ?? "gray"]}>
+                      {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                    </span>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="online">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      Online
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="busy">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-red-500" />
-                      Busy
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="away">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                      Away
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="offline">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-gray-500" />
-                      Offline
-                    </div>
-                  </SelectItem>
+                  {STATUS_DOT_ITEMS.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={cn(
+                            "w-2 h-2 rounded-full",
+                            accentBg[teamStatusAccent[value] ?? "gray"]
+                          )}
+                        />
+                        {label}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-tertiary">
                 Last active: {formatTimeAgo(member.lastActive)}
               </div>
             </div>
@@ -234,6 +228,7 @@ export default function TeamPage() {
   const updateTeamMember = useMutation(api.team.updateTeamMember);
   const deleteTeamMember = useMutation(api.team.deleteTeamMember);
   const updateStatus = useMutation(api.team.updateStatus);
+  const { confirm, confirmDialog } = useConfirm();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
@@ -339,9 +334,8 @@ export default function TeamPage() {
   };
 
   const handleDelete = async (id: Id<"team">) => {
-    if (confirm("Remove this team member?")) {
-      await deleteTeamMember({ id });
-    }
+    if (!(await confirm({ title: "Remove this team member?", destructive: true }))) return;
+    await deleteTeamMember({ id });
   };
 
   const handleStatusChange = async (id: Id<"team">, status: TeamMember["status"]) => {
@@ -350,21 +344,20 @@ export default function TeamPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Team</h1>
-          <p className="text-gray-400 mt-1">Manage your team members and agents</p>
-        </div>
+      <PageHeader
+        title="Team"
+        subtitle="Manage your team members and agents"
+      >
         <Button onClick={handleCreate} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Add Member
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {isLoading
           ? [1, 2, 3, 4].map((i) => (
-              <Card key={i} className="glass">
+              <Card key={i}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <Skeleton className="w-8 h-8" />
@@ -377,30 +370,26 @@ export default function TeamPage() {
               </Card>
             ))
           : [
-              { label: "Total", value: stats.total, icon: Users },
-              { label: "Human", value: stats.human, icon: User },
-              { label: "Agents", value: stats.agents, icon: Bot },
-              { label: "Online", value: stats.online, icon: Activity },
+              { label: "Total",  value: stats.total,  icon: Users,    accent: "blue"   as AccentName },
+              { label: "Human",  value: stats.human,  icon: User,     accent: "teal"   as AccentName },
+              { label: "Agents", value: stats.agents, icon: Bot,      accent: "purple" as AccentName },
+              { label: "Online", value: stats.online, icon: Activity, accent: "green"  as AccentName },
             ].map((stat) => (
-              <Card key={stat.label} className="glass">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <stat.icon className="w-8 h-8 text-gray-500" />
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-white">{stat.value}</div>
-                      <div className="text-xs text-gray-400">{stat.label}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <StatCard
+                key={stat.label}
+                label={stat.label}
+                value={stat.value}
+                icon={stat.icon}
+                accent={stat.accent}
+              />
             ))}
       </div>
 
-      <Card className="glass mb-6">
+      <Card className="mb-6">
         <div className="p-4 flex gap-2">
           {[
-            { id: "all", label: "All" },
-            { id: "human", label: "Human" },
+            { id: "all",   label: "All"    },
+            { id: "human", label: "Human"  },
             { id: "agent", label: "Agents" },
           ].map((tab) => (
             <Button
@@ -419,7 +408,7 @@ export default function TeamPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="glass overflow-hidden">
+              <Card key={i} className="overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-start gap-4">
                     <Skeleton className="w-14 h-14 rounded-full shrink-0" />
@@ -439,26 +428,26 @@ export default function TeamPage() {
             ))}
           </div>
         ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
-          {filteredTeam.map((member) => (
-            <TeamMemberCard
-              key={member._id}
-              member={member}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onStatusChange={handleStatusChange}
-            />
-          ))}
-          {filteredTeam.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <UserCircle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-300">No team members</h3>
-              <p className="text-gray-500 mt-1">
-                Add your first team member or agent
-              </p>
-            </div>
-          )}
-        </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
+            {filteredTeam.map((member) => (
+              <TeamMemberCard
+                key={member._id}
+                member={member}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onStatusChange={handleStatusChange}
+              />
+            ))}
+            {filteredTeam.length === 0 && (
+              <div className="col-span-full">
+                <EmptyState
+                  icon={UserCircle}
+                  message="No team members"
+                  hint="Add your first team member or agent"
+                />
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -475,7 +464,7 @@ export default function TeamPage() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Name</label>
+                <label className="text-sm font-medium text-foreground">Name</label>
                 <Input
                   value={formData.name}
                   onChange={(e) =>
@@ -485,7 +474,7 @@ export default function TeamPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Role</label>
+                <label className="text-sm font-medium text-foreground">Role</label>
                 <Input
                   value={formData.role}
                   onChange={(e) =>
@@ -497,7 +486,7 @@ export default function TeamPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Type</label>
+                <label className="text-sm font-medium text-foreground">Type</label>
                 <Select
                   value={formData.type}
                   onValueChange={(v) =>
@@ -514,7 +503,7 @@ export default function TeamPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Status</label>
+                <label className="text-sm font-medium text-foreground">Status</label>
                 <Select
                   value={formData.status}
                   onValueChange={(v) =>
@@ -534,21 +523,20 @@ export default function TeamPage() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Avatar Image URL</label>
+              <label className="text-sm font-medium text-foreground">Avatar Image URL</label>
               <Input
                 value={formData.avatar}
                 onChange={(e) =>
                   setFormData({ ...formData, avatar: e.target.value })
                 }
                 placeholder="https://example.com/avatar.png"
-                className="glass"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-tertiary mt-1">
                 Use a direct image URL (PNG, JPG, SVG). Try: ui-avatars.com, dicebear.com, or avataaars.io
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Skills</label>
+              <label className="text-sm font-medium text-foreground">Skills</label>
               <Input
                 value={formData.skills}
                 onChange={(e) =>
@@ -558,7 +546,7 @@ export default function TeamPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Description</label>
+              <label className="text-sm font-medium text-foreground">Description</label>
               <Textarea
                 value={formData.description}
                 onChange={(e) =>
@@ -568,7 +556,7 @@ export default function TeamPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Email</label>
+              <label className="text-sm font-medium text-foreground">Email</label>
               <Input
                 type="email"
                 value={formData.email}
@@ -589,6 +577,7 @@ export default function TeamPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {confirmDialog}
     </div>
   );
 }

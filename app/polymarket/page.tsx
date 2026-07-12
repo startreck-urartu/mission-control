@@ -4,7 +4,6 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
   TrendingUp,
-  TrendingDown,
   Activity,
   DollarSign,
   BarChart2,
@@ -15,14 +14,19 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { cn, formatCurrency } from "@/lib/utils";
+import { accentBg, accentPill, accentText, pnlDisplay, pnlDisplayUSD, type AccentName,
+  traderStatusAccent,
+} from "@/lib/status-colors";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatUSD(n: number | null | undefined, decimals = 2) {
-  if (n === null || n === undefined) return "—";
-  const formatted = Math.abs(n).toFixed(decimals);
-  return (n < 0 ? "-$" : "$") + formatted;
+  return formatCurrency(n, { decimals });
 }
 
 function formatNum(n: number | null | undefined, decimals = 2) {
@@ -63,38 +67,18 @@ function formatTimestamp(iso: string) {
   }
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+// ── Log level / source accent maps ────────────────────────────────────────────
 
-function StatCard({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  color,
-  valueColor,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  valueColor?: string;
-}) {
-  return (
-    <div className="glass rounded-xl p-5">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm text-gray-400">{label}</span>
-        <div className={cn("p-2 rounded-lg", color)}>
-          <Icon className="w-4 h-4" />
-        </div>
-      </div>
-      <p className={cn("text-2xl font-bold", valueColor ?? "text-white")}>
-        {value}
-      </p>
-      {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
-    </div>
-  );
-}
+const LEVEL_ACCENT: Record<string, AccentName> = {
+  ERROR: "red",
+  WARN: "yellow",
+  WARNING: "yellow",
+};
+
+const SOURCE_ACCENT: Record<string, AccentName> = {
+  directional: "blue",
+  spread: "purple",
+};
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
@@ -106,19 +90,6 @@ type LogEntry = {
   source: string;
 };
 
-const LEVEL_STYLES: Record<string, string> = {
-  ERROR: "text-red-400",
-  WARN:  "text-yellow-400",
-  WARNING: "text-yellow-400",
-  INFO:  "text-gray-300",
-  DEBUG: "text-gray-500",
-};
-
-const SOURCE_BADGE: Record<string, string> = {
-  directional: "bg-blue-500/20 text-blue-300",
-  spread:      "bg-purple-500/20 text-purple-300",
-  sync:        "bg-gray-700 text-gray-400",
-};
 
 export default function PolymarketPage() {
   const traderState = useQuery(api.polymarketTrader.getTraderState);
@@ -137,20 +108,6 @@ export default function PolymarketPage() {
   const isLoading =
     traderState === undefined || recentTrades === undefined || tradeStats === undefined;
 
-  const statusColors: Record<string, string> = {
-    running: "text-green-400",
-    stopped: "text-gray-400",
-    error: "text-red-400",
-    unknown: "text-yellow-400",
-  };
-
-  const statusDot: Record<string, string> = {
-    running: "bg-green-500 animate-pulse",
-    stopped: "bg-gray-500",
-    error: "bg-red-500 animate-pulse",
-    unknown: "bg-yellow-500",
-  };
-
   const status = traderState?.status ?? "unknown";
   const dailyPnl = traderState?.dailyPnl ?? 0;
   const positions: {
@@ -163,114 +120,129 @@ export default function PolymarketPage() {
     last_price: number | null;
   }[] = (traderState?.positions as typeof positions) ?? [];
 
+  // Status pill accent
+  const statusAccent: AccentName =
+    status === "running" ? "green" : status === "error" ? "red" : "gray";
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Polymarket Trader</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            Autonomous prediction market trading system
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {traderState && (
-            <span className="text-xs text-gray-500">
-              Synced {timeAgo(traderState.lastSyncedAt)}
-            </span>
+      <PageHeader
+        title="Polymarket Trader"
+        subtitle="Autonomous prediction market trading system"
+      >
+        {traderState && (
+          <span className="text-xs text-muted">
+            Synced {timeAgo(traderState.lastSyncedAt)}
+          </span>
+        )}
+        <div
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border border-separator",
+            accentPill[statusAccent]
           )}
-          <div
+        >
+          <span
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border",
-              status === "running"
-                ? "bg-green-500/10 border-green-500/30 text-green-400"
-                : status === "error"
-                ? "bg-red-500/10 border-red-500/30 text-red-400"
-                : "bg-gray-700 border-gray-600 text-gray-400"
+              "w-2 h-2 rounded-full border border-background",
+              accentBg[traderStatusAccent[status] ?? "gray"],
+              status === "running" || status === "error" ? "animate-pulse" : ""
             )}
-          >
-            <span
-              className={cn("w-2 h-2 rounded-full", statusDot[status] ?? "bg-gray-500")}
-            />
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-            {traderState?.strategyName && (
-              <span className="text-gray-500">· {traderState.strategyName}</span>
-            )}
-          </div>
+          />
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {traderState?.strategyName && (
+            <span className="text-tertiary">· {traderState.strategyName}</span>
+          )}
         </div>
-      </div>
+      </PageHeader>
 
       {/* No data state */}
       {!isLoading && !traderState && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <AlertCircle className="w-12 h-12 text-gray-600 mb-4" />
-          <h3 className="text-lg font-medium text-gray-300">No data yet</h3>
-          <p className="text-sm text-gray-500 mt-1 max-w-sm">
-            Run the sync script on your trading machine to push state to this dashboard.
-          </p>
-          <code className="mt-4 text-xs bg-gray-800 px-3 py-2 rounded text-gray-300 font-mono">
+        <EmptyState
+          icon={AlertCircle}
+          message="No data yet"
+          hint="Run the sync script on your trading machine to push state to this dashboard."
+        >
+          <code className="text-xs bg-fill px-3 py-2 rounded text-foreground font-mono">
             python sync_to_mission_control.py
           </code>
-        </div>
+        </EmptyState>
       )}
 
       {/* Stats Cards */}
       {(traderState || isLoading) && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            label="Daily P&L"
-            value={isLoading ? "…" : formatUSD(dailyPnl)}
-            sub={`Reset: ${traderState?.dailyResetDate ?? "—"}`}
-            icon={DollarSign}
-            color="bg-green-500/10 text-green-400"
-            valueColor={
-              isLoading
-                ? "text-white"
-                : dailyPnl > 0
-                ? "text-green-400"
-                : dailyPnl < 0
-                ? "text-red-400"
-                : "text-white"
-            }
-          />
-          <StatCard
-            label="Trades Today"
-            value={isLoading ? "…" : String(traderState?.totalTradesToday ?? 0)}
-            sub={`${tradeStats?.totalTrades ?? 0} total recorded`}
-            icon={Activity}
-            color="bg-blue-500/10 text-blue-400"
-          />
-          <StatCard
-            label="Win Rate"
-            value={isLoading ? "…" : formatPct(tradeStats?.winRate)}
-            sub={`${tradeStats?.wins ?? 0}W / ${tradeStats?.losses ?? 0}L`}
-            icon={BarChart2}
-            color="bg-purple-500/10 text-purple-400"
-            valueColor={
-              (tradeStats?.winRate ?? 0) >= 50 ? "text-green-400" : "text-red-400"
-            }
-          />
-          <StatCard
-            label="Peak Equity"
-            value={isLoading ? "…" : formatUSD(traderState?.peakEquity)}
-            sub={`Avg edge: ${formatPct(
-              tradeStats?.avgEdge ? tradeStats.avgEdge * 100 : undefined
-            )}`}
-            icon={TrendingUp}
-            color="bg-yellow-500/10 text-yellow-400"
-          />
+          {isLoading ? (
+            <>
+              <Skeleton className="h-24 rounded-2xl" />
+              <Skeleton className="h-24 rounded-2xl" />
+              <Skeleton className="h-24 rounded-2xl" />
+              <Skeleton className="h-24 rounded-2xl" />
+            </>
+          ) : (
+            <>
+              {(() => {
+                const p = pnlDisplayUSD(dailyPnl);
+                return (
+                  <StatCard
+                    label="Daily P&L"
+                    value={<span className={cn("tabular-nums", p.className)}>{p.text}</span>}
+                    sub={`Reset: ${traderState?.dailyResetDate ?? "—"}`}
+                    icon={DollarSign}
+                    accent={dailyPnl > 0 ? "green" : dailyPnl < 0 ? "red" : "gray"}
+                  />
+                );
+              })()}
+              <StatCard
+                label="Trades Today"
+                value={<span className="tabular-nums">{String(traderState?.totalTradesToday ?? 0)}</span>}
+                sub={`${tradeStats?.totalTrades ?? 0} total recorded`}
+                icon={Activity}
+                accent="blue"
+              />
+              <StatCard
+                label="Win Rate"
+                value={
+                  <span
+                    className={cn(
+                      "tabular-nums",
+                      (tradeStats?.winRate ?? 0) >= 50 ? "text-accent-green" : "text-accent-red"
+                    )}
+                  >
+                    {formatPct(tradeStats?.winRate)}
+                  </span>
+                }
+                sub={`${tradeStats?.wins ?? 0}W / ${tradeStats?.losses ?? 0}L`}
+                icon={BarChart2}
+                accent="purple"
+              />
+              {(() => {
+                const edgePct = tradeStats?.avgEdge ? tradeStats.avgEdge * 100 : undefined;
+                const ep = edgePct !== undefined ? pnlDisplay(edgePct) : null;
+                return (
+                  <StatCard
+                    label="Peak Equity"
+                    value={<span className="tabular-nums">{formatUSD(traderState?.peakEquity)}</span>}
+                    sub={ep ? `Avg edge: ${ep.text}%` : "Avg edge: —"}
+                    icon={TrendingUp}
+                    accent="yellow"
+                  />
+                );
+              })()}
+            </>
+          )}
         </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Active Positions */}
-        <div className="glass rounded-xl">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+        <div className="glass-pane rounded-2xl">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-separator">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-blue-400" />
-              <h2 className="text-sm font-semibold text-white">Active Positions</h2>
+              <Layers className="w-4 h-4 text-accent-blue" />
+              <h2 className="text-sm font-semibold text-foreground">Active Positions</h2>
             </div>
-            <span className="text-xs text-gray-500 bg-gray-700 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-muted bg-fill px-2 py-0.5 rounded-full">
               {positions.length}
             </span>
           </div>
@@ -278,18 +250,18 @@ export default function PolymarketPage() {
           {isLoading ? (
             <div className="p-5 space-y-2">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-10 bg-gray-700 rounded animate-pulse" />
+                <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
           ) : positions.length === 0 ? (
-            <div className="px-5 py-10 text-center text-sm text-gray-500">
+            <div className="px-5 py-10 text-center text-sm text-muted">
               No open positions
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs text-gray-500 border-b border-white/[0.06]">
+                  <tr className="text-xs text-muted border-b border-separator">
                     <th className="text-left px-5 py-2.5">Market ID</th>
                     <th className="text-right px-4 py-2.5">Size</th>
                     <th className="text-right px-4 py-2.5">Entry</th>
@@ -298,37 +270,32 @@ export default function PolymarketPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {positions.map((pos, i) => (
-                    <tr
-                      key={pos.token_id ?? i}
-                      className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors"
-                    >
-                      <td className="px-5 py-3 font-mono text-xs text-gray-300">
-                        {pos.market_id}
-                      </td>
-                      <td className="px-4 py-3 text-right text-gray-300">
-                        {formatNum(pos.size, 1)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-gray-300">
-                        ${formatNum(pos.avg_entry_price, 3)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-gray-400">
-                        {pos.last_price !== null ? `$${formatNum(pos.last_price, 3)}` : "—"}
-                      </td>
-                      <td
-                        className={cn(
-                          "px-5 py-3 text-right font-medium",
-                          (pos.unrealized_pnl ?? 0) > 0
-                            ? "text-green-400"
-                            : (pos.unrealized_pnl ?? 0) < 0
-                            ? "text-red-400"
-                            : "text-gray-400"
-                        )}
+                  {positions.map((pos, i) => {
+                    const upnl = pos.unrealized_pnl ?? 0;
+                    const p = pnlDisplayUSD(upnl);
+                    return (
+                      <tr
+                        key={pos.token_id ?? i}
+                        className="border-b border-separator/40 hover:bg-fill/50 transition-colors"
                       >
-                        {formatUSD(pos.unrealized_pnl)}
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="px-5 py-3 font-mono text-xs text-foreground">
+                          {pos.market_id}
+                        </td>
+                        <td className="px-4 py-3 text-right text-foreground tabular-nums">
+                          {formatNum(pos.size, 1)}
+                        </td>
+                        <td className="px-4 py-3 text-right text-foreground tabular-nums">
+                          ${formatNum(pos.avg_entry_price, 3)}
+                        </td>
+                        <td className="px-4 py-3 text-right text-muted tabular-nums">
+                          {pos.last_price !== null ? `$${formatNum(pos.last_price, 3)}` : "—"}
+                        </td>
+                        <td className={cn("px-5 py-3 text-right font-medium tabular-nums", p.className)}>
+                          {p.text}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -336,19 +303,19 @@ export default function PolymarketPage() {
         </div>
 
         {/* Trade Stats Breakdown */}
-        <div className="glass rounded-xl">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-white/[0.06]">
-            <RefreshCw className="w-4 h-4 text-purple-400" />
-            <h2 className="text-sm font-semibold text-white">Strategy Breakdown</h2>
+        <div className="glass-pane rounded-2xl">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-separator">
+            <RefreshCw className="w-4 h-4 text-accent-purple" />
+            <h2 className="text-sm font-semibold text-foreground">Strategy Breakdown</h2>
           </div>
           {isLoading ? (
             <div className="p-5 space-y-2">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-10 bg-gray-700 rounded animate-pulse" />
+                <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
           ) : (recentTrades?.length ?? 0) === 0 ? (
-            <div className="px-5 py-10 text-center text-sm text-gray-500">
+            <div className="px-5 py-10 text-center text-sm text-muted">
               No trades synced yet
             </div>
           ) : (
@@ -370,19 +337,19 @@ export default function PolymarketPage() {
                 return Object.entries(byStrategy).map(([name, data]) => (
                   <div
                     key={name}
-                    className="flex items-center justify-between py-2.5 px-3 bg-white/[0.03] rounded-lg"
+                    className="flex items-center justify-between py-2.5 px-3 bg-fill rounded-lg"
                   >
                     <div>
-                      <p className="text-sm font-medium text-white">{name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-sm font-medium text-foreground">{name}</p>
+                      <p className="text-xs text-muted mt-0.5">
                         {data.buys}B / {data.sells}S · {data.count} trades
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-gray-200">
+                      <p className="text-sm font-medium text-foreground tabular-nums">
                         {formatUSD(data.totalValue, 0)}
                       </p>
-                      <p className="text-xs text-gray-500">volume</p>
+                      <p className="text-xs text-muted">volume</p>
                     </div>
                   </div>
                 ));
@@ -393,13 +360,13 @@ export default function PolymarketPage() {
       </div>
 
       {/* Recent Trades */}
-      <div className="glass rounded-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+      <div className="glass-pane rounded-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-separator">
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-green-400" />
-            <h2 className="text-sm font-semibold text-white">Recent Trades</h2>
+            <Activity className="w-4 h-4 text-accent-green" />
+            <h2 className="text-sm font-semibold text-foreground">Recent Trades</h2>
           </div>
-          <span className="text-xs text-gray-500">Last 50</span>
+          <span className="text-xs text-muted">Last 50</span>
         </div>
 
         {recentTrades === undefined ? (
@@ -409,14 +376,14 @@ export default function PolymarketPage() {
             ))}
           </div>
         ) : recentTrades.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm text-gray-500">
+          <div className="px-5 py-10 text-center text-sm text-muted">
             No trades recorded yet
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-gray-500 border-b border-white/[0.06]">
+                <tr className="text-xs text-muted border-b border-separator">
                   <th className="text-left px-5 py-2.5">Time</th>
                   <th className="text-left px-4 py-2.5">Market</th>
                   <th className="text-center px-3 py-2.5">Side</th>
@@ -429,78 +396,67 @@ export default function PolymarketPage() {
                 </tr>
               </thead>
               <tbody>
-                {(recentTrades ?? []).map((trade) => (
-                  <tr
-                    key={trade.tradeId}
-                    className="border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors"
-                  >
-                    <td className="px-5 py-2.5 text-xs text-gray-400 whitespace-nowrap">
-                      {formatTimestamp(trade.timestampUtc)}
-                    </td>
-                    <td
-                      className="px-4 py-2.5 text-xs text-gray-300 max-w-[200px] truncate"
-                      title={trade.marketSlug}
+                {(recentTrades ?? []).map((trade) => {
+                  const edge = trade.signalEdge ?? 0;
+                  const edgeAccent: AccentName =
+                    edge >= 0.7 ? "green" : edge >= 0.5 ? "yellow" : "gray";
+                  const tradePnl = trade.pnl;
+                  const pnlEl =
+                    tradePnl !== null && tradePnl !== undefined
+                      ? (() => {
+                          const p = pnlDisplayUSD(tradePnl);
+                          return (
+                            <span className={cn("tabular-nums", p.className)}>
+                              {p.text}
+                            </span>
+                          );
+                        })()
+                      : <span className="text-muted">open</span>;
+
+                  return (
+                    <tr
+                      key={trade.tradeId}
+                      className="border-b border-separator/40 hover:bg-fill/50 transition-colors"
                     >
-                      {shortSlug(trade.marketSlug)}
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <span
-                        className={cn(
-                          "inline-block px-1.5 py-0.5 rounded text-xs font-semibold",
-                          trade.side === "BUY"
-                            ? "bg-green-500/15 text-green-400"
-                            : "bg-red-500/15 text-red-400"
-                        )}
+                      <td className="px-5 py-2.5 text-xs text-muted whitespace-nowrap">
+                        {formatTimestamp(trade.timestampUtc)}
+                      </td>
+                      <td
+                        className="px-4 py-2.5 text-xs text-foreground max-w-[200px] truncate"
+                        title={trade.marketSlug}
                       >
-                        {trade.side}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-gray-300 font-mono text-xs">
-                      ${formatNum(trade.price, 3)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-gray-300 font-mono text-xs">
-                      {formatNum(trade.size, 1)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-gray-300 font-mono text-xs">
-                      {formatUSD(trade.orderValue)}
-                    </td>
-                    <td
-                      className={cn(
-                        "px-3 py-2.5 text-right text-xs font-mono",
-                        (trade.signalEdge ?? 0) >= 0.7
-                          ? "text-green-400"
-                          : (trade.signalEdge ?? 0) >= 0.5
-                          ? "text-yellow-400"
-                          : "text-gray-400"
-                      )}
-                    >
-                      {trade.signalEdge !== undefined && trade.signalEdge !== null
-                        ? (trade.signalEdge * 100).toFixed(0) + "%"
-                        : "—"}
-                    </td>
-                    <td className="px-3 py-2.5 text-left">
-                      <span className="text-xs text-gray-500 bg-white/[0.04] px-1.5 py-0.5 rounded">
-                        {trade.strategy ?? "—"}
-                      </span>
-                    </td>
-                    <td
-                      className={cn(
-                        "px-5 py-2.5 text-right text-xs font-mono font-medium",
-                        trade.pnl === null || trade.pnl === undefined
-                          ? "text-gray-500"
-                          : trade.pnl > 0
-                          ? "text-green-400"
-                          : trade.pnl < 0
-                          ? "text-red-400"
-                          : "text-gray-400"
-                      )}
-                    >
-                      {trade.pnl !== null && trade.pnl !== undefined
-                        ? formatUSD(trade.pnl)
-                        : "open"}
-                    </td>
-                  </tr>
-                ))}
+                        {shortSlug(trade.marketSlug)}
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <Badge color={trade.side === "BUY" ? "green" : "red"}>
+                          {trade.side}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-foreground font-mono text-xs tabular-nums">
+                        ${formatNum(trade.price, 3)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-foreground font-mono text-xs tabular-nums">
+                        {formatNum(trade.size, 1)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-foreground font-mono text-xs tabular-nums">
+                        {formatUSD(trade.orderValue)}
+                      </td>
+                      <td className={cn("px-3 py-2.5 text-right text-xs font-mono tabular-nums", accentText[edgeAccent])}>
+                        {trade.signalEdge !== undefined && trade.signalEdge !== null
+                          ? (trade.signalEdge * 100).toFixed(0) + "%"
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2.5 text-left">
+                        <span className="text-xs text-muted bg-fill px-1.5 py-0.5 rounded">
+                          {trade.strategy ?? "—"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-2.5 text-right text-xs font-mono font-medium">
+                        {pnlEl}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -508,12 +464,12 @@ export default function PolymarketPage() {
       </div>
 
       {/* Trader Logs */}
-      <div className="glass rounded-xl">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
+      <div className="glass-pane rounded-2xl">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-separator">
           <div className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-green-400" />
-            <h2 className="text-sm font-semibold text-white">Trader Logs</h2>
-            <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">
+            <Terminal className="w-4 h-4 text-accent-green" />
+            <h2 className="text-sm font-semibold text-foreground">Trader Logs</h2>
+            <span className="text-xs text-muted bg-fill px-2 py-0.5 rounded-full">
               {filteredLogs.length}
             </span>
           </div>
@@ -523,10 +479,10 @@ export default function PolymarketPage() {
                 key={f}
                 onClick={() => setLogFilter(f)}
                 className={cn(
-                  "px-2.5 py-1 rounded text-xs font-medium transition-colors",
+                  "px-2.5 py-1 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/40",
                   logFilter === f
-                    ? "bg-gray-700 text-white"
-                    : "text-gray-500 hover:text-gray-300"
+                    ? "bg-fill text-foreground"
+                    : "text-muted hover:text-foreground"
                 )}
               >
                 {f}
@@ -539,50 +495,54 @@ export default function PolymarketPage() {
           {isLoading ? (
             <div className="space-y-1.5 pt-2">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-4 bg-gray-800 rounded animate-pulse" style={{ width: `${60 + (i % 3) * 15}%` }} />
+                <Skeleton key={i} className="h-4" style={{ width: `${60 + (i % 3) * 15}%` }} />
               ))}
             </div>
           ) : filteredLogs.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-600">
+            <div className="flex items-center justify-center h-full text-tertiary">
               No log entries — start the trader daemon to see output here
             </div>
           ) : (
-            filteredLogs.map((entry, i) => (
-              <div key={i} className="flex gap-2 leading-5 hover:bg-gray-800/50 px-1 rounded">
-                <span className="text-gray-600 shrink-0 w-16">
-                  {entry.ts?.slice(11, 19) || ""}
-                </span>
-                <span
-                  className={cn(
-                    "shrink-0 w-12",
-                    LEVEL_STYLES[entry.level] ?? "text-gray-400"
-                  )}
-                >
-                  {entry.level}
-                </span>
-                {entry.source && (
+            filteredLogs.map((entry, i) => {
+              const levelAccent = LEVEL_ACCENT[entry.level];
+              const srcAccent = SOURCE_ACCENT[entry.source];
+              return (
+                <div key={i} className="flex gap-2 leading-5 hover:bg-fill/50 px-1 rounded">
+                  <span className="text-tertiary shrink-0 w-16">
+                    {entry.ts?.slice(11, 19) || ""}
+                  </span>
                   <span
                     className={cn(
-                      "shrink-0 px-1 rounded text-[10px] leading-5",
-                      SOURCE_BADGE[entry.source] ?? "bg-gray-700 text-gray-400"
+                      "shrink-0 w-12",
+                      levelAccent ? accentText[levelAccent] : "text-muted"
                     )}
                   >
-                    {entry.source}
+                    {entry.level}
                   </span>
-                )}
-                {entry.module && (
-                  <span className="text-gray-500 shrink-0">{entry.module}:</span>
-                )}
-                <span
-                  className={cn(
-                    "break-all",
-                    LEVEL_STYLES[entry.level] ?? "text-gray-300"
+                  {entry.source && (
+                    <span
+                      className={cn(
+                        "shrink-0 px-1 rounded text-[10px] leading-5",
+                        srcAccent ? accentPill[srcAccent] : "bg-fill text-muted"
+                      )}
+                    >
+                      {entry.source}
+                    </span>
                   )}
-                >
-                  {entry.message}
-                </span>
-              </div>
-            ))
+                  {entry.module && (
+                    <span className="text-muted shrink-0">{entry.module}:</span>
+                  )}
+                  <span
+                    className={cn(
+                      "break-all",
+                      levelAccent ? accentText[levelAccent] : "text-foreground"
+                    )}
+                  >
+                    {entry.message}
+                  </span>
+                </div>
+              );
+            })
           )}
           <div ref={logEndRef} />
         </div>

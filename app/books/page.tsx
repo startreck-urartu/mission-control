@@ -6,8 +6,6 @@ import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +26,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   BookOpen,
   Plus,
@@ -41,9 +43,34 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { Doc, Id } from "@/convex/_generated/dataModel";
+import { accentBg, type AccentName } from "@/lib/status-colors";
 
 type Book = Doc<"books">;
 
+/* ── AccentName maps (page-scoped) ───────────────────────────────────────── */
+const CATEGORY_ACCENT: Record<string, AccentName> = {
+  business: "blue",
+  technical: "teal",
+  design: "purple",
+  marketing: "orange",
+  leadership: "indigo",
+  finance: "green",
+  legal: "gray",
+  "personal-development": "pink",
+  "industry-specific": "yellow",
+  reference: "gray",
+  other: "gray",
+};
+
+const STATUS_ACCENT: Record<string, AccentName> = {
+  "to-read": "gray",
+  reading: "blue",
+  completed: "green",
+  reference: "purple",
+  archived: "gray",
+};
+
+/* ── Static data ─────────────────────────────────────────────────────────── */
 const categories = [
   { value: "business", label: "Business", icon: "💼" },
   { value: "technical", label: "Technical", icon: "⚙️" },
@@ -69,11 +96,11 @@ const formats = [
 ];
 
 const statuses = [
-  { value: "to-read", label: "To Read", color: "bg-gray-500" },
-  { value: "reading", label: "Reading", color: "bg-blue-500" },
-  { value: "completed", label: "Completed", color: "bg-green-500" },
-  { value: "reference", label: "Reference", color: "bg-purple-500" },
-  { value: "archived", label: "Archived", color: "bg-yellow-500" },
+  { value: "to-read", label: "To Read" },
+  { value: "reading", label: "Reading" },
+  { value: "completed", label: "Completed" },
+  { value: "reference", label: "Reference" },
+  { value: "archived", label: "Archived" },
 ];
 
 export default function BooksPage() {
@@ -84,6 +111,7 @@ export default function BooksPage() {
   const updateBook = useMutation(api.books.updateBook);
   const deleteBook = useMutation(api.books.deleteBook);
   const recordAccess = useMutation(api.books.recordAccess);
+  const { confirm, confirmDialog } = useConfirm();
 
   const statsLoading = stats === undefined;
   const booksLoading = books === undefined;
@@ -225,9 +253,8 @@ export default function BooksPage() {
   };
 
   const handleDelete = async (id: Id<"books">) => {
-    if (confirm("Delete this book from the library?")) {
-      await deleteBook({ id });
-    }
+    if (!(await confirm({ title: "Delete this book from the library?", destructive: true }))) return;
+    await deleteBook({ id });
   };
 
   const handleOpenBook = async (book: Book) => {
@@ -235,8 +262,6 @@ export default function BooksPage() {
     if (book.fileUrl) {
       window.open(book.fileUrl, "_blank");
     } else if (book.filePath) {
-      // For local files, we can't directly open them from browser
-      // This would need a custom protocol or file server
       alert(`Local file: ${book.filePath}\n\nFor local files, navigate to this path on your system.`);
     }
   };
@@ -255,101 +280,65 @@ export default function BooksPage() {
     categories.find((c) => c.value === value)?.icon || "📄";
   const getFormatIcon = (value: string) =>
     formats.find((f) => f.value === value)?.icon || "📎";
-  const getStatusColor = (value: string) =>
-    statuses.find((s) => s.value === value)?.color || "bg-gray-500";
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Library</h1>
-          <p className="text-gray-400 mt-1">
-            Digital library for business literature and skill development
-          </p>
-        </div>
-        <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700">
+      <PageHeader
+        title="Library"
+        subtitle="Digital library for business literature and skill development"
+      >
+        <Button onClick={handleCreate}>
           <Plus className="w-4 h-4 mr-2" />
           Add Book
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="glass card-hover highlight-top">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-200">Total Books</CardTitle>
-            <div className="p-2 rounded-lg bg-blue-400/10">
-              <BookOpen className="w-4 h-4 text-blue-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {statsLoading ? <Skeleton className="h-8 w-12" /> : stats.totalBooks}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass card-hover highlight-top">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-200">Reading Now</CardTitle>
-            <div className="p-2 rounded-lg bg-green-400/10">
-              <Clock className="w-4 h-4 text-green-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {statsLoading ? <Skeleton className="h-8 w-12" /> : stats.currentlyReading}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass card-hover highlight-top">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-200">Completed</CardTitle>
-            <div className="p-2 rounded-lg bg-purple-400/10">
-              <CheckCircle className="w-4 h-4 text-purple-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {statsLoading ? <Skeleton className="h-8 w-12" /> : stats.completed}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass card-hover highlight-top">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-200">Library Size</CardTitle>
-            <div className="p-2 rounded-lg bg-yellow-400/10">
-              <FolderOpen className="w-4 h-4 text-yellow-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {statsLoading ? <Skeleton className="h-8 w-16" /> : formatFileSize(stats.totalSize)}
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          label="Total Books"
+          value={statsLoading ? <Skeleton className="h-8 w-12" /> : stats.totalBooks}
+          icon={BookOpen}
+          accent="blue"
+        />
+        <StatCard
+          label="Reading Now"
+          value={statsLoading ? <Skeleton className="h-8 w-12" /> : stats.currentlyReading}
+          icon={Clock}
+          accent="green"
+        />
+        <StatCard
+          label="Completed"
+          value={statsLoading ? <Skeleton className="h-8 w-12" /> : stats.completed}
+          icon={CheckCircle}
+          accent="purple"
+        />
+        <StatCard
+          label="Library Size"
+          value={statsLoading ? <Skeleton className="h-8 w-16" /> : formatFileSize(stats.totalSize)}
+          icon={FolderOpen}
+          accent="yellow"
+        />
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <Input
               placeholder="Search books, authors, tags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/[0.03] border-white/[0.08]"
+              className="pl-10"
             />
           </div>
         </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="w-[180px] bg-white/[0.03] border-white/[0.08]">
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700">
+          <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.value} value={cat.value}>
@@ -359,10 +348,10 @@ export default function BooksPage() {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[180px] bg-white/[0.03] border-white/[0.08]">
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700">
+          <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             {statuses.map((status) => (
               <SelectItem key={status.value} value={status.value}>
@@ -377,7 +366,7 @@ export default function BooksPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {booksLoading &&
           [1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="glass card-hover highlight-top">
+            <Card key={i}>
               <CardContent className="p-4">
                 <div className="flex gap-4">
                   <Skeleton className="w-16 h-20 rounded-lg flex-shrink-0" />
@@ -395,13 +384,13 @@ export default function BooksPage() {
         {filteredBooks?.map((book) => (
           <Card
             key={book._id}
-            className="glass card-hover highlight-top transition-colors cursor-pointer group"
+            className="transition-colors cursor-pointer group"
             onClick={() => handleOpenBook(book)}
           >
             <CardContent className="p-4">
               <div className="flex gap-4">
                 {/* Thumbnail or Icon */}
-                <div className="w-16 h-20 bg-white/[0.04] rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-20 bg-fill rounded-lg flex items-center justify-center flex-shrink-0">
                   {book.thumbnailUrl ? (
                     <img
                       src={book.thumbnailUrl}
@@ -415,24 +404,24 @@ export default function BooksPage() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-white truncate">{book.title}</h3>
+                    <h3 className="font-semibold text-foreground truncate">{book.title}</h3>
                     <div
-                      className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${getStatusColor(
-                        book.status
-                      )}`}
+                      className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${
+                        accentBg[STATUS_ACCENT[book.status] ?? "gray"]
+                      }`}
                     />
                   </div>
 
                   {book.author && (
-                    <p className="text-sm text-gray-400 truncate">{book.author}</p>
+                    <p className="text-sm text-muted truncate">{book.author}</p>
                   )}
 
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline" className="text-xs">
+                    <Badge color={CATEGORY_ACCENT[book.category] ?? "gray"}>
                       {getCategoryIcon(book.category)} {getCategoryLabel(book.category)}
                     </Badge>
                     {(book.fileSize ?? 0) > 0 && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-tertiary">
                         {formatFileSize(book.fileSize ?? 0)}
                       </span>
                     )}
@@ -445,8 +434,8 @@ export default function BooksPage() {
                           key={i}
                           className={`w-3 h-3 ${
                             i < book.rating!
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-600"
+                              ? "text-accent-yellow fill-accent-yellow"
+                              : "text-tertiary"
                           }`}
                         />
                       ))}
@@ -454,7 +443,7 @@ export default function BooksPage() {
                   )}
 
                   <div className="flex items-center gap-2 mt-3">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-tertiary">
                       Opened {book.readCount} {book.readCount === 1 ? "time" : "times"}
                     </span>
                   </div>
@@ -462,27 +451,30 @@ export default function BooksPage() {
               </div>
 
               {/* Action Buttons (visible on hover) */}
-              <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-800 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-separator opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="Edit book"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit(book);
                   }}
+                  className="hover:bg-fill"
                 >
                   <Edit2 className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="Delete book"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(book._id);
                   }}
-                  className="text-red-400 hover:text-red-300"
+                  className="hover:bg-accent-red-tint"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 text-accent-red" />
                 </Button>
               </div>
             </CardContent>
@@ -490,15 +482,13 @@ export default function BooksPage() {
         ))}
 
         {!booksLoading && !filteredBooks?.length && (
-          <Card className="glass card-hover highlight-top col-span-full">
-            <CardContent className="p-8 text-center">
-              <BookMarked className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No books in the library yet.</p>
-              <p className="text-sm text-gray-500 mt-2">
-                Add your first book to start building your digital library.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="col-span-full">
+            <EmptyState
+              icon={BookMarked}
+              message="No books in the library yet."
+              hint="Add your first book to start building your digital library."
+            />
+          </div>
         )}
       </div>
 
@@ -507,7 +497,7 @@ export default function BooksPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingBook ? "Edit Book" : "Add New Book"}</DialogTitle>
-          <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted">
               For local files, add the file path. For online documents, add the URL.
             </p>
           </DialogHeader>
@@ -521,7 +511,6 @@ export default function BooksPage() {
                     setFormData({ ...formData, title: e.target.value })
                   }
                   placeholder="Book title"
-                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
               <div className="space-y-2">
@@ -532,7 +521,6 @@ export default function BooksPage() {
                     setFormData({ ...formData, author: e.target.value })
                   }
                   placeholder="Author name"
-                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
             </div>
@@ -545,7 +533,6 @@ export default function BooksPage() {
                   setFormData({ ...formData, description: e.target.value })
                 }
                 placeholder="Brief description of the book"
-                className="bg-white/[0.03] border-white/[0.08]"
                 rows={2}
               />
             </div>
@@ -559,10 +546,10 @@ export default function BooksPage() {
                     setFormData({ ...formData, category: v as Book["category"] })
                   }
                 >
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectContent>
                     {categories.map((cat) => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {cat.icon} {cat.label}
@@ -580,10 +567,10 @@ export default function BooksPage() {
                   }
                   disabled={!!editingBook}
                 >
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectContent>
                     {formats.map((fmt) => (
                       <SelectItem key={fmt.value} value={fmt.value}>
                         {fmt.icon} {fmt.label}
@@ -600,10 +587,10 @@ export default function BooksPage() {
                     setFormData({ ...formData, priority: v as Book["priority"] })
                   }
                 >
-                  <SelectTrigger className="bg-white/[0.03] border-white/[0.08]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectContent>
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="high">High</SelectItem>
@@ -620,9 +607,8 @@ export default function BooksPage() {
                   setFormData({ ...formData, filePath: e.target.value })
                 }
                 placeholder="e.g., /Users/username/Documents/book.pdf"
-                className="bg-white/[0.03] border-white/[0.08]"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-tertiary">
                 Path to the file on your local system
               </p>
             </div>
@@ -640,7 +626,6 @@ export default function BooksPage() {
                     })
                   }
                   placeholder="0"
-                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
               <div className="space-y-2">
@@ -651,7 +636,6 @@ export default function BooksPage() {
                     setFormData({ ...formData, fileUrl: e.target.value })
                   }
                   placeholder="https://..."
-                  className="bg-white/[0.03] border-white/[0.08]"
                 />
               </div>
             </div>
@@ -664,7 +648,6 @@ export default function BooksPage() {
                   setFormData({ ...formData, thumbnailUrl: e.target.value })
                 }
                 placeholder="https://..."
-                className="bg-white/[0.03] border-white/[0.08]"
               />
             </div>
 
@@ -676,7 +659,6 @@ export default function BooksPage() {
                   setFormData({ ...formData, tags: e.target.value })
                 }
                 placeholder="e.g., cad, jewelry, marketing"
-                className="bg-white/[0.03] border-white/[0.08]"
               />
             </div>
 
@@ -688,7 +670,6 @@ export default function BooksPage() {
                   setFormData({ ...formData, notes: e.target.value })
                 }
                 placeholder="Personal notes about this book"
-                className="bg-white/[0.03] border-white/[0.08]"
                 rows={3}
               />
             </div>
@@ -700,7 +681,6 @@ export default function BooksPage() {
               <Button
                 onClick={handleSubmit}
                 disabled={!formData.title}
-                className="bg-blue-600 hover:bg-blue-700"
               >
                 {editingBook ? "Update" : "Add Book"}
               </Button>
@@ -708,6 +688,7 @@ export default function BooksPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {confirmDialog}
     </div>
   );
 }

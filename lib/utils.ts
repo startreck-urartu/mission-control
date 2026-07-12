@@ -39,3 +39,21 @@ export function formatTimeAgo(dateString: string | undefined | null): string {
   if (days < 30) return `${days}d ago`;
   return formatDate(dateString);
 }
+
+export function formatCurrency(
+  amount: number | null | undefined,
+  { decimals = 2, fallback = "—" }: { decimals?: number; fallback?: string } = {}
+): string {
+  if (amount === null || amount === undefined || Number.isNaN(amount)) {
+    return fallback;
+  }
+  const sign = amount < 0 ? "-" : "";
+  return (
+    sign +
+    "$" +
+    Math.abs(amount).toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    })
+  );
+}

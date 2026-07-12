@@ -34,17 +34,27 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn, formatDate } from "@/lib/utils";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import {
+  accentBg,
+  accentText,
+  revenueCategoryAccent,
+  type AccentName,
+} from "@/lib/status-colors";
 
 type Revenue = Doc<"revenue">;
 type Goal = Doc<"goals">;
 
 const CATEGORIES = [
-  { id: "cadcam-design", label: "CAD/CAM Design", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  { id: "3dgoldsmith", label: "3DGoldsmith", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-  { id: "trading", label: "Trading", color: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-  { id: "consulting", label: "Consulting", color: "bg-teal-500/10 text-teal-400 border-teal-500/20" },
-  { id: "other", label: "Other", color: "bg-gray-500/10 text-gray-400 border-gray-500/20" },
+  { id: "cadcam-design", label: "CAD/CAM Design" },
+  { id: "3dgoldsmith", label: "3DGoldsmith" },
+  { id: "trading", label: "Trading" },
+  { id: "consulting", label: "Consulting" },
+  { id: "other", label: "Other" },
 ] as const;
 
 const GOAL_CATEGORIES = [
@@ -54,10 +64,6 @@ const GOAL_CATEGORIES = [
   { id: "trading", label: "Trading" },
   { id: "custom", label: "Custom" },
 ] as const;
-
-function categoryConfig(id: string) {
-  return CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[4];
-}
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -74,6 +80,9 @@ function monthBounds() {
   };
 }
 
+// Summary stat config — accent keys only (no raw class strings)
+const STAT_ACCENTS: AccentName[] = ["green", "orange", "blue", "purple"];
+
 export default function RevenuePage() {
   const allRevenue = useQuery(api.revenue.getAllRevenue);
   const goals = useQuery(api.goals.getGoalProgress);
@@ -86,6 +95,8 @@ export default function RevenuePage() {
   const createGoal = useMutation(api.goals.createGoal);
   const updateGoal = useMutation(api.goals.updateGoal);
   const deleteGoal = useMutation(api.goals.deleteGoal);
+
+  const { confirm, confirmDialog } = useConfirm();
 
   const [revenueDialogOpen, setRevenueDialogOpen] = useState(false);
   const [editingRevenue, setEditingRevenue] = useState<Revenue | null>(null);
@@ -125,8 +136,7 @@ export default function RevenuePage() {
     [allRevenue]
   );
 
-  // Month aggregates derived from the already-live ledger — no second
-  // subscription (getCurrentMonthRevenue) needed; local month matches EST use
+  // Month aggregates derived from the already-live ledger
   const monthRevenue = useMemo(() => {
     if (!allRevenue) return undefined;
     const { start, end } = monthBounds();
@@ -207,9 +217,8 @@ export default function RevenuePage() {
   };
 
   const removeRevenue = async (id: Id<"revenue">) => {
-    if (confirm("Delete this revenue entry?")) {
-      await deleteRevenue({ id });
-    }
+    if (!(await confirm({ title: "Delete this revenue entry?", destructive: true }))) return;
+    await deleteRevenue({ id });
   };
 
   // ── Goal handlers ────────────────────────────────────
@@ -265,18 +274,16 @@ export default function RevenuePage() {
   };
 
   const removeGoal = async (id: Id<"goals">) => {
-    if (confirm("Delete this goal?")) {
-      await deleteGoal({ id });
-    }
+    if (!(await confirm({ title: "Delete this goal?", destructive: true }))) return;
+    await deleteGoal({ id });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Revenue & Goals</h1>
-          <p className="text-gray-400 mt-1">Income by category, financial targets, deal payouts</p>
-        </div>
+      <PageHeader
+        title="Revenue & Goals"
+        subtitle="Income by category, financial targets, deal payouts"
+      >
         <div className="flex gap-2">
           <Button variant="outline" onClick={openCreateGoal} className="flex items-center gap-2">
             <Target className="w-4 h-4" /> New Goal
@@ -285,55 +292,43 @@ export default function RevenuePage() {
             <Plus className="w-4 h-4" /> Add Revenue
           </Button>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 stagger-in">
         {[
           {
             label: "Received This Month",
-            value: `$${(monthRevenue?.received ?? 0).toLocaleString()}`,
+            value: formatCurrency(monthRevenue?.received ?? 0, { decimals: 0 }),
             icon: DollarSign,
-            color: "text-green-400",
-            bg: "bg-green-500/10",
+            accent: STAT_ACCENTS[0],
           },
           {
             label: "Pending This Month",
-            value: `$${(monthRevenue?.pending ?? 0).toLocaleString()}`,
+            value: formatCurrency(monthRevenue?.pending ?? 0, { decimals: 0 }),
             icon: Clock,
-            color: (monthRevenue?.pending ?? 0) > 0 ? "text-yellow-400" : "text-gray-600",
-            bg: (monthRevenue?.pending ?? 0) > 0 ? "bg-yellow-500/10" : "bg-white/[0.03]",
+            accent: (monthRevenue?.pending ?? 0) > 0 ? STAT_ACCENTS[1] : ("gray" as AccentName),
           },
           {
             label: "All-Time Received",
-            value: `$${allTimeReceived.toLocaleString()}`,
+            value: formatCurrency(allTimeReceived, { decimals: 0 }),
             icon: TrendingUp,
-            color: "text-blue-400",
-            bg: "bg-blue-500/10",
+            accent: STAT_ACCENTS[2],
           },
           {
             label: "Entries This Month",
             value: monthRevenue?.count ?? 0,
             icon: Users,
-            color: "text-purple-400",
-            bg: "bg-purple-500/10",
+            accent: STAT_ACCENTS[3],
           },
         ].map((stat) => (
-          <Card key={stat.label} className="glass">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className={cn("p-1.5 rounded-lg", stat.bg)}>
-                  <stat.icon className={cn("w-4 h-4", stat.color)} />
-                </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold text-white">
-                    {isLoading ? <Skeleton className="h-7 w-16 ml-auto" /> : stat.value}
-                  </div>
-                  <div className="text-[11px] text-gray-500">{stat.label}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            key={stat.label}
+            label={stat.label}
+            value={isLoading ? <Skeleton className="h-7 w-16 ml-auto" /> : stat.value}
+            icon={stat.icon}
+            accent={stat.accent}
+          />
         ))}
       </div>
 
@@ -341,8 +336,9 @@ export default function RevenuePage() {
       {monthRevenue && Object.keys(monthRevenue.byCategory).length > 0 && (
         <div className="flex flex-wrap gap-2">
           {Object.entries(monthRevenue.byCategory).map(([cat, data]) => (
-            <Badge key={cat} variant="outline" className={cn("text-xs", categoryConfig(cat).color)}>
-              {categoryConfig(cat).label}: ${data.amount.toLocaleString()} ({data.count})
+            <Badge key={cat} color={revenueCategoryAccent[cat] ?? "gray"}>
+              {CATEGORIES.find((c) => c.id === cat)?.label ?? cat}:{" "}
+              {formatCurrency(data.amount, { decimals: 0 })} ({data.count})
             </Badge>
           ))}
         </div>
@@ -350,13 +346,13 @@ export default function RevenuePage() {
 
       {/* Goals */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
-          <Target className="w-4 h-4 text-amber-400" /> Active Goals
+        <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <Target className={cn("w-4 h-4", accentText["orange"])} /> Active Goals
         </h2>
         {goals === undefined ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="glass border border-amber-500/10">
+              <Card key={i} className="border-separator">
                 <CardContent className="p-4 space-y-3">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-7 w-40" />
@@ -367,70 +363,86 @@ export default function RevenuePage() {
           </div>
         ) : goals.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {goals.map((goal) => (
-              <Card key={goal._id} className="glass border border-amber-500/10 group">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-medium text-gray-200 truncate">{goal.title}</h3>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
-                        {formatDate(goal.startDate)} → {formatDate(goal.endDate)} · {goal.daysLeft}d left
-                        {goal.category === "revenue" && (
-                          <span className="text-amber-400/70"> · auto</span>
+            {goals.map((goal) => {
+              const met = goal.progressPct >= 100;
+              return (
+                <Card key={goal._id} className="group">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-medium text-foreground truncate">{goal.title}</h3>
+                        <p className="text-[11px] text-muted mt-0.5">
+                          {formatDate(goal.startDate)} → {formatDate(goal.endDate)} · {goal.daysLeft}d left
+                          {goal.category === "revenue" && (
+                            <span className={accentText["orange"]}> · auto</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity shrink-0">
+                        <button
+                          onClick={() => openEditGoal(goal)}
+                          aria-label="Edit goal"
+                          className="p-1 rounded hover:bg-fill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
+                        >
+                          <Edit className="w-3 h-3 text-muted" />
+                        </button>
+                        <button
+                          onClick={() => removeGoal(goal._id)}
+                          aria-label="Delete goal"
+                          className="p-1 rounded hover:bg-accent-red-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
+                        >
+                          <Trash2 className="w-3 h-3 text-accent-red" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-xl font-bold text-foreground tabular-nums tracking-tight mt-3">
+                      {formatCurrency(goal.currentAmount, { decimals: 0 })}
+                      <span className="text-sm font-normal text-muted">
+                        {" "}/ {formatCurrency(goal.targetAmount, { decimals: 0 })}
+                      </span>
+                    </div>
+                    <div className="mt-2 w-full h-1.5 rounded-full bg-fill overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-700",
+                          met ? accentBg["green"] : accentBg["orange"]
                         )}
-                      </p>
+                        style={{ width: `${Math.min(100, goal.progressPct)}%` }}
+                      />
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button onClick={() => openEditGoal(goal)} className="p-1 rounded hover:bg-white/[0.06]">
-                        <Edit className="w-3 h-3 text-gray-400" />
-                      </button>
-                      <button onClick={() => removeGoal(goal._id)} className="p-1 rounded hover:bg-red-900/30">
-                        <Trash2 className="w-3 h-3 text-red-400" />
-                      </button>
+                    <div className="flex justify-between mt-1">
+                      <span className={cn("text-[11px]", met ? accentText["green"] : "text-tertiary")}>
+                        {goal.progressPct}%
+                      </span>
+                      <span className={cn("text-[11px]", met ? accentText["green"] : accentText["orange"])}>
+                        {met
+                          ? "Goal met!"
+                          : `${formatCurrency(Math.max(0, goal.targetAmount - goal.currentAmount), { decimals: 0 })} to go`}
+                      </span>
                     </div>
-                  </div>
-                  <div className="text-xl font-bold text-white mt-3">
-                    ${goal.currentAmount.toLocaleString()}
-                    <span className="text-sm font-normal text-gray-500"> / ${goal.targetAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="mt-2 w-full h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-500/80 to-amber-400/60 transition-all duration-700"
-                      style={{ width: `${goal.progressPct}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[11px] text-gray-600">{goal.progressPct}%</span>
-                    <span className="text-[11px] text-amber-400">
-                      ${Math.max(0, goal.targetAmount - goal.currentAmount).toLocaleString()} to go
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
-          <Card className="glass">
-            <CardContent className="p-6 text-center">
-              <Target className="w-8 h-8 text-gray-700 mx-auto mb-2 empty-state-icon" />
-              <p className="text-sm text-gray-500">No active goals</p>
-              <p className="text-xs text-gray-700 mt-1">
-                Revenue goals track received income in their date range automatically
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={Target}
+            message="No active goals"
+            hint="Revenue goals track received income in their date range automatically"
+          />
         )}
       </div>
 
       {/* Entries */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-green-400" /> Revenue Entries
+        <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <DollarSign className={cn("w-4 h-4", accentText["green"])} /> Revenue Entries
         </h2>
-        <Card className="glass">
+        <Card>
           <CardContent className="p-2">
             {isLoading ? (
-              <div className="divide-y divide-white/[0.04]">
+              <div className="divide-y divide-separator">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="flex items-center gap-3 p-2.5">
                     <Skeleton className="h-3 w-20 shrink-0" />
@@ -440,39 +452,42 @@ export default function RevenuePage() {
                 ))}
               </div>
             ) : entries.length > 0 ? (
-              <div className="divide-y divide-white/[0.04]">
+              <div className="divide-y divide-separator">
                 {entries.slice(0, visibleEntries).map((r) => (
-                  <div key={r._id} className="flex items-center gap-3 p-2.5 group hover:bg-white/[0.02] rounded-lg">
-                    <span className="text-[11px] text-gray-500 w-20 shrink-0">{formatDate(r.date)}</span>
+                  <div key={r._id} className="flex items-center gap-3 p-2.5 group hover:bg-fill rounded-lg">
+                    <span className="text-[11px] text-muted w-20 shrink-0">{formatDate(r.date)}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-300 truncate">{r.description}</p>
+                      <p className="text-sm text-foreground truncate">{r.description}</p>
                       {clientName(r.clientId) && (
-                        <p className="text-[10px] text-gray-600">{clientName(r.clientId)}</p>
+                        <p className="text-[10px] text-tertiary">{clientName(r.clientId)}</p>
                       )}
                     </div>
-                    <Badge variant="outline" className={cn("text-[10px] shrink-0", categoryConfig(r.category).color)}>
-                      {categoryConfig(r.category).label}
+                    <Badge color={revenueCategoryAccent[r.category] ?? "gray"} className="text-[10px] shrink-0">
+                      {CATEGORIES.find((c) => c.id === r.category)?.label ?? r.category}
                     </Badge>
                     <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[10px] shrink-0",
-                        r.status === "received"
-                          ? "bg-green-500/10 text-green-400 border-green-500/20"
-                          : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                      )}
+                      color={r.status === "received" ? "green" : "orange"}
+                      className="text-[10px] shrink-0"
                     >
                       {r.status}
                     </Badge>
-                    <span className="text-sm font-semibold text-green-400 w-24 text-right shrink-0">
+                    <span className={cn("text-sm font-semibold w-24 text-right shrink-0 tabular-nums tracking-tight", accentText["green"])}>
                       ${r.amount.toLocaleString()}
                     </span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button onClick={() => openEditRevenue(r)} className="p-1 rounded hover:bg-white/[0.06]">
-                        <Edit className="w-3 h-3 text-gray-400" />
+                    <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity shrink-0">
+                      <button
+                        onClick={() => openEditRevenue(r)}
+                        aria-label="Edit revenue entry"
+                        className="p-1 rounded hover:bg-fill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
+                      >
+                        <Edit className="w-3 h-3 text-muted" />
                       </button>
-                      <button onClick={() => removeRevenue(r._id)} className="p-1 rounded hover:bg-red-900/30">
-                        <Trash2 className="w-3 h-3 text-red-400" />
+                      <button
+                        onClick={() => removeRevenue(r._id)}
+                        aria-label="Delete revenue entry"
+                        className="p-1 rounded hover:bg-accent-red-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
+                      >
+                        <Trash2 className="w-3 h-3 text-accent-red" />
                       </button>
                     </div>
                   </div>
@@ -483,7 +498,7 @@ export default function RevenuePage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setVisibleEntries((n) => n + 50)}
-                      className="text-xs text-gray-400"
+                      className="text-xs text-muted"
                     >
                       Show more ({entries.length - visibleEntries} older entries)
                     </Button>
@@ -491,13 +506,11 @@ export default function RevenuePage() {
                 )}
               </div>
             ) : (
-              <div className="text-center py-10">
-                <DollarSign className="w-8 h-8 text-gray-700 mx-auto mb-2 empty-state-icon" />
-                <p className="text-sm text-gray-500">No revenue logged yet</p>
-                <p className="text-xs text-gray-700 mt-1">
-                  Entries are created automatically when a client reaches Paid, or add one manually
-                </p>
-              </div>
+              <EmptyState
+                icon={DollarSign}
+                message="No revenue logged yet"
+                hint="Entries are created automatically when a client reaches Paid, or add one manually"
+              />
             )}
           </CardContent>
         </Card>
@@ -515,21 +528,21 @@ export default function RevenuePage() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Amount ($) *</label>
+                <label className="text-sm font-medium text-foreground">Amount ($) *</label>
                 <Input type="number" value={revenueForm.amount} onChange={(e) => setRevenueForm({ ...revenueForm, amount: e.target.value })} placeholder="1500" />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Date *</label>
+                <label className="text-sm font-medium text-foreground">Date *</label>
                 <Input type="date" value={revenueForm.date} onChange={(e) => setRevenueForm({ ...revenueForm, date: e.target.value })} />
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Description *</label>
+              <label className="text-sm font-medium text-foreground">Description *</label>
               <Textarea value={revenueForm.description} onChange={(e) => setRevenueForm({ ...revenueForm, description: e.target.value })} placeholder="Ring CAD model — final payment" rows={2} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Category</label>
+                <label className="text-sm font-medium text-foreground">Category</label>
                 <Select value={revenueForm.category} onValueChange={(v) => setRevenueForm({ ...revenueForm, category: v as Revenue["category"] })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -540,7 +553,7 @@ export default function RevenuePage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Status</label>
+                <label className="text-sm font-medium text-foreground">Status</label>
                 <Select value={revenueForm.status} onValueChange={(v) => setRevenueForm({ ...revenueForm, status: v as Revenue["status"] })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -552,7 +565,7 @@ export default function RevenuePage() {
             </div>
             {(clients?.length ?? 0) > 0 && (
               <div>
-                <label className="text-sm font-medium text-gray-200">Client (optional)</label>
+                <label className="text-sm font-medium text-foreground">Client (optional)</label>
                 <Select value={revenueForm.clientId || "none"} onValueChange={(v) => setRevenueForm({ ...revenueForm, clientId: v === "none" ? "" : v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -585,16 +598,16 @@ export default function RevenuePage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium text-gray-200">Title *</label>
+              <label className="text-sm font-medium text-foreground">Title *</label>
               <Input value={goalForm.title} onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })} placeholder="July Revenue Target" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Target ($) *</label>
+                <label className="text-sm font-medium text-foreground">Target ($) *</label>
                 <Input type="number" value={goalForm.targetAmount} onChange={(e) => setGoalForm({ ...goalForm, targetAmount: e.target.value })} placeholder="10000" />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Category</label>
+                <label className="text-sm font-medium text-foreground">Category</label>
                 <Select value={goalForm.category} onValueChange={(v) => setGoalForm({ ...goalForm, category: v as Goal["category"] })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -607,22 +620,22 @@ export default function RevenuePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Start *</label>
+                <label className="text-sm font-medium text-foreground">Start *</label>
                 <Input type="date" value={goalForm.startDate} onChange={(e) => setGoalForm({ ...goalForm, startDate: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">End *</label>
+                <label className="text-sm font-medium text-foreground">End *</label>
                 <Input type="date" value={goalForm.endDate} onChange={(e) => setGoalForm({ ...goalForm, endDate: e.target.value })} />
               </div>
             </div>
             {goalForm.category !== "revenue" && (
               <div>
-                <label className="text-sm font-medium text-gray-200">Current Progress ($)</label>
+                <label className="text-sm font-medium text-foreground">Current Progress ($)</label>
                 <Input type="number" value={goalForm.currentAmount} onChange={(e) => setGoalForm({ ...goalForm, currentAmount: e.target.value })} placeholder="0" />
               </div>
             )}
             <div>
-              <label className="text-sm font-medium text-gray-200">Description</label>
+              <label className="text-sm font-medium text-foreground">Description</label>
               <Textarea value={goalForm.description} onChange={(e) => setGoalForm({ ...goalForm, description: e.target.value })} rows={2} />
             </div>
             <div className="flex justify-end gap-2 pt-4">
@@ -634,6 +647,8 @@ export default function RevenuePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {confirmDialog}
     </div>
   );
 }

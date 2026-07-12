@@ -33,7 +33,7 @@ import {
   Trash2,
   Edit,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,25 +53,30 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageHeader } from "@/components/ui/page-header";
 import { cn, formatDate } from "@/lib/utils";
+import {
+  accentBg,
+  accentBorderT,
+  accentText,
+  clientStageAccent,
+  priorityAccent,
+  type AccentName,
+} from "@/lib/status-colors";
 
 type Client = Doc<"clients">;
 
 const STAGES = [
-  { id: "lead", label: "Lead", color: "bg-gray-500", border: "border-gray-500/40", text: "text-gray-400" },
-  { id: "qualified", label: "Qualified", color: "bg-blue-500", border: "border-blue-500/40", text: "text-blue-400" },
-  { id: "proposal", label: "Proposal", color: "bg-purple-500", border: "border-purple-500/40", text: "text-purple-400" },
-  { id: "contract", label: "Contract", color: "bg-indigo-500", border: "border-indigo-500/40", text: "text-indigo-400" },
-  { id: "in-production", label: "In Production", color: "bg-yellow-500", border: "border-yellow-500/40", text: "text-yellow-400" },
-  { id: "delivered", label: "Delivered", color: "bg-orange-500", border: "border-orange-500/40", text: "text-orange-400" },
-  { id: "paid", label: "Paid", color: "bg-green-500", border: "border-green-500/40", text: "text-green-400" },
+  { id: "lead", label: "Lead" },
+  { id: "qualified", label: "Qualified" },
+  { id: "proposal", label: "Proposal" },
+  { id: "contract", label: "Contract" },
+  { id: "in-production", label: "In Production" },
+  { id: "delivered", label: "Delivered" },
+  { id: "paid", label: "Paid" },
 ] as const;
-
-const PRIORITY_COLORS = {
-  low: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  medium: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  high: "bg-red-500/10 text-red-400 border-red-500/20",
-};
 
 function ClientCard({
   client,
@@ -93,17 +98,17 @@ function ClientCard({
 
   return (
     <Card
-      className="group bg-[var(--surface-2)] border-white/[0.06] hover:border-white/[0.1] transition-all duration-200 cursor-pointer overflow-hidden"
+      className="group cursor-pointer overflow-hidden"
       onClick={() => setShowActions(false)}
     >
       <div className="p-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-medium text-gray-200 truncate">{client.name}</h3>
+            <h3 className="text-sm font-medium text-foreground truncate">{client.name}</h3>
             {client.company && (
               <div className="flex items-center gap-1 mt-0.5">
-                <Building2 className="w-3 h-3 text-gray-600" />
-                <span className="text-xs text-gray-500 truncate">{client.company}</span>
+                <Building2 className="w-3 h-3 text-tertiary" />
+                <span className="text-xs text-muted truncate">{client.company}</span>
               </div>
             )}
           </div>
@@ -113,29 +118,30 @@ function ClientCard({
                 e.stopPropagation();
                 setShowActions(!showActions);
               }}
-              className="p-1 rounded hover:bg-white/[0.06] transition-colors"
+              className="p-1 rounded hover:bg-fill transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
+              aria-label="Client actions"
             >
-              <MoreHorizontal className="w-3.5 h-3.5 text-gray-500" />
+              <MoreHorizontal className="w-3.5 h-3.5 text-muted" />
             </button>
             {showActions && (
-              <div className="absolute right-0 top-7 z-10 min-w-[120px] rounded-lg bg-[var(--surface-3)] border border-white/[0.08] shadow-xl py-1">
+              <div className="absolute right-0 top-7 z-10 min-w-[120px] rounded-lg glass-pane border border-separator shadow-xl py-1">
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(client); setShowActions(false); }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-gray-300 hover:bg-white/[0.04]"
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-foreground hover:bg-fill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 rounded"
                 >
                   <Edit className="w-3 h-3" /> Edit
                 </button>
                 {nextStage && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onMove(client._id, nextStage); setShowActions(false); }}
-                    className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-green-300 hover:bg-white/[0.04]"
+                    className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-accent-green hover:bg-fill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 rounded"
                   >
                     <ChevronDown className="w-3 h-3" /> Advance
                   </button>
                 )}
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(client._id); setShowActions(false); }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-red-400 hover:bg-white/[0.04]"
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-accent-red hover:bg-accent-red-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50 rounded"
                 >
                   <Trash2 className="w-3 h-3" /> Delete
                 </button>
@@ -146,38 +152,38 @@ function ClientCard({
 
         {client.projectType && (
           <div className="mt-1.5">
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-gray-400">{client.projectType}</span>
+            <Badge color="gray">{client.projectType}</Badge>
           </div>
         )}
 
         {!!client.value && (
           <div className="mt-2 flex items-center gap-1.5">
-            <DollarSign className="w-3.5 h-3.5 text-green-400" />
-            <span className="text-sm font-semibold text-green-400">${client.value.toLocaleString()}</span>
+            <DollarSign className="w-3.5 h-3.5 text-accent-green" />
+            <span className="text-sm font-semibold text-accent-green tabular-nums tracking-tight">${client.value.toLocaleString()}</span>
           </div>
         )}
 
         {client.notes && (
-          <p className="text-xs text-gray-500 mt-2 line-clamp-2">{client.notes}</p>
+          <p className="text-xs text-muted mt-2 line-clamp-2">{client.notes}</p>
         )}
 
         <div className="flex items-center gap-2 mt-3 flex-wrap">
-          <Badge variant="outline" className={cn("text-[10px]", PRIORITY_COLORS[client.priority])}>
+          <Badge color={priorityAccent[client.priority] ?? "gray"}>
             <Flag className="w-2.5 h-2.5 mr-1" />{client.priority}
           </Badge>
           {client.followUpDate && (
             <span className={cn("text-[10px] flex items-center gap-1",
-              new Date(client.followUpDate) <= new Date() ? "text-red-400" : "text-gray-500"
+              new Date(client.followUpDate) <= new Date() ? "text-accent-red" : "text-muted"
             )}>
               <Calendar className="w-2.5 h-2.5" />{formatDate(client.followUpDate)}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 mt-2 text-[10px] text-gray-600">
+        <div className="flex items-center gap-2 mt-2 text-[10px] text-tertiary">
           {client.email && <Mail className="w-3 h-3" />}
           {client.phone && <Phone className="w-3 h-3" />}
-          {client.source && <span className="text-gray-500">via {client.source}</span>}
+          {client.source && <span className="text-muted">via {client.source}</span>}
         </div>
       </div>
     </Card>
@@ -227,19 +233,20 @@ function StageColumn({
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const stageValue = clients.reduce((sum, c) => sum + (c.value ?? 0), 0);
+  const accent: AccentName = clientStageAccent[stage.id] ?? "gray";
 
   return (
     <div className="w-72 sm:w-80 flex-shrink-0 flex flex-col">
-      <div className={cn("p-3 rounded-t-lg border-t-2", stage.border)}>
+      <div className={cn("p-3 rounded-t-lg glass-pane border border-separator border-t-2", accentBorderT[accent])}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={cn("w-2 h-2 rounded-full", stage.color)} />
-            <h2 className="text-sm font-semibold text-gray-200">{stage.label}</h2>
+            <div className={cn("w-2 h-2 rounded-full", accentBg[accent])} />
+            <h2 className="text-sm font-semibold text-foreground">{stage.label}</h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">{clients.length}</span>
+            <span className="text-xs text-muted tabular-nums">{clients.length}</span>
             {stageValue > 0 && (
-              <span className="text-xs text-green-400">${stageValue.toLocaleString()}</span>
+              <span className={cn("text-xs tabular-nums tracking-tight", accentText["green"])}>${stageValue.toLocaleString()}</span>
             )}
           </div>
         </div>
@@ -247,8 +254,8 @@ function StageColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 bg-[var(--surface-1)]/50 rounded-b-lg border border-white/[0.04] border-t-0 p-2 space-y-2 overflow-y-auto transition-colors",
-          isOver && "bg-white/[0.04] border-white/[0.1]"
+          "flex-1 bg-glass backdrop-blur-xl rounded-b-lg border border-separator border-t-0 p-2 space-y-2 overflow-y-auto transition-colors",
+          isOver && "bg-accent-blue-tint border-accent-blue/40"
         )}
       >
         {clients.map((client) => (
@@ -262,7 +269,7 @@ function StageColumn({
         ))}
         {clients.length === 0 && (
           <div className="text-center py-8">
-            <span className="text-xs text-gray-600">No clients</span>
+            <span className="text-xs text-tertiary">No clients</span>
           </div>
         )}
       </div>
@@ -271,18 +278,19 @@ function StageColumn({
 }
 
 function StageColumnSkeleton({ stage }: { stage: (typeof STAGES)[number] }) {
+  const accent: AccentName = clientStageAccent[stage.id] ?? "gray";
   return (
     <div className="w-72 sm:w-80 flex-shrink-0 flex flex-col">
-      <div className={cn("p-3 rounded-t-lg border-t-2", stage.border)}>
+      <div className={cn("p-3 rounded-t-lg glass-pane border border-separator border-t-2", accentBorderT[accent])}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={cn("w-2 h-2 rounded-full", stage.color)} />
-            <h2 className="text-sm font-semibold text-gray-200">{stage.label}</h2>
+            <div className={cn("w-2 h-2 rounded-full", accentBg[accent])} />
+            <h2 className="text-sm font-semibold text-foreground">{stage.label}</h2>
           </div>
           <Skeleton className="h-3 w-6" />
         </div>
       </div>
-      <div className="flex-1 bg-[var(--surface-1)]/50 rounded-b-lg border border-white/[0.04] border-t-0 p-2 space-y-2">
+      <div className="flex-1 bg-glass backdrop-blur-xl rounded-b-lg border border-separator border-t-0 p-2 space-y-2">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-24 w-full rounded-xl" />
         ))}
@@ -302,6 +310,7 @@ export default function ClientsPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeClient, setActiveClient] = useState<Client | null>(null);
+  const { confirm, confirmDialog } = useConfirm();
 
   // distance threshold keeps card buttons clickable without starting a drag
   const sensors = useSensors(
@@ -417,9 +426,8 @@ export default function ClientsPage() {
   };
 
   const handleDelete = async (id: Id<"clients">) => {
-    if (confirm("Remove this client?")) {
-      await deleteClient({ id });
-    }
+    if (!(await confirm({ title: "Remove this client?", destructive: true }))) return;
+    await deleteClient({ id });
   };
 
   const handleMove = async (id: Id<"clients">, stage: Client["stage"]) => {
@@ -444,64 +452,41 @@ export default function ClientsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Client Pipeline</h1>
-          <p className="text-gray-400 mt-1">CADCAM Designs — drag deals between stages; Paid books revenue automatically</p>
-        </div>
+      <PageHeader
+        title="Client Pipeline"
+        subtitle="CADCAM Designs — drag deals between stages; Paid books revenue automatically"
+      >
         <Button onClick={handleCreate} className="flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Client
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 stagger-in">
-        {[
-          {
-            label: "Total Clients",
-            value: metrics?.totalClients ?? 0,
-            icon: Users,
-            color: "text-blue-400",
-            bg: "bg-blue-500/10",
-          },
-          {
-            label: "Pipeline Value",
-            value: `$${(metrics?.totalPipeline ?? 0).toLocaleString()}`,
-            icon: TrendingUp,
-            color: "text-purple-400",
-            bg: "bg-purple-500/10",
-          },
-          {
-            label: "Revenue Won",
-            value: `$${(metrics?.totalWon ?? 0).toLocaleString()}`,
-            icon: DollarSign,
-            color: "text-green-400",
-            bg: "bg-green-500/10",
-          },
-          {
-            label: "Follow-ups",
-            value: metrics?.followUpNeeded ?? 0,
-            icon: AlertCircle,
-            color: (metrics?.followUpNeeded ?? 0) > 0 ? "text-red-400" : "text-gray-600",
-            bg: (metrics?.followUpNeeded ?? 0) > 0 ? "bg-red-500/10" : "bg-white/[0.03]",
-          },
-        ].map((stat) => (
-          <Card key={stat.label} className="glass">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className={cn("p-1.5 rounded-lg", stat.bg)}>
-                  <stat.icon className={cn("w-4 h-4", stat.color)} />
-                </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold text-white">
-                    {isLoading ? <Skeleton className="h-7 w-16 ml-auto" /> : stat.value}
-                  </div>
-                  <div className="text-[11px] text-gray-500">{stat.label}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <StatCard
+          label="Total Clients"
+          value={isLoading ? <Skeleton className="h-7 w-16 ml-auto" /> : (metrics?.totalClients ?? 0)}
+          icon={Users}
+          accent="blue"
+        />
+        <StatCard
+          label="Pipeline Value"
+          value={isLoading ? <Skeleton className="h-7 w-24 ml-auto" /> : `$${(metrics?.totalPipeline ?? 0).toLocaleString()}`}
+          icon={TrendingUp}
+          accent="purple"
+        />
+        <StatCard
+          label="Revenue Won"
+          value={isLoading ? <Skeleton className="h-7 w-24 ml-auto" /> : `$${(metrics?.totalWon ?? 0).toLocaleString()}`}
+          icon={DollarSign}
+          accent="green"
+        />
+        <StatCard
+          label="Follow-ups"
+          value={isLoading ? <Skeleton className="h-7 w-10 ml-auto" /> : (metrics?.followUpNeeded ?? 0)}
+          icon={AlertCircle}
+          accent={(metrics?.followUpNeeded ?? 0) > 0 ? "red" : "gray"}
+        />
       </div>
 
       <div className="mb-4">
@@ -541,14 +526,14 @@ export default function ClientsPage() {
 
         <DragOverlay>
           {activeClient && (
-            <Card className="p-3.5 w-72 bg-[var(--surface-2)] border-white/[0.15] shadow-2xl rotate-2">
-              <h3 className="text-sm font-medium text-gray-200 truncate">{activeClient.name}</h3>
+            <div className="glass-pane-elevated rounded-2xl p-3.5 w-72 rotate-2 shadow-2xl">
+              <h3 className="text-sm font-medium text-foreground truncate">{activeClient.name}</h3>
               {!!activeClient.value && (
-                <span className="text-sm font-semibold text-green-400">
+                <span className="text-sm font-semibold text-accent-green tabular-nums tracking-tight">
                   ${activeClient.value.toLocaleString()}
                 </span>
               )}
-            </Card>
+            </div>
           )}
         </DragOverlay>
       </DndContext>
@@ -565,27 +550,27 @@ export default function ClientsPage() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Name *</label>
+                <label className="text-sm font-medium text-foreground">Name *</label>
                 <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Client name" />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Company</label>
+                <label className="text-sm font-medium text-foreground">Company</label>
                 <Input value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} placeholder="Company" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Email</label>
+                <label className="text-sm font-medium text-foreground">Email</label>
                 <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="email@example.com" />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Phone</label>
+                <label className="text-sm font-medium text-foreground">Phone</label>
                 <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="(555) 555-5555" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Stage</label>
+                <label className="text-sm font-medium text-foreground">Stage</label>
                 <Select value={formData.stage} onValueChange={(v) => setFormData({ ...formData, stage: v as Client["stage"] })} >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -596,7 +581,7 @@ export default function ClientsPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Priority</label>
+                <label className="text-sm font-medium text-foreground">Priority</label>
                 <Select value={formData.priority} onValueChange={(v) => setFormData({ ...formData, priority: v as Client["priority"] })} >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -609,28 +594,28 @@ export default function ClientsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Estimated Value ($)</label>
+                <label className="text-sm font-medium text-foreground">Estimated Value ($)</label>
                 <Input type="number" value={formData.value} onChange={(e) => setFormData({ ...formData, value: e.target.value })} placeholder="5000" />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-200">Project Type</label>
+                <label className="text-sm font-medium text-foreground">Project Type</label>
                 <Input value={formData.projectType} onChange={(e) => setFormData({ ...formData, projectType: e.target.value })} placeholder="CAD Design, Prototyping..." />
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Source</label>
+              <label className="text-sm font-medium text-foreground">Source</label>
               <Input value={formData.source} onChange={(e) => setFormData({ ...formData, source: e.target.value })} placeholder="Referral, LinkedIn, JCK..." />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Follow-up Date</label>
+              <label className="text-sm font-medium text-foreground">Follow-up Date</label>
               <Input type="date" value={formData.followUpDate} onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })} />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Notes</label>
+              <label className="text-sm font-medium text-foreground">Notes</label>
               <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} placeholder="Project details, next steps..." rows={3} />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200">Tags</label>
+              <label className="text-sm font-medium text-foreground">Tags</label>
               <Input value={formData.tags} onChange={(e) => setFormData({ ...formData, tags: e.target.value })} placeholder="tag1, tag2" />
             </div>
             <div className="flex justify-end gap-2 pt-4">
@@ -642,6 +627,8 @@ export default function ClientsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {confirmDialog}
     </div>
   );
 }

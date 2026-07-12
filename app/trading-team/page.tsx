@@ -14,7 +14,6 @@ import {
   Eye,
   FileText,
   Loader2,
-  Radio,
   RefreshCw,
   Send,
   Shield,
@@ -47,69 +46,53 @@ import {
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { FormattedResult } from "@/components/ui/formatted-result";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Doc } from "@/convex/_generated/dataModel";
+import {
+  accentBg,
+  accentPill,
+  accentText,
+  teamStatusAccent,
+  taskStatusAccent,
+  priorityAccent,
+  type AccentName,
+  tradingAgentAccent,
+} from "@/lib/status-colors";
 
 type TeamMember = Doc<"team">;
 type Task = Doc<"tasks">;
 
 const TRADING_AGENT_NAMES = ["Orion Prime", "Vega", "Atlas", "Mercury"];
 
+// Per-agent identity accents (AccentName values only — no raw classes)
+
 const AGENT_CONFIG: Record<
   string,
-  { icon: typeof Target; color: string; gradient: string; tag: string; glow: string }
+  { icon: typeof Target; tag: string }
 > = {
-  "Orion Prime": {
-    icon: Target,
-    color: "text-amber-400",
-    gradient: "from-amber-500/20 to-amber-600/5",
-    tag: "orion-prime",
-    glow: "glow-amber",
-  },
-  Vega: {
-    icon: Activity,
-    color: "text-cyan-400",
-    gradient: "from-cyan-500/20 to-cyan-600/5",
-    tag: "vega",
-    glow: "glow-blue",
-  },
-  Atlas: {
-    icon: Shield,
-    color: "text-emerald-400",
-    gradient: "from-emerald-500/20 to-emerald-600/5",
-    tag: "atlas",
-    glow: "glow-green",
-  },
-  Mercury: {
-    icon: Zap,
-    color: "text-violet-400",
-    gradient: "from-violet-500/20 to-violet-600/5",
-    tag: "mercury",
-    glow: "glow-purple",
-  },
+  "Orion Prime": { icon: Target, tag: "orion-prime" },
+  Vega: { icon: Activity, tag: "vega" },
+  Atlas: { icon: Shield, tag: "atlas" },
+  Mercury: { icon: Zap, tag: "mercury" },
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  online: "bg-green-500",
-  busy: "bg-yellow-500",
-  away: "bg-orange-500",
-  offline: "bg-gray-500",
-};
-
+// Heartbeat health — returns AccentName instead of raw color strings
 function getHeartbeatHealth(lastActive: string | undefined | null): {
   label: string;
-  color: string;
-  dotColor: string;
+  accent: AccentName;
   icon: typeof Wifi;
 } {
-  if (!lastActive) return { label: "Unknown", color: "text-gray-400", dotColor: "bg-gray-500", icon: WifiOff };
+  if (!lastActive)
+    return { label: "Unknown", accent: "gray", icon: WifiOff };
   const diff = Date.now() - new Date(lastActive).getTime();
-  if (isNaN(diff)) return { label: "Unknown", color: "text-gray-400", dotColor: "bg-gray-500", icon: WifiOff };
+  if (isNaN(diff))
+    return { label: "Unknown", accent: "gray", icon: WifiOff };
   const minutes = diff / 60000;
-  if (minutes < 10)
-    return { label: "Healthy", color: "text-green-400", dotColor: "bg-green-500", icon: Wifi };
-  if (minutes < 30)
-    return { label: "Stale", color: "text-yellow-400", dotColor: "bg-yellow-500", icon: Signal };
-  return { label: "Offline", color: "text-red-400", dotColor: "bg-red-500", icon: WifiOff };
+  if (minutes < 10) return { label: "Healthy", accent: "green", icon: Wifi };
+  if (minutes < 30) return { label: "Stale", accent: "yellow", icon: Signal };
+  return { label: "Offline", accent: "red", icon: WifiOff };
 }
 
 function AgentCard({
@@ -134,7 +117,8 @@ function AgentCard({
   onViewResult: (agentName: string, result: string, title: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const config = AGENT_CONFIG[agent.name] || AGENT_CONFIG["Mercury"];
+  const config = AGENT_CONFIG[agent.name] ?? AGENT_CONFIG["Mercury"];
+  const accent = tradingAgentAccent[agent.name] ?? "gray";
   const Icon = config.icon;
   const heartbeat = getHeartbeatHealth(agent.lastActive);
   const HeartbeatIcon = heartbeat.icon;
@@ -169,43 +153,48 @@ function AgentCard({
       : agentResult.result
     : null;
 
+  const failedCount = agentResult?.failedTasks ?? 0;
+  const failedAccent: AccentName = failedCount > 0 ? "red" : "gray";
+
   return (
-    <Card className="glass overflow-hidden">
-      <div className={cn("bg-gradient-to-r p-5", config.gradient)}>
+    <Card className="glass-pane overflow-hidden">
+      {/* Agent header strip */}
+      <div className={cn("p-5 border-b border-separator", accentPill[accent])}>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center glass">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-glass border border-separator">
               {agent.avatar && !agent.avatar.startsWith("http") ? (
                 <span className="text-2xl">{agent.avatar}</span>
               ) : (
-                <Icon className={cn("w-6 h-6", config.color)} />
+                <Icon className={cn("w-6 h-6", accentText[accent])} />
               )}
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">{agent.name}</h3>
-              <p className="text-sm text-gray-400">{agent.role}</p>
+              <h3 className="text-lg font-semibold text-foreground">{agent.name}</h3>
+              <p className="text-sm text-muted">{agent.role}</p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">
+            {/* Online/busy/away/offline dot */}
             <div className="flex items-center gap-2">
               <div
                 className={cn(
-                  "w-2.5 h-2.5 rounded-full",
-                  STATUS_COLORS[agent.status],
+                  "w-2.5 h-2.5 rounded-full border-2 border-background",
+                  accentBg[teamStatusAccent[agent.status] ?? "gray"],
                   agent.status === "online" && "animate-pulse"
                 )}
               />
-              <span className="text-xs text-gray-400 capitalize">
+              <span className="text-xs text-muted capitalize">
                 {agent.status}
               </span>
             </div>
             {/* Heartbeat indicator */}
             <div className="flex items-center gap-1.5">
-              <HeartbeatIcon className={cn("w-3 h-3", heartbeat.color)} />
-              <span className={cn("text-[10px]", heartbeat.color)}>
+              <HeartbeatIcon className={cn("w-3 h-3", accentText[heartbeat.accent])} />
+              <span className={cn("text-[10px]", accentText[heartbeat.accent])}>
                 {heartbeat.label}
               </span>
-              <span className="text-[10px] text-gray-600">
+              <span className="text-[10px] text-tertiary">
                 {formatTimeAgo(agent.lastActive)}
               </span>
             </div>
@@ -213,7 +202,7 @@ function AgentCard({
         </div>
 
         {agent.description && (
-          <p className="text-sm text-gray-400 mt-3 line-clamp-2">
+          <p className="text-sm text-muted mt-3 line-clamp-2">
             {agent.description}
           </p>
         )}
@@ -222,13 +211,13 @@ function AgentCard({
           {agent.skills?.slice(0, 3).map((skill) => (
             <span
               key={skill}
-              className="text-xs px-2 py-0.5 rounded-full bg-white/[0.04] text-gray-300 border border-white/[0.06]"
+              className="text-xs px-2 py-0.5 rounded-full bg-glass border border-separator text-muted"
             >
               {skill}
             </span>
           ))}
           {(agent.skills?.length ?? 0) > 3 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white/[0.04] text-gray-500">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-fill text-tertiary">
               +{agent.skills!.length - 3}
             </span>
           )}
@@ -238,35 +227,30 @@ function AgentCard({
       <div className="p-5 space-y-4">
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="text-center p-2 rounded-lg bg-white/[0.03]">
-            <div className="text-lg font-bold text-green-400">
+          <div className="text-center p-2 rounded-lg bg-fill">
+            <div className="text-lg font-bold tabular-nums text-accent-green">
               {agentResult?.completedTasks ?? 0}
             </div>
-            <div className="text-xs text-gray-500">Done</div>
+            <div className="text-xs text-muted">Done</div>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.03]">
-            <div className="text-lg font-bold text-blue-400">
+          <div className="text-center p-2 rounded-lg bg-fill">
+            <div className="text-lg font-bold tabular-nums text-accent-blue">
               {activeTasks.length}
             </div>
-            <div className="text-xs text-gray-500">Active</div>
+            <div className="text-xs text-muted">Active</div>
           </div>
-          <div className="text-center p-2 rounded-lg bg-white/[0.03]">
-            <div
-              className={cn(
-                "text-lg font-bold",
-                (agentResult?.failedTasks ?? 0) > 0 ? "text-red-400" : "text-gray-600"
-              )}
-            >
-              {agentResult?.failedTasks ?? 0}
+          <div className="text-center p-2 rounded-lg bg-fill">
+            <div className={cn("text-lg font-bold tabular-nums", accentText[failedAccent])}>
+              {failedCount}
             </div>
-            <div className="text-xs text-gray-500">Failed</div>
+            <div className="text-xs text-muted">Failed</div>
           </div>
         </div>
 
         {/* Last result preview */}
         {resultPreview && (
           <div
-            className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04] cursor-pointer hover:bg-white/[0.04] transition-colors"
+            className="p-3 rounded-lg bg-fill border border-separator cursor-pointer hover:bg-glass transition-colors"
             onClick={() =>
               agentResult?.result &&
               onViewResult(agent.name, agentResult.result, agentResult.title)
@@ -274,24 +258,24 @@ function AgentCard({
           >
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-1.5">
-                <FileText className="w-3 h-3 text-blue-400" />
-                <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">
+                <FileText className="w-3 h-3 text-accent-blue" />
+                <span className="text-[11px] text-muted font-medium uppercase tracking-wider">
                   Last Result
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 {agentResult?.completedAt && (
-                  <span className="text-[10px] text-gray-600">
+                  <span className="text-[10px] text-tertiary">
                     {formatTimeAgo(agentResult.completedAt)}
                   </span>
                 )}
-                <Eye className="w-3 h-3 text-gray-500" />
+                <Eye className="w-3 h-3 text-muted" />
               </div>
             </div>
-            <p className="text-xs text-gray-400 font-medium mb-1 truncate">
+            <p className="text-xs text-muted font-medium mb-1 truncate">
               {agentResult?.title}
             </p>
-            <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+            <p className="text-xs text-tertiary leading-relaxed line-clamp-2">
               {resultPreview}
             </p>
           </div>
@@ -300,7 +284,7 @@ function AgentCard({
         {/* Recent tasks */}
         {recentTasks.length > 0 && (
           <div>
-            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <h4 className="text-xs font-medium text-muted uppercase tracking-wider mb-2">
               Recent Tasks
             </h4>
             <div className="space-y-1.5">
@@ -324,7 +308,7 @@ function AgentCard({
             {agentTasks.length > 3 && (
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1 mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors mx-auto"
+                className="flex items-center gap-1 mt-2 text-xs text-muted hover:text-foreground transition-colors mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/40 rounded"
               >
                 {expanded ? (
                   <>
@@ -342,7 +326,7 @@ function AgentCard({
 
         {recentTasks.length === 0 && (
           <div className="text-center py-4">
-            <p className="text-sm text-gray-600">No tasks yet</p>
+            <p className="text-sm text-tertiary">No tasks yet</p>
           </div>
         )}
 
@@ -370,42 +354,32 @@ function TaskRow({
   return (
     <div
       className={cn(
-        "flex items-start gap-2 p-2 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors group",
+        "flex items-start gap-2 p-2 rounded-lg bg-fill hover:bg-glass transition-colors group",
         onViewResult && "cursor-pointer"
       )}
       onClick={onViewResult}
     >
       {task.status === "done" || task.status === "agent-reviewed" ? (
-        <CheckCircle2 className="w-3.5 h-3.5 text-green-400 mt-0.5 shrink-0" />
+        <CheckCircle2 className="w-3.5 h-3.5 text-accent-green mt-0.5 shrink-0" />
       ) : task.status === "failed" || task.status === "validation-error" ? (
-        <XCircle className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0" />
+        <XCircle className="w-3.5 h-3.5 text-accent-red mt-0.5 shrink-0" />
       ) : task.status === "processing" ? (
-        <Loader2 className="w-3.5 h-3.5 text-blue-400 mt-0.5 shrink-0 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 text-accent-blue mt-0.5 shrink-0 animate-spin" />
       ) : (
-        <Clock className="w-3.5 h-3.5 text-gray-500 mt-0.5 shrink-0" />
+        <Clock className="w-3.5 h-3.5 text-muted mt-0.5 shrink-0" />
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-gray-300 truncate">{task.title}</p>
+        <p className="text-sm text-foreground truncate">{task.title}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          <p className="text-xs text-gray-500">{formatTimeAgo(task.updatedAt)}</p>
+          <p className="text-xs text-muted">{formatTimeAgo(task.updatedAt)}</p>
           {task.lastAgentResult && (
-            <span className="text-[10px] text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+            <span className="text-[10px] text-accent-blue opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity flex items-center gap-0.5">
               <Eye className="w-2.5 h-2.5" /> view result
             </span>
           )}
         </div>
       </div>
-      <Badge
-        variant="outline"
-        className={cn(
-          "text-[10px] shrink-0",
-          task.priority === "high"
-            ? "border-red-500/30 text-red-400"
-            : task.priority === "medium"
-              ? "border-yellow-500/30 text-yellow-400"
-              : "border-gray-600 text-gray-500"
-        )}
-      >
+      <Badge color={priorityAccent[task.priority ?? "low"] ?? "gray"} className="text-[10px] shrink-0">
         {task.priority}
       </Badge>
     </div>
@@ -512,44 +486,32 @@ export default function TradingTeamPage() {
     setViewingResult({ agent, result, title });
   };
 
+  const failedAccentStat: AccentName = stats.failed > 0 ? "red" : "gray";
+
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-violet-500/20 flex items-center justify-center border border-white/[0.06]">
-              <Radio className="w-5 h-5 text-amber-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                Trading Team
-              </h1>
-              <p className="text-sm text-gray-400">
-                S4 DELTA strategy agents on n8n
-              </p>
-            </div>
+      <PageHeader
+        title="Trading Team"
+        subtitle="S4 DELTA strategy agents on n8n"
+      >
+        {isLoading ? (
+          <Skeleton className="h-8 w-24 rounded-full" />
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-glass border border-separator text-sm">
+            <div
+              className={cn(
+                "w-2 h-2 rounded-full",
+                stats.onlineAgents > 0
+                  ? "bg-accent-green animate-pulse"
+                  : "bg-fill"
+              )}
+            />
+            <span className="text-muted">
+              {stats.onlineAgents}/{tradingAgents.length} Online
+            </span>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {isLoading ? (
-            <Skeleton className="h-8 w-24 rounded-full" />
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full glass text-sm">
-              <div
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  stats.onlineAgents > 0
-                    ? "bg-green-500 animate-pulse"
-                    : "bg-gray-500"
-                )}
-              />
-              <span className="text-gray-300">
-                {stats.onlineAgents}/{tradingAgents.length} Online
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
+        )}
+      </PageHeader>
 
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
@@ -568,68 +530,20 @@ export default function TradingTeamPage() {
           ))}
         </div>
       ) : (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6 stagger-in">
-        {[
-          {
-            label: "Agents",
-            value: tradingAgents.length,
-            icon: Bot,
-            color: "text-blue-400",
-            bg: "bg-blue-500/10",
-          },
-          {
-            label: "Active",
-            value: stats.active,
-            icon: RefreshCw,
-            color: "text-yellow-400",
-            bg: "bg-yellow-500/10",
-          },
-          {
-            label: "Completed",
-            value: stats.completed,
-            icon: CheckCircle2,
-            color: "text-green-400",
-            bg: "bg-green-500/10",
-          },
-          {
-            label: "Failed",
-            value: stats.failed,
-            icon: AlertTriangle,
-            color: stats.failed > 0 ? "text-red-400" : "text-gray-600",
-            bg: stats.failed > 0 ? "bg-red-500/10" : "bg-white/[0.03]",
-          },
-          {
-            label: "Total Tasks",
-            value: stats.total,
-            icon: Activity,
-            color: "text-purple-400",
-            bg: "bg-purple-500/10",
-          },
-        ].map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <div className={cn("p-1.5 rounded-lg", stat.bg)}>
-                  <stat.icon className={cn("w-4 h-4", stat.color)} />
-                </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold text-white">
-                    {stat.value}
-                  </div>
-                  <div className="text-[11px] text-gray-500">{stat.label}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6 stagger-in">
+          <StatCard label="Agents" value={tradingAgents.length} icon={Bot} accent="blue" />
+          <StatCard label="Active" value={stats.active} icon={RefreshCw} accent="yellow" />
+          <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} accent="green" />
+          <StatCard label="Failed" value={stats.failed} icon={AlertTriangle} accent={failedAccentStat} />
+          <StatCard label="Total Tasks" value={stats.total} icon={Activity} accent="purple" />
+        </div>
       )}
 
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="glass overflow-hidden">
+              <Card key={i} className="glass-pane overflow-hidden">
                 <div className="p-5">
                   <div className="flex items-center gap-3">
                     <Skeleton className="w-12 h-12 rounded-xl" />
@@ -651,160 +565,141 @@ export default function TradingTeamPage() {
             ))}
           </div>
         ) : (
-        <>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
-          {tradingAgents.length > 0 ? (
-            tradingAgents.map((agent) => (
-              <AgentCard
-                key={agent._id}
-                agent={agent}
-                tasks={tasks ?? []}
-                agentResult={agentResults?.[agent.name] ?? null}
-                onDispatch={setDispatchAgent}
-                onViewResult={handleViewResult}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-20">
-              <Bot className="w-14 h-14 text-gray-700 mx-auto mb-4 empty-state-icon" />
-              <h3 className="text-lg font-medium text-gray-400">
-                No trading agents found
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Add Orion Prime, Vega, Atlas, and Mercury to your team
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* All Trading Tasks table with inline result preview */}
-        {tradingTasks.length > 0 && (
-          <div className="mt-2 mb-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-300 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-blue-400" />
-                  All Trading Tasks
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-white/[0.06] text-gray-500"
-                  >
-                    {tradingTasks.length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-0.5">
-                  {tradingTasks
-                    .sort(
-                      (a, b) =>
-                        new Date(b.updatedAt).getTime() -
-                        new Date(a.updatedAt).getTime()
-                    )
-                    .slice(0, 12)
-                    .map((task) => (
-                      <div key={task._id}>
-                        <div
-                          className={cn(
-                            "flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors",
-                            task.lastAgentResult && "cursor-pointer",
-                            expandedTask === task._id && "bg-white/[0.02]"
-                          )}
-                          onClick={() => {
-                            if (task.lastAgentResult) {
-                              setExpandedTask(
-                                expandedTask === task._id ? null : task._id
-                              );
-                            }
-                          }}
-                        >
-                          {task.status === "done" || task.status === "agent-reviewed" ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0" />
-                          ) : task.status === "failed" || task.status === "validation-error" ? (
-                            <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                          ) : task.status === "processing" ? (
-                            <Loader2 className="w-3.5 h-3.5 text-blue-400 shrink-0 animate-spin" />
-                          ) : (
-                            <Clock className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                          )}
-
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-300 truncate">{task.title}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-gray-500">
-                                {task.claimedBy || task.tags?.find((t: string) =>
-                                  ["mercury", "atlas", "vega", "orion-prime"].includes(t.toLowerCase())
-                                ) || "—"}
-                              </span>
-                              <span className="text-[10px] text-gray-600">
-                                {formatTimeAgo(task.updatedAt)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-[10px]",
-                                task.priority === "high"
-                                  ? "border-red-500/30 text-red-400"
-                                  : task.priority === "medium"
-                                    ? "border-yellow-500/30 text-yellow-400"
-                                    : "border-gray-600 text-gray-500"
-                              )}
-                            >
-                              {task.priority}
-                            </Badge>
-                            <span
-                              className={cn(
-                                "text-xs px-2 py-0.5 rounded-full",
-                                task.status === "done" || task.status === "agent-reviewed"
-                                  ? "bg-green-500/10 text-green-400"
-                                  : task.status === "processing"
-                                    ? "bg-blue-500/10 text-blue-400"
-                                    : task.status === "dispatched"
-                                      ? "bg-yellow-500/10 text-yellow-400"
-                                      : task.status === "failed" || task.status === "validation-error"
-                                        ? "bg-red-500/10 text-red-400"
-                                        : "bg-white/[0.04] text-gray-400"
-                              )}
-                            >
-                              {task.status}
-                            </span>
-                            {task.lastAgentResult && (
-                              <ChevronDown
-                                className={cn(
-                                  "w-3.5 h-3.5 text-gray-500 transition-transform duration-200",
-                                  expandedTask === task._id && "rotate-180"
-                                )}
-                              />
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Inline result expansion */}
-                        {expandedTask === task._id && task.lastAgentResult && (
-                          <div className="mx-2 mb-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04] animate-fade-in-up">
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <FileText className="w-3 h-3 text-blue-400" />
-                              <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">
-                                Agent Result
-                              </span>
-                            </div>
-                            <div className="max-h-48 overflow-y-auto">
-                              <FormattedResult content={task.lastAgentResult} className="text-xs" />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
+              {tradingAgents.length > 0 ? (
+                tradingAgents.map((agent) => (
+                  <AgentCard
+                    key={agent._id}
+                    agent={agent}
+                    tasks={tasks ?? []}
+                    agentResult={agentResults?.[agent.name] ?? null}
+                    onDispatch={setDispatchAgent}
+                    onViewResult={handleViewResult}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full">
+                  <EmptyState
+                    icon={Bot}
+                    message="No trading agents found"
+                    hint="Add Orion Prime, Vega, Atlas, and Mercury to your team"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-        </>
+              )}
+            </div>
+
+            {/* All Trading Tasks table with inline result preview */}
+            {tradingTasks.length > 0 && (
+              <div className="mt-2 mb-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-accent-blue" />
+                      All Trading Tasks
+                      <Badge color="gray">
+                        {tradingTasks.length}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-0.5">
+                      {tradingTasks
+                        .sort(
+                          (a, b) =>
+                            new Date(b.updatedAt).getTime() -
+                            new Date(a.updatedAt).getTime()
+                        )
+                        .slice(0, 12)
+                        .map((task) => {
+                          const statusAccent: AccentName =
+                            taskStatusAccent[task.status] ?? "gray";
+                          return (
+                            <div key={task._id}>
+                              <div
+                                className={cn(
+                                  "flex items-center gap-3 p-2.5 rounded-lg hover:bg-fill transition-colors",
+                                  task.lastAgentResult && "cursor-pointer",
+                                  expandedTask === task._id && "bg-fill"
+                                )}
+                                onClick={() => {
+                                  if (task.lastAgentResult) {
+                                    setExpandedTask(
+                                      expandedTask === task._id ? null : task._id
+                                    );
+                                  }
+                                }}
+                              >
+                                {task.status === "done" || task.status === "agent-reviewed" ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-accent-green shrink-0" />
+                                ) : task.status === "failed" || task.status === "validation-error" ? (
+                                  <XCircle className="w-3.5 h-3.5 text-accent-red shrink-0" />
+                                ) : task.status === "processing" ? (
+                                  <Loader2 className="w-3.5 h-3.5 text-accent-blue shrink-0 animate-spin" />
+                                ) : (
+                                  <Clock className="w-3.5 h-3.5 text-muted shrink-0" />
+                                )}
+
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-foreground truncate">{task.title}</p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-xs text-muted">
+                                      {task.claimedBy || task.tags?.find((t: string) =>
+                                        ["mercury", "atlas", "vega", "orion-prime"].includes(t.toLowerCase())
+                                      ) || "—"}
+                                    </span>
+                                    <span className="text-[10px] text-tertiary">
+                                      {formatTimeAgo(task.updatedAt)}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <Badge color={priorityAccent[task.priority ?? "low"] ?? "gray"} className="text-[10px]">
+                                    {task.priority}
+                                  </Badge>
+                                  <span
+                                    className={cn(
+                                      "rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                                      accentPill[statusAccent]
+                                    )}
+                                  >
+                                    {task.status}
+                                  </span>
+                                  {task.lastAgentResult && (
+                                    <ChevronDown
+                                      className={cn(
+                                        "w-3.5 h-3.5 text-muted transition-transform duration-200",
+                                        expandedTask === task._id && "rotate-180"
+                                      )}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Inline result expansion */}
+                              {expandedTask === task._id && task.lastAgentResult && (
+                                <div className="mx-2 mb-2 p-3 rounded-lg bg-fill border border-separator animate-fade-in-up">
+                                  <div className="flex items-center gap-1.5 mb-2">
+                                    <FileText className="w-3 h-3 text-accent-blue" />
+                                    <span className="text-[11px] text-muted font-medium uppercase tracking-wider">
+                                      Agent Result
+                                    </span>
+                                  </div>
+                                  <div className="max-h-48 overflow-y-auto">
+                                    <FormattedResult content={task.lastAgentResult} className="text-xs" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -816,7 +711,7 @@ export default function TradingTeamPage() {
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Send className="w-4 h-4 text-blue-400" />
+              <Send className="w-4 h-4 text-accent-blue" />
               Dispatch Task to {dispatchAgent}
             </DialogTitle>
             <DialogDescription>
@@ -825,7 +720,7 @@ export default function TradingTeamPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <label className="text-sm font-medium text-gray-200 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 Title
               </label>
               <Input
@@ -835,7 +730,7 @@ export default function TradingTeamPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 Description
               </label>
               <Textarea
@@ -846,7 +741,7 @@ export default function TradingTeamPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-200 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 Priority
               </label>
               <Select
@@ -901,7 +796,7 @@ export default function TradingTeamPage() {
         <DialogContent className="sm:max-w-[640px] max-h-[80vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-blue-400" />
+              <FileText className="w-4 h-4 text-accent-blue" />
               {viewingResult?.agent} — Result
             </DialogTitle>
             <DialogDescription>

@@ -41,7 +41,18 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatDate } from "@/lib/utils";
+import {
+  contentStageAccent,
+  accentPill,
+  accentBg,
+  accentBorderT,
+  accentText,
+  type AccentName,
+} from "@/lib/status-colors";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 
 type Content = Doc<"content">;
@@ -52,19 +63,27 @@ type ContentType = "video" | "blog" | "social" | "podcast";
 type AssignedTo = "human" | "openclaw";
 
 const STAGES = [
-  { id: "idea", label: "Idea", icon: FileText, color: "bg-gray-500" },
-  { id: "script", label: "Script", icon: FileText, color: "bg-blue-500" },
-  { id: "thumbnail", label: "Thumbnail", icon: Image, color: "bg-purple-500" },
-  { id: "filming", label: "Filming", icon: Video, color: "bg-yellow-500" },
-  { id: "editing", label: "Editing", icon: FileText, color: "bg-orange-500" },
-  { id: "published", label: "Published", icon: Share2, color: "bg-green-500" },
+  { id: "idea", label: "Idea", icon: FileText },
+  { id: "script", label: "Script", icon: FileText },
+  { id: "thumbnail", label: "Thumbnail", icon: Image },
+  { id: "filming", label: "Filming", icon: Video },
+  { id: "editing", label: "Editing", icon: FileText },
+  { id: "published", label: "Published", icon: Share2 },
 ] as const;
 
-const CONTENT_TYPES = {
-  video: { icon: Play, color: "text-red-400" },
-  blog: { icon: FileText, color: "text-blue-400" },
-  social: { icon: Share2, color: "text-purple-400" },
-  podcast: { icon: Mic, color: "text-yellow-400" },
+// AccentName-valued map — allowed per spec
+const CONTENT_TYPE_ACCENT: Record<ContentType, AccentName> = {
+  video: "blue",
+  blog: "purple",
+  social: "teal",
+  podcast: "orange",
+};
+
+const CONTENT_TYPE_ICON: Record<ContentType, typeof Play> = {
+  video: Play,
+  blog: FileText,
+  social: Share2,
+  podcast: Mic,
 };
 
 function ContentCard({
@@ -82,51 +101,51 @@ function ContentCard({
 }) {
   const stageIndex = STAGES.findIndex((s) => s.id === content.stage);
   const progressPercent = ((stageIndex + 1) / STAGES.length) * 100;
-  const TypeIcon = CONTENT_TYPES[content.contentType].icon;
+  const stageAccent = contentStageAccent[content.stage] ?? "gray";
+  const TypeIcon = CONTENT_TYPE_ICON[content.contentType];
+  const typeAccent = CONTENT_TYPE_ACCENT[content.contentType] ?? "gray";
 
   return (
-    <Card className="glass card-hover highlight-top transition-all group overflow-hidden">
-      <div className="h-1 w-full bg-gray-700">
+    <Card className="transition-all group overflow-hidden">
+      {/* Progress bar track + fill */}
+      <div className="h-1 w-full bg-fill">
         <div
-          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
+          className={cn("h-full transition-all", accentBg[stageAccent])}
           style={{ width: `${progressPercent}%` }}
         />
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <TypeIcon
-              className={cn(
-                "w-4 h-4",
-                CONTENT_TYPES[content.contentType].color
-              )}
-            />
-            <Badge variant="outline" className="text-xs">
+            <TypeIcon className={cn("w-4 h-4", accentText[typeAccent])} />
+            <Badge color={typeAccent} className="text-xs">
               {content.contentType}
             </Badge>
           </div>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(content)}
-              className="p-1 hover:bg-gray-700 rounded"
+              aria-label="Edit content"
+              className="p-1 hover:bg-fill rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
             >
-              <Edit className="w-3 h-3 text-gray-400" />
+              <Edit className="w-3 h-3 text-muted" />
             </button>
             <button
               onClick={() => onDelete(content._id)}
-              className="p-1 hover:bg-red-900/30 rounded"
+              aria-label="Delete content"
+              className="p-1 hover:bg-accent-red-tint rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
             >
-              <Trash2 className="w-3 h-3 text-red-400" />
+              <Trash2 className="w-3 h-3 text-accent-red" />
             </button>
           </div>
         </div>
 
-        <h3 className="text-sm font-medium text-gray-100 mt-2 leading-tight">
+        <h3 className="text-sm font-medium text-foreground mt-2 leading-tight">
           {content.title}
         </h3>
 
         {content.description && (
-          <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+          <p className="text-xs text-muted mt-1 line-clamp-2">
             {content.description}
           </p>
         )}
@@ -134,26 +153,26 @@ function ContentCard({
         <div className="mt-3 space-y-2">
           <div className="flex items-center gap-2">
             {content.assignedTo === "human" ? (
-              <User className="w-3 h-3 text-gray-400" />
+              <User className="w-3 h-3 text-muted" />
             ) : (
-              <Bot className="w-3 h-3 text-purple-400" />
+              <Bot className="w-3 h-3 text-accent-purple" />
             )}
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-muted">
               {content.assignedTo === "human" ? "Human" : "OpenClaw"}
             </span>
           </div>
 
           {content.platform && (
             <div className="flex items-center gap-2">
-              <Tag className="w-3 h-3 text-gray-400" />
-              <span className="text-xs text-gray-400">{content.platform}</span>
+              <Tag className="w-3 h-3 text-muted" />
+              <span className="text-xs text-muted">{content.platform}</span>
             </div>
           )}
 
           {content.publishDate && (
             <div className="flex items-center gap-2">
-              <ExternalLink className="w-3 h-3 text-green-400" />
-              <span className="text-xs text-green-400">
+              <ExternalLink className="w-3 h-3 text-accent-green" />
+              <span className="text-xs text-accent-green">
                 {formatDate(content.publishDate)}
               </span>
             </div>
@@ -163,17 +182,14 @@ function ContentCard({
         {content.tags && content.tags.length > 0 && (
           <div className="flex gap-1 mt-3 flex-wrap">
             {content.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs px-2 py-0.5 bg-white/[0.06] rounded-full text-gray-300"
-              >
+              <Badge key={tag} color="gray" className="text-xs">
                 {tag}
-              </span>
+              </Badge>
             ))}
           </div>
         )}
 
-        <div className="flex justify-between mt-4 pt-3 border-t border-gray-700">
+        <div className="flex justify-between mt-4 pt-3 border-t border-separator">
           <Button
             variant="ghost"
             size="sm"
@@ -193,11 +209,11 @@ function ContentCard({
               "h-7 px-2",
               stageIndex === STAGES.length - 1
                 ? ""
-                : "hover:bg-green-900/30 hover:text-green-400"
+                : "hover:bg-accent-green-tint hover:text-accent-green"
             )}
           >
             {stageIndex === STAGES.length - 1 ? (
-              <CheckCircle className="w-4 h-4 text-green-500" />
+              <CheckCircle className="w-4 h-4 text-accent-green" />
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
@@ -222,7 +238,7 @@ function ContentSkeleton() {
           </div>
           <div className="space-y-3">
             {[1, 2].map((i) => (
-              <Card key={i} className="glass highlight-top overflow-hidden">
+              <Card key={i} className="overflow-hidden">
                 <div className="p-4 space-y-3">
                   <Skeleton className="h-4 w-16" />
                   <Skeleton className="h-4 w-40" />
@@ -248,6 +264,7 @@ export default function ContentPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
+  const { confirm, confirmDialog } = useConfirm();
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -337,9 +354,8 @@ export default function ContentPage() {
   };
 
   const handleDelete = async (id: Id<"content">) => {
-    if (confirm("Delete this content?")) {
-      await deleteContent({ id });
-    }
+    if (!(await confirm({ title: "Delete this content?", destructive: true }))) return;
+    await deleteContent({ id });
   };
 
   const handleAdvance = async (id: Id<"content">) => {
@@ -358,55 +374,55 @@ export default function ContentPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Content Pipeline</h1>
-          <p className="text-gray-400 mt-1">
-            From idea to published - track your content creation workflow
-          </p>
-        </div>
+      <PageHeader
+        title="Content Pipeline"
+        subtitle="From idea to published - track your content creation workflow"
+      >
         <Button onClick={handleCreate} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New Content
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="flex-1 overflow-x-auto">
         {isLoading ? (
           <ContentSkeleton />
         ) : (
         <div className="flex gap-4 pb-4 min-w-0 md:min-w-max">
-          {STAGES.map((stage, index) => {
+          {STAGES.map((stage) => {
             const StageIcon = stage.icon;
             const stageContent = contentByStage[stage.id] || [];
+            const accent = contentStageAccent[stage.id] ?? "gray";
 
             return (
               <div key={stage.id} className="w-60 sm:w-72 flex-shrink-0">
-                <div className="flex items-center gap-2 mb-3">
-                  <div
-                    className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center",
-                      stage.color
-                    )}
-                  >
-                    <StageIcon className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h2 className="font-semibold text-gray-100">{stage.label}</h2>
-                      <Badge variant="secondary" className="bg-white/[0.06]">
-                        {stageContent.length}
-                      </Badge>
-                    </div>
+                <div
+                  className={cn(
+                    "glass-pane rounded-2xl border border-separator border-t-2 mb-3 p-2",
+                    accentBorderT[accent]
+                  )}
+                >
+                  <div className="flex items-center gap-2">
                     <div
-                      className="h-0.5 mt-1 rounded-full"
-                      style={{
-                        background: `linear-gradient(90deg, ${
-                          index <= 2 ? "#3b82f6" : index === 3 ? "#eab308" : "#22c55e"
-                        }, transparent)`,
-                        width: "100%",
-                      }}
-                    />
+                      className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center",
+                        accentPill[accent]
+                      )}
+                    >
+                      <StageIcon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-semibold text-foreground">{stage.label}</h2>
+                        <Badge color="gray">
+                          {stageContent.length}
+                        </Badge>
+                      </div>
+                      <div
+                        className={cn("h-0.5 mt-1 rounded-full", accentBg[accent])}
+                        style={{ width: "100%" }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -422,9 +438,7 @@ export default function ContentPage() {
                     />
                   ))}
                   {stageContent.length === 0 && (
-                    <div className="text-center py-8 border-2 border-dashed border-gray-800 rounded-lg">
-                      <span className="text-sm text-gray-500">No content</span>
-                    </div>
+                    <EmptyState message="No content" />
                   )}
                 </div>
               </div>
@@ -449,7 +463,7 @@ export default function ContentPage() {
 
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium text-gray-200">Title</label>
+              <label className="text-sm font-medium text-foreground">Title</label>
               <Input
                 value={formData.title}
                 onChange={(e) =>
@@ -460,7 +474,7 @@ export default function ContentPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-200">Description</label>
+              <label className="text-sm font-medium text-foreground">Description</label>
               <Textarea
                 value={formData.description}
                 onChange={(e) =>
@@ -472,7 +486,7 @@ export default function ContentPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Content Type</label>
+                <label className="text-sm font-medium text-foreground">Content Type</label>
                 <Select
                   value={formData.contentType}
                   onValueChange={(v) =>
@@ -492,7 +506,7 @@ export default function ContentPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-200">Stage</label>
+                <label className="text-sm font-medium text-foreground">Stage</label>
                 <Select
                   value={formData.stage}
                   onValueChange={(v) =>
@@ -513,7 +527,7 @@ export default function ContentPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-200">Platform</label>
+                <label className="text-sm font-medium text-foreground">Platform</label>
                 <Input
                   value={formData.platform}
                   onChange={(e) =>
@@ -524,7 +538,7 @@ export default function ContentPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-200">Assigned To</label>
+                <label className="text-sm font-medium text-foreground">Assigned To</label>
                 <Select
                   value={formData.assignedTo}
                   onValueChange={(v) =>
@@ -543,7 +557,7 @@ export default function ContentPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-200">Tags</label>
+              <label className="text-sm font-medium text-foreground">Tags</label>
               <Input
                 value={formData.tags}
                 onChange={(e) =>
@@ -555,7 +569,7 @@ export default function ContentPage() {
 
             {formData.stage === "script" || formData.stage === "editing" ? (
               <div>
-                <label className="text-sm font-medium text-gray-200">Script Content</label>
+                <label className="text-sm font-medium text-foreground">Script Content</label>
                 <Textarea
                   value={formData.scriptContent}
                   onChange={(e) =>
@@ -569,7 +583,7 @@ export default function ContentPage() {
 
             {formData.stage === "thumbnail" ? (
               <div>
-                <label className="text-sm font-medium text-gray-200">Thumbnail URL</label>
+                <label className="text-sm font-medium text-foreground">Thumbnail URL</label>
                 <Input
                   value={formData.thumbnailUrl}
                   onChange={(e) =>
@@ -583,7 +597,7 @@ export default function ContentPage() {
             {formData.stage === "published" ? (
               <>
                 <div>
-                  <label className="text-sm font-medium text-gray-200">Video URL</label>
+                  <label className="text-sm font-medium text-foreground">Video URL</label>
                   <Input
                     value={formData.videoUrl}
                     onChange={(e) =>
@@ -593,7 +607,7 @@ export default function ContentPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-200">Publish Date</label>
+                  <label className="text-sm font-medium text-foreground">Publish Date</label>
                   <Input
                     type="datetime-local"
                     value={formData.publishDate}
@@ -616,6 +630,7 @@ export default function ContentPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {confirmDialog}
     </div>
   );
 }
