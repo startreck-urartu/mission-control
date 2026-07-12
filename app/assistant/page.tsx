@@ -190,7 +190,7 @@ export default function AssistantPage() {
       <div className="flex-1 flex flex-col">
         <div className="flex items-center gap-2 border-b border-separator px-4 py-3">
           <MessageCircle className="h-5 w-5 text-muted" />
-          <span className="font-semibold text-foreground">CAD Assistant</span>
+          <h1 className="text-[15px] font-semibold text-foreground">CAD Assistant</h1>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -232,7 +232,7 @@ export default function AssistantPage() {
                 {streamText ? (
                   <>
                     {streamText}
-                    <span className="inline-block w-1.5 h-4 ml-0.5 -mb-0.5 bg-fill animate-pulse" />
+                    <span className="inline-block w-1.5 h-4 ml-0.5 -mb-0.5 bg-muted animate-pulse" />
                     {streamCitations.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {streamCitations.map((c, i) => (
@@ -251,9 +251,9 @@ export default function AssistantPage() {
                 ) : (
                   <span className="flex items-center gap-2 text-muted">
                     <span className="inline-flex gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-fill animate-bounce [animation-delay:-0.3s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-fill animate-bounce [animation-delay:-0.15s]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-fill animate-bounce" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" />
                     </span>
                     Searching the knowledge base…
                   </span>
