@@ -75,7 +75,7 @@ function MemoryCard({
   onEdit: (memory: Memory) => void;
   onDelete: (id: Id<"memories">) => void;
 }) {
-  const TypeIcon = MEMORY_TYPES[memory.type].icon;
+  const TypeIcon = MEMORY_TYPES[memory.type]?.icon ?? Brain;
   const typeAccent = MEMORY_TYPE_ACCENT[memory.type] ?? "gray";
 
   return (

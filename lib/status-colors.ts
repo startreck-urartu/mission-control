@@ -1,6 +1,7 @@
 /**
  * Single source of truth mapping every domain status to the Apple accent
- * palette. Pages must import from here — no local color maps.
+ * palette. Pages must import from here — no local RAW-CLASS color maps.
+ * (Page-scoped Record<string, AccentName> maps for page-only domains are OK.)
  * Each entry pairs bright text with its tint background (pill idiom).
  * Policy: the palette is pure Apple system colors — there is no `amber`;
  * anything formerly amber maps to `orange` (or `yellow` where truly yellow).
