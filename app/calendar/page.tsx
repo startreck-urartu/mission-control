@@ -121,6 +121,14 @@ function CalendarGrid({
           const isTodayDate = isToday(day);
           const isExpanded = expandedDays.has(dayKey);
 
+          const toggleExpanded = () => {
+            setExpandedDays((prev) => {
+              const next = new Set(prev);
+              if (next.has(dayKey)) next.delete(dayKey); else next.add(dayKey);
+              return next;
+            });
+          };
+
           return (
             <div
               key={day.toISOString()}
@@ -175,15 +183,8 @@ function CalendarGrid({
                   <div
                     role="button"
                     tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedDays((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(dayKey)) next.delete(dayKey); else next.add(dayKey);
-                        return next;
-                      });
-                    }}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); (e.currentTarget as HTMLElement).click(); } }}
+                    onClick={(e) => { e.stopPropagation(); toggleExpanded(); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleExpanded(); } }}
                     className="text-xs text-muted px-2 cursor-pointer hover:text-foreground select-none"
                   >
                     {isExpanded ? "Show less" : `+${dayEvents.length - 3} more`}
@@ -366,6 +367,7 @@ export default function CalendarPage() {
       <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
         <div className="flex-1 flex flex-col min-h-0">
           <CalendarGrid
+            key={format(currentDate, "yyyy-MM")}
             currentDate={currentDate}
             events={events ?? []}
             onSelectDate={handleCreate}
