@@ -47,6 +47,7 @@ import { useConfirm } from "@/components/ui/confirm-dialog";
 import { cn, formatDate } from "@/lib/utils";
 import {
   contentStageAccent,
+  accentPill,
   accentBg,
   accentBorderT,
   accentText,
@@ -405,10 +406,10 @@ export default function ContentPage() {
                     <div
                       className={cn(
                         "w-8 h-8 rounded-lg flex items-center justify-center",
-                        accentBg[accent]
+                        accentPill[accent]
                       )}
                     >
-                      <StageIcon className="w-4 h-4 text-white" />
+                      <StageIcon className="w-4 h-4" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
