@@ -168,7 +168,7 @@ export function FormattedResult({
           code: ({ children, className: codeClassName }) => {
             const isInline = !codeClassName;
             return isInline ? (
-              <code className="px-1 py-0.5 rounded bg-fill text-accent-amber text-xs font-mono">{children}</code>
+              <code className="px-1 py-0.5 rounded bg-fill text-accent-orange text-xs font-mono">{children}</code>
             ) : (
               <code className={cn("block p-3 rounded-lg bg-fill text-xs font-mono text-foreground overflow-x-auto mb-2", codeClassName)}>
                 {children}
